@@ -34,29 +34,21 @@ namespace LastDay.Dialogue
         }
 
         /// <summary>
-        /// Build a context string from triggered memories for injection into the LLM prompt.
+        /// Returns memory IDs that have been triggered, for CharacterPrompts to embed
+        /// as narrative context within the system prompt.
+        /// NOTE: Do not inject the raw output of this into an LLM prompt — use
+        /// CharacterPrompts.GetMarthaPrompt(triggeredMemoryIds) instead.
         /// </summary>
-        public string BuildMemoryContext(List<string> triggeredMemoryIds, string character)
+        public List<string> GetTriggeredMemoryIds(List<string> triggeredMemoryIds)
         {
-            if (triggeredMemoryIds == null || triggeredMemoryIds.Count == 0)
-                return "";
-
-            var lines = new List<string>();
-            lines.Add("\n[MEMORY CONTEXT - These memories have been explored today:]");
-
+            var valid = new List<string>();
+            if (triggeredMemoryIds == null) return valid;
             foreach (string id in triggeredMemoryIds)
             {
-                if (memoryLookup.TryGetValue(id, out MemoryData data))
-                {
-                    string contextText = character == "david" ? data.davidContext : data.marthaContext;
-                    if (!string.IsNullOrEmpty(contextText))
-                    {
-                        lines.Add($"- {data.objectName}: {contextText}");
-                    }
-                }
+                if (memoryLookup.ContainsKey(id))
+                    valid.Add(id);
             }
-
-            return string.Join("\n", lines);
+            return valid;
         }
 
         /// <summary>

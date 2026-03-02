@@ -92,7 +92,8 @@ namespace LastDay.UI
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
 
-            string greeting = $"*Martha looks at the {displayName}*";
+            // Use story-aware opening line from CharacterPrompts
+            string greeting = CharacterPrompts.GetObjectOpeningLine(memoryId, "martha");
             ShowResponse(greeting);
         }
 
@@ -114,9 +115,10 @@ namespace LastDay.UI
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
 
+            // Direct NPC click — use a natural, character-specific greeting
             string greeting = npcId == "david"
-                ? "Hey, old friend. Thought I'd give you a call today. How are you holding up?"
-                : "*Martha turns to you* Yes, dear?";
+                ? CharacterPrompts.GetObjectOpeningLine("phone", "david")
+                : "Is everything alright? You have that look.";
             ShowResponse(greeting);
         }
 

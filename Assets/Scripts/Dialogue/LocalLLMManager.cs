@@ -159,23 +159,24 @@ namespace LastDay.Dialogue
         {
             if (memories == null || memories.Count == 0) return;
 
-            string basePrompt = currentCharacter == "david"
+            // CharacterPrompts already weaves memories into the persona section —
+            // no separate [MEMORY CONTEXT] block that could leak into responses.
+            string prompt = currentCharacter == "david"
                 ? CharacterPrompts.GetDavidPrompt(memories)
                 : CharacterPrompts.GetMarthaPrompt(memories);
 
-            if (MemoryContext.Instance != null)
-            {
-                string memoryContext = MemoryContext.Instance.BuildMemoryContext(memories, currentCharacter);
-                basePrompt += memoryContext;
-            }
-
-            ActiveCharacter.systemPrompt = basePrompt;
+            ActiveCharacter.systemPrompt = prompt;
         }
 #endif
 
         private string ValidateResponse(string response)
         {
-            if (string.IsNullOrEmpty(response) || response.Length < 10)
+            if (string.IsNullOrEmpty(response))
+                return GetFallbackResponse();
+
+            response = StripScriptArtifacts(response);
+
+            if (response.Length < 8)
                 return GetFallbackResponse();
 
             if (response.Length > 500)
@@ -185,12 +186,44 @@ namespace LastDay.Dialogue
                     response = response.Substring(0, cutoff + 1);
             }
 
-            string[] forbidden = { "I'm an AI", "language model", "I cannot", "As an AI" };
+            string[] forbidden = { "I'm an AI", "language model", "As an AI", "I am an AI", "as a language" };
             foreach (var pattern in forbidden)
             {
                 if (response.Contains(pattern, System.StringComparison.OrdinalIgnoreCase))
                     return GetFallbackResponse();
             }
+
+            return response.Trim();
+        }
+
+        /// <summary>
+        /// Strips artifacts that appear when the LLM writes dialogue like a script.
+        /// Removes: [Martha]: prefix, [Robert]: lines, [MEMORY CONTEXT] blocks, stage directions.
+        /// </summary>
+        private string StripScriptArtifacts(string response)
+        {
+            // Remove any leading "Martha:" or "[Martha]:" label
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"^\s*\[?Martha\]?\s*:", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Remove any leading "David:" or "[David]:" label
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"^\s*\[?David\]?\s*:", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Cut everything from the first [Robert]: or Robert: line onward
+            int robertIdx = System.Text.RegularExpressions.Regex.Match(
+                response, @"\[?Robert\]?\s*:", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Index;
+            if (robertIdx > 0)
+                response = response.Substring(0, robertIdx);
+
+            // Remove [MEMORY CONTEXT] blocks and everything after
+            int memCtxIdx = response.IndexOf("[MEMORY CONTEXT", System.StringComparison.OrdinalIgnoreCase);
+            if (memCtxIdx >= 0)
+                response = response.Substring(0, memCtxIdx);
+
+            // Remove standalone stage directions like [sighs] or *sighs* that leaked out
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"\[[^\]]{0,40}\]", "");
 
             return response.Trim();
         }
