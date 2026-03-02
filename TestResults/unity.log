@@ -1,0 +1,56 @@
+Unity Editor version:    2022.3.62f3 (96770f904ca7)
+Branch:                  2022.3/respin/2022.3.62f2-4af31df585-v2
+Build type:              Release
+Batch mode:              YES
+macOS version:           Version 26.2 (Build 25C56)
+Darwin version:          25.2.0
+Architecture:            arm64
+Running under Rosetta:   NO
+Available memory:        32768 MB
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-stephone" at "2026-03-02T05:23:43.161739Z"
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 46193, path: "/Applications/Unity Hub.app/Contents/Frameworks/UnityLicensingClient_V1.app/Contents/MacOS/Unity.Licensing.Client")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.17.4+4293ba1
+  Session Id:              7241fb48fd5c47378f872a3552305b98
+  Correlation Id:          0234d4b47405744a8d7530f02493ad5c
+  External correlation Id: 2183249509800754496
+  Machine Id:              4vN0ej26KZjBKHpgk0/wg6AVyjE=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-stephone" (connect: 0.00s, validation: 0.01s, handshake: 0.28s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-stephone-notifications" at "2026-03-02T05:23:43.456047Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully updated license
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Serial number assigned to: "20067545858207-UnityPersXXXX"
+Pro License: NO
+[Licensing::Client] Successfully resolved entitlement details
+Launching external process: /Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/Resources/PackageManager/Server/UnityPackageManager
+
+COMMAND LINE ARGUMENTS:
+/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/MacOS/Unity
+-batchmode
+-nographics
+-projectPath
+/Users/stephone/Documents/LastDay
+-runTests
+-testPlatform
+PlayMode
+-testResults
+/Users/stephone/Documents/LastDay/TestResults/results.xml
+-logFile
+/Users/stephone/Documents/LastDay/TestResults/unity.log
+-quit
+Successfully changed project path to: /Users/stephone/Documents/LastDay
+/Users/stephone/Documents/LastDay
+It looks like another Unity instance is running with this project open.
+
+Multiple Unity instances cannot open the same project.
+
+Project: /Users/stephone/Documents/LastDay
+Fatal Error! It looks like another Unity instance is running with this project open.
+
+Multiple Unity instances cannot open the same project.
+
+Project: /Users/stephone/Documents/LastDay
+[Package Manager] Server::Kill -- Server was shutdown
