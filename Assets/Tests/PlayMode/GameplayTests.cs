@@ -1037,9 +1037,9 @@ namespace LastDay.Tests
             if (System.IO.File.Exists(modelPath))
                 System.IO.File.Delete(modelPath);
 
-            var dl         = CreateModelDownloader();
-            bool errorFired = false;
-            dl.OnError += _ => errorFired = true;
+            var dl = CreateModelDownloader();
+            string capturedError = null;
+            dl.OnError += err => capturedError = err;
 
             // Don't actually download (no network in test). The download will fail quickly.
             // We just verify that a null/failure result comes back and IsModelReady stays false.
@@ -1055,11 +1055,14 @@ namespace LastDay.Tests
 
             if (task.IsCompleted)
             {
-                // If the download "completed" (failed fast), result should be null
                 if (task.Result == null)
+                {
                     Assert.IsFalse(dl.IsModelReady, "IsModelReady must remain false on download failure");
+                    if (capturedError != null)
+                        StringAssert.IsMatch(".+", capturedError, "OnError should fire with a non-empty message");
+                }
             }
-            // If still running after 2s, that's acceptable — just verify state is consistent
+            // Invariant: cannot be Ready without a ModelPath
             Assert.IsFalse(dl.IsModelReady && string.IsNullOrEmpty(dl.ModelPath),
                 "Cannot be Ready with an empty ModelPath");
 
