@@ -9,7 +9,7 @@ namespace LastDay.Interaction
     /// Handles gaze timer, highlight, and event publishing.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
-    public class InteractableObject2D : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+    public class InteractableObject2D : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Header("Object Identity")]
         [SerializeField] private string objectId;
@@ -92,16 +92,11 @@ namespace LastDay.Interaction
                 prompt.Hide();
         }
 
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (GameStateMachine.Instance != null && !GameStateMachine.Instance.CanInteract) return;
-
-            if (clickSound != null)
-                AudioSource.PlayClipAtPoint(clickSound, transform.position, 0.7f);
-
-            OnInteract();
-        }
-
+        /// <summary>
+        /// Called by ClickToMoveHandler (via Physics2D raycast) after the player
+        /// walks up to this object. Do not call from a pointer event — that would
+        /// fire twice on the same click alongside ClickToMoveHandler.
+        /// </summary>
         protected virtual void OnGazeComplete()
         {
             hasTriggeredGaze = true;
@@ -119,6 +114,9 @@ namespace LastDay.Interaction
 
         public virtual void OnInteract()
         {
+            if (clickSound != null)
+                AudioSource.PlayClipAtPoint(clickSound, transform.position, 0.7f);
+
             if (EventManager.Instance != null)
             {
                 EventManager.Instance.PublishEvent(new GameEvent(
