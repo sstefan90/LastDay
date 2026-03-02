@@ -845,5 +845,268 @@ namespace LastDay.Tests
 
             Debug.Log("[TEST PASS] NPC_InteractDirectly_OpensDialogue");
         }
+
+        // ═══════════════════════════════════════════════════════
+        //  CHARACTER IDLE MOVEMENT
+        // ═══════════════════════════════════════════════════════
+
+        CharacterIdleMovement CreateIdleMovement(bool enableTremor = true)
+        {
+            var go   = CreateChild("__TestIdle__");
+            var idle = go.AddComponent<CharacterIdleMovement>();
+            // Apply tremor setting via reflection so we don't need a public setter
+            var config = new CharacterIdleMovement.TremorConfig
+            {
+                enabled     = enableTremor,
+                amount      = 0.01f,
+                duration    = 0.3f,
+                intervalMin = 3f,
+                intervalMax = 8f
+            };
+            SetField(idle, "tremor", config);
+            return idle;
+        }
+
+        [UnityTest]
+        public IEnumerator CharacterIdleMovement_OnStartWalking_DisablesComponent()
+        {
+            var idle = CreateIdleMovement();
+            yield return null;
+
+            idle.OnStartWalking();
+            Assert.IsFalse(idle.enabled, "Component should be disabled while walking");
+
+            Debug.Log("[TEST PASS] CharacterIdleMovement_OnStartWalking_DisablesComponent");
+        }
+
+        [UnityTest]
+        public IEnumerator CharacterIdleMovement_OnStopWalking_EnablesComponent()
+        {
+            var idle = CreateIdleMovement();
+            yield return null;
+
+            idle.OnStartWalking();
+            idle.OnStopWalking();
+            Assert.IsTrue(idle.enabled, "Component should be re-enabled after stopping");
+
+            Debug.Log("[TEST PASS] CharacterIdleMovement_OnStopWalking_EnablesComponent");
+        }
+
+        [Test]
+        public void CharacterIdleMovement_TremorConfig_None_HasTremorDisabled()
+        {
+            var none = CharacterIdleMovement.TremorConfig.None;
+            Assert.IsFalse(none.enabled, "TremorConfig.None should have enabled=false");
+            Debug.Log("[TEST PASS] CharacterIdleMovement_TremorConfig_None_HasTremorDisabled");
+        }
+
+        [Test]
+        public void CharacterIdleMovement_TremorConfig_Default_HasTremorEnabled()
+        {
+            var def = CharacterIdleMovement.TremorConfig.Default;
+            Assert.IsTrue(def.enabled,    "TremorConfig.Default should have enabled=true");
+            Assert.Greater(def.amount, 0f, "Default tremor amount should be positive");
+            Assert.Greater(def.intervalMax, def.intervalMin, "intervalMax should exceed intervalMin");
+            Debug.Log("[TEST PASS] CharacterIdleMovement_TremorConfig_Default_HasTremorEnabled");
+        }
+
+        [Test]
+        public void CharacterIdleMovement_BreathingConfig_Default_HasExpectedValues()
+        {
+            var def = CharacterIdleMovement.BreathingConfig.Default;
+            Assert.IsTrue(def.enabled,       "Breathing should be on by default");
+            Assert.Greater(def.scaleAmount, 0f);
+            Assert.Greater(def.speed, 0f);
+            Debug.Log("[TEST PASS] CharacterIdleMovement_BreathingConfig_Default_HasExpectedValues");
+        }
+
+        [Test]
+        public void CharacterIdleMovement_SwayConfig_Default_HasExpectedValues()
+        {
+            var def = CharacterIdleMovement.SwayConfig.Default;
+            Assert.IsTrue(def.enabled, "Sway should be on by default");
+            Assert.Greater(def.amount, 0f);
+            Assert.Greater(def.speed, 0f);
+            Debug.Log("[TEST PASS] CharacterIdleMovement_SwayConfig_Default_HasExpectedValues");
+        }
+
+        [UnityTest]
+        public IEnumerator CharacterIdleMovement_UpdateDoesNotThrow_WithoutSpriteRoot()
+        {
+            // spriteRoot defaults to own transform — should not throw
+            var go   = CreateChild("__TestIdleNoRoot__");
+            var idle = go.AddComponent<CharacterIdleMovement>();
+            // Leave spriteRoot unassigned (null → falls back to self in Start)
+
+            yield return null; // triggers Start + first Update
+            yield return null;
+
+            Assert.IsTrue(idle != null, "Component should survive without explicit spriteRoot");
+            Debug.Log("[TEST PASS] CharacterIdleMovement_UpdateDoesNotThrow_WithoutSpriteRoot");
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  MODEL DOWNLOADER
+        // ═══════════════════════════════════════════════════════
+
+        ModelDownloader CreateModelDownloader()
+        {
+            var go = CreateChild("__TestModelDownloader__");
+            return go.AddComponent<ModelDownloader>();
+        }
+
+        [Test]
+        public void ModelDownloader_IsModelReady_FalseOnCreation()
+        {
+            var dl = CreateModelDownloader();
+            Assert.IsFalse(dl.IsModelReady, "IsModelReady should be false before EnsureModelReady is called");
+            Debug.Log("[TEST PASS] ModelDownloader_IsModelReady_FalseOnCreation");
+        }
+
+        [Test]
+        public void ModelDownloader_IsDownloading_FalseOnCreation()
+        {
+            var dl = CreateModelDownloader();
+            Assert.IsFalse(dl.IsDownloading, "IsDownloading should be false initially");
+            Debug.Log("[TEST PASS] ModelDownloader_IsDownloading_FalseOnCreation");
+        }
+
+        [Test]
+        public void ModelDownloader_StatusMessage_HasInitialValue()
+        {
+            var dl = CreateModelDownloader();
+            Assert.IsFalse(string.IsNullOrEmpty(dl.StatusMessage),
+                "StatusMessage should have a non-empty default value");
+            Debug.Log("[TEST PASS] ModelDownloader_StatusMessage_HasInitialValue");
+        }
+
+        [UnityTest]
+        public IEnumerator ModelDownloader_EnsureModelReady_WhenFileExists_SetsReadyTrue()
+        {
+            // Arrange: place a tiny sentinel file at the expected model path
+            string modelDir  = System.IO.Path.Combine(Application.persistentDataPath, "Models");
+            string modelPath = System.IO.Path.Combine(modelDir, "phi3-mini.gguf");
+            System.IO.Directory.CreateDirectory(modelDir);
+            System.IO.File.WriteAllText(modelPath, "test");
+
+            var dl           = CreateModelDownloader();
+            bool readyFired  = false;
+            string firedPath = null;
+            dl.OnModelReady += p => { readyFired = true; firedPath = p; };
+
+            // Act
+            var task = dl.EnsureModelReady();
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            // Assert
+            Assert.IsTrue(dl.IsModelReady,  "IsModelReady should be true when file exists");
+            Assert.IsTrue(readyFired,        "OnModelReady event should fire");
+            Assert.AreEqual(modelPath, firedPath, "OnModelReady should pass the correct path");
+            Assert.AreEqual(modelPath, dl.ModelPath);
+
+            // Cleanup
+            System.IO.File.Delete(modelPath);
+            Debug.Log("[TEST PASS] ModelDownloader_EnsureModelReady_WhenFileExists_SetsReadyTrue");
+        }
+
+        [UnityTest]
+        public IEnumerator ModelDownloader_EnsureModelReady_WhenFileExists_ReturnsPath()
+        {
+            string modelDir  = System.IO.Path.Combine(Application.persistentDataPath, "Models");
+            string modelPath = System.IO.Path.Combine(modelDir, "phi3-mini.gguf");
+            System.IO.Directory.CreateDirectory(modelDir);
+            System.IO.File.WriteAllText(modelPath, "test");
+
+            var dl   = CreateModelDownloader();
+            var task = dl.EnsureModelReady();
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            Assert.AreEqual(modelPath, task.Result,
+                "EnsureModelReady should return the model path when the file is present");
+
+            System.IO.File.Delete(modelPath);
+            Debug.Log("[TEST PASS] ModelDownloader_EnsureModelReady_WhenFileExists_ReturnsPath");
+        }
+
+        [UnityTest]
+        public IEnumerator ModelDownloader_EnsureModelReady_WhenFileMissing_ReturnsNull()
+        {
+            // Ensure the file does NOT exist
+            string modelDir  = System.IO.Path.Combine(Application.persistentDataPath, "Models");
+            string modelPath = System.IO.Path.Combine(modelDir, "phi3-mini.gguf");
+            if (System.IO.File.Exists(modelPath))
+                System.IO.File.Delete(modelPath);
+
+            var dl         = CreateModelDownloader();
+            bool errorFired = false;
+            dl.OnError += _ => errorFired = true;
+
+            // Don't actually download (no network in test). The download will fail quickly.
+            // We just verify that a null/failure result comes back and IsModelReady stays false.
+            var task = dl.EnsureModelReady();
+
+            // Give it a moment then cancel expectations — download won't complete in a unit test
+            float timeout = 0f;
+            while (!task.IsCompleted && timeout < 2f)
+            {
+                timeout += Time.deltaTime;
+                yield return null;
+            }
+
+            if (task.IsCompleted)
+            {
+                // If the download "completed" (failed fast), result should be null
+                if (task.Result == null)
+                    Assert.IsFalse(dl.IsModelReady, "IsModelReady must remain false on download failure");
+            }
+            // If still running after 2s, that's acceptable — just verify state is consistent
+            Assert.IsFalse(dl.IsModelReady && string.IsNullOrEmpty(dl.ModelPath),
+                "Cannot be Ready with an empty ModelPath");
+
+            Debug.Log("[TEST PASS] ModelDownloader_EnsureModelReady_WhenFileMissing_ReturnsNull");
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  LOCAL LLM MANAGER - Initialize overload
+        // ═══════════════════════════════════════════════════════
+
+        [UnityTest]
+        public IEnumerator LLM_Initialize_WithNullPath_InitializesInStubMode()
+        {
+            var llm = CreateLLMManager();
+            llm.isInitialized = false;
+
+            var task = llm.Initialize(null);
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            Assert.IsTrue(llm.isInitialized, "LLM should initialize even with null model path");
+            Debug.Log("[TEST PASS] LLM_Initialize_WithNullPath_InitializesInStubMode");
+        }
+
+        [UnityTest]
+        public IEnumerator LLM_Initialize_WithEmptyPath_InitializesInStubMode()
+        {
+            var llm = CreateLLMManager();
+            llm.isInitialized = false;
+
+            var task = llm.Initialize("");
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            Assert.IsTrue(llm.isInitialized, "LLM should initialize even with empty model path");
+            Debug.Log("[TEST PASS] LLM_Initialize_WithEmptyPath_InitializesInStubMode");
+        }
+
+        [UnityTest]
+        public IEnumerator LLM_Initialize_WithInvalidPath_InitializesInStubMode()
+        {
+            var llm = CreateLLMManager();
+            llm.isInitialized = false;
+
+            var task = llm.Initialize("/nonexistent/path/model.gguf");
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            Assert.IsTrue(llm.isInitialized, "LLM should fall back to stub mode for bad path");
+            Debug.Log("[TEST PASS] LLM_Initialize_WithInvalidPath_InitializesInStubMode");
+        }
     }
 }

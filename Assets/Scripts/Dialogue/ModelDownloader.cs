@@ -97,7 +97,7 @@ namespace LastDay.Dialogue
             while (!op.isDone)
             {
                 float p = request.downloadProgress;
-                long  downloaded = request.downloadedBytes;
+                ulong downloaded = request.downloadedBytes;
                 string msg = $"Downloading model… {FormatBytes(downloaded)} / ~2.4 GB";
                 UpdateStatus(p, msg);
                 await Task.Yield();
@@ -144,11 +144,11 @@ namespace LastDay.Dialogue
             OnProgress?.Invoke(progress, message);
         }
 
-        private static string FormatBytes(long bytes)
+        private static string FormatBytes(ulong bytes)
         {
-            if (bytes < 1024)         return $"{bytes} B";
-            if (bytes < 1024 * 1024)  return $"{bytes / 1024f:F1} KB";
-            return                           $"{bytes / (1024f * 1024f):F0} MB";
+            if (bytes < 1024)               return $"{bytes} B";
+            if (bytes < 1024ul * 1024ul)    return $"{bytes / 1024f:F1} KB";
+            return                                 $"{bytes / (1024f * 1024f):F0} MB";
         }
     }
 }
