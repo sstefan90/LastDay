@@ -1,0 +1,26 @@
+{
+    "name": "LastDay.Editor",
+    "rootNamespace": "LastDay.Editor",
+    "references": [
+        "LastDay.Runtime",
+        "Unity.TextMeshPro",
+        "undream.llmunity.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "ai.undream.llm",
+            "expression": "",
+            "define": "LLMUNITY_AVAILABLE"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -1,0 +1,96 @@
+# =====================
+# Unity Generated Files
+# =====================
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+Asset StoreTools/
+
+# Visual Studio / Rider
+.vs/
+.vscode/
+*.csproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity3D generated meta files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Crashlytics
+crashlytics-build.properties
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# =====================
+# Python / Tools
+# =====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+
+# =====================
+# LLM Model Files
+# =====================
+*.gguf
+*.bin
+Assets/StreamingAssets/Models/*.gguf
+Assets/StreamingAssets/Models/*.bin
+
+# =====================
+# Debug Exports
+# =====================
+DebugExports/
+
+# =====================
+# Generated Assets (large files)
+# =====================
+Tools/generated_assets/
+
+# =====================
+# Local LLM / Large Binaries
+# =====================
+Assets/StreamingAssets/LlamaLib*/

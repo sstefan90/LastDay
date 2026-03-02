@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c247c7b3acb51426ea61cfb91acd65e9, type: 3}
+  m_Name: Memory_Guitar
+  m_EditorClassIdentifier: 
+  memoryId: guitar
+  objectName: Guitar
+  objectSprite: {fileID: 21300000, guid: bbb245fb0a2d841df90286b4edb786f8, type: 3}
+  glowSprite: {fileID: 21300000, guid: 19ff9d2db23c748f180e5c1ea218991e, type: 3}
+  shortDescription: "Robert's acoustic guitar, dusty now. He hasn't played in months
+    \u2014 his fingers won't cooperate."
+  fullStory: Sunday mornings were for music. The whole house would fill with sound.
+  marthaContext: Martha misses the music most. She'd hum along from the kitchen.
+    The silence in the house now is the loudest thing she's ever heard.
+  davidContext: David and Robert used to jam together. David on harmonica, Robert
+    on guitar. They were terrible, but it didn't matter.

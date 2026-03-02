@@ -1,0 +1,23 @@
+{
+    "name": "LastDay.Runtime",
+    "rootNamespace": "LastDay",
+    "references": [
+        "Unity.TextMeshPro",
+        "undream.llmunity.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "ai.undream.llm",
+            "expression": "",
+            "define": "LLMUNITY_AVAILABLE"
+        }
+    ],
+    "noEngineReferences": false
+}
