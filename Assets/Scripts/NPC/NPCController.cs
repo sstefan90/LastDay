@@ -23,7 +23,7 @@ namespace LastDay.NPC
         [Header("Components")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private CharacterAnimator characterAnimator;
-        [SerializeField] private SubtleIdleMovement idleMovement;
+        [SerializeField] private CharacterIdleMovement idleMovement;
 
         public string NpcId => npcId;
         public string DisplayName => displayName;

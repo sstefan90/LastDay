@@ -17,7 +17,7 @@ namespace LastDay.Player
 
         [Header("Components")]
         public CharacterAnimator characterAnimator;
-        public SubtleIdleMovement idleMovement;
+        public CharacterIdleMovement idleMovement;
 
         [Header("Pathfinding")]
         [SerializeField] private SimplePathfinder pathfinder;
