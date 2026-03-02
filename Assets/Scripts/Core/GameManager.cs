@@ -9,6 +9,7 @@ namespace LastDay.Core
     {
         [Header("References")]
         [SerializeField] private LocalLLMManager llmManager;
+        [SerializeField] private ModelDownloader modelDownloader;
 
         [Header("Game State")]
         public bool isGameStarted;
@@ -25,12 +26,34 @@ namespace LastDay.Core
 
         private async void InitializeGame()
         {
+            // ── Step 1: ensure the model file is present ──────────────────
+            if (modelDownloader == null)
+                modelDownloader = FindObjectOfType<ModelDownloader>();
+
+            if (modelDownloader != null)
+            {
+                string modelPath = await modelDownloader.EnsureModelReady();
+
+                if (string.IsNullOrEmpty(modelPath))
+                {
+                    Debug.LogError("[GameManager] Model download failed. Dialogue will use fallback.");
+                }
+                else
+                {
+                    Debug.Log($"[GameManager] Model ready at: {modelPath}");
+                }
+            }
+
+            // ── Step 2: initialize LLM ────────────────────────────────────
             if (llmManager == null)
                 llmManager = FindObjectOfType<LocalLLMManager>();
 
             if (llmManager != null)
             {
-                await llmManager.Initialize();
+                string path = modelDownloader != null && modelDownloader.IsModelReady
+                    ? modelDownloader.ModelPath
+                    : null;
+                await llmManager.Initialize(path);
             }
             else
             {

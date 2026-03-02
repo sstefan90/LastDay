@@ -496,6 +496,13 @@ public class SceneSetupEditor : EditorWindow
         var mcGo = CreateChild(root, "MemoryContext");
         mcGo.AddComponent<MemoryContext>();
 
+        var dlGo = CreateChild(root, "ModelDownloader");
+        var downloader = dlGo.AddComponent<ModelDownloader>();
+
+        // Wire ModelDownloader → GameManager
+        var gm = gmGo.GetComponent<GameManager>();
+        SetPrivateField(gm, "modelDownloader", downloader);
+
         Debug.Log("[SceneSetup] Managers hierarchy created.");
         return root;
     }
@@ -589,9 +596,8 @@ public class SceneSetupEditor : EditorWindow
         var charAnim = robert.AddComponent<CharacterAnimator>();
         SetPrivateField(charAnim, "spriteRenderer", sr);
 
-        var idleMove = robert.AddComponent<SubtleIdleMovement>();
-        SetPrivateField(idleMove, "characterSprite", spriteChild.transform);
-        SetPrivateField(idleMove, "enableTremor", true);
+        var idleMove = robert.AddComponent<CharacterIdleMovement>();
+        SetPrivateField(idleMove, "spriteRoot", spriteChild.transform);
 
         var controller = robert.AddComponent<PlayerController2D>();
         SetPrivateField(controller, "pathfinder", pathfinder);
@@ -693,9 +699,18 @@ public class SceneSetupEditor : EditorWindow
         var charAnim = martha.AddComponent<CharacterAnimator>();
         SetPrivateField(charAnim, "spriteRenderer", sr);
 
-        var idleMove = martha.AddComponent<SubtleIdleMovement>();
-        SetPrivateField(idleMove, "characterSprite", spriteChild.transform);
-        SetPrivateField(idleMove, "enableTremor", false);
+        var idleMove = martha.AddComponent<CharacterIdleMovement>();
+        SetPrivateField(idleMove, "spriteRoot", spriteChild.transform);
+        // Disable tremor for NPC — Martha doesn't have ALS
+        var tremorConfig = new CharacterIdleMovement.TremorConfig
+        {
+            enabled     = false,
+            amount      = 0f,
+            duration    = 0.3f,
+            intervalMin = 5f,
+            intervalMax = 10f
+        };
+        SetPrivateField(idleMove, "tremor", tremorConfig);
 
         var npcCtrl = martha.AddComponent<NPCController>();
         SetPrivateField(npcCtrl, "npcId", "martha");

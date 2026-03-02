@@ -53,20 +53,31 @@ namespace LastDay.Dialogue
             Instance = this;
         }
 
-        public async Task Initialize()
+        /// <summary>
+        /// Optionally supply the model path returned by ModelDownloader.
+        /// If null, the LLM component's already-configured model path is used.
+        /// </summary>
+        public async Task Initialize(string modelPath = null)
         {
 #if LLMUNITY_AVAILABLE
             if (useLLM && marthaCharacter != null)
             {
+                // Apply runtime model path if provided (from ModelDownloader)
+                if (!string.IsNullOrEmpty(modelPath) && marthaCharacter.llm != null)
+                {
+                    marthaCharacter.llm.model = modelPath;
+                    Debug.Log($"[LLM] Model path set to: {modelPath}");
+                }
+
                 marthaCharacter.systemPrompt = CharacterPrompts.GetMarthaPrompt(new List<string>());
-                marthaCharacter.numPredict = maxTokens;
-                marthaCharacter.temperature = temperature;
+                marthaCharacter.numPredict   = maxTokens;
+                marthaCharacter.temperature  = temperature;
 
                 if (davidCharacter != null)
                 {
                     davidCharacter.systemPrompt = CharacterPrompts.GetDavidPrompt(new List<string>());
-                    davidCharacter.numPredict = maxTokens;
-                    davidCharacter.temperature = temperature;
+                    davidCharacter.numPredict   = maxTokens;
+                    davidCharacter.temperature  = temperature;
                 }
 
                 try
