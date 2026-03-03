@@ -35,7 +35,7 @@ namespace LastDay.Interaction
         public string DisplayName => displayName;
         public string MemoryId => memoryId;
 
-        void Start()
+        protected virtual void Start()
         {
             if (highlightRenderer != null)
                 highlightRenderer.enabled = false;

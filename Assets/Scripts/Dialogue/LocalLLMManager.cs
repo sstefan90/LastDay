@@ -168,13 +168,13 @@ namespace LastDay.Dialogue
 #if LLMUNITY_AVAILABLE
         private void UpdatePromptWithMemories(List<string> memories)
         {
-            if (memories == null || memories.Count == 0) return;
+            int activeQuestion   = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion  : 0;
+            bool shutdownMode    = EventManager.Instance != null && EventManager.Instance.marthaShutdownMode;
+            bool guitarBreakdown = EventManager.Instance != null && EventManager.Instance.marthaGuitarBreakdown;
 
-            // CharacterPrompts already weaves memories into the persona section —
-            // no separate [MEMORY CONTEXT] block that could leak into responses.
             string prompt = currentCharacter == "david"
-                ? CharacterPrompts.GetDavidPrompt(memories)
-                : CharacterPrompts.GetMarthaPrompt(memories);
+                ? CharacterPrompts.GetDavidPrompt(memories ?? new List<string>(), activeQuestion)
+                : CharacterPrompts.GetMarthaPrompt(memories ?? new List<string>(), activeQuestion, shutdownMode, guitarBreakdown);
 
             ActiveCharacter.systemPrompt = prompt;
         }
@@ -263,27 +263,51 @@ namespace LastDay.Dialogue
 
         private string GetStubResponse(string input, string character)
         {
-            string lowerInput = input.ToLower();
+            string lowerInput    = input.ToLower();
+            int activeQuestion   = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion  : 0;
+            bool shutdownMode    = EventManager.Instance != null && EventManager.Instance.marthaShutdownMode;
+            bool guitarBreakdown = EventManager.Instance != null && EventManager.Instance.marthaGuitarBreakdown;
 
             if (character == "david")
             {
+                if (activeQuestion == 1 && (lowerInput.Contains("rope") || lowerInput.Contains("arthur") || lowerInput.Contains("expedition") || lowerInput.Contains("k2") || lowerInput.Contains("mountain")))
+                    return "His name was Arthur. And you know what you did, Robert. I was on the radio. I heard him.";
+                if (activeQuestion == 2 && (lowerInput.Contains("money") || lowerInput.Contains("account") || lowerInput.Contains("investment")))
+                    return "Stop playing dumb. Sarah. The child support. Twenty-five years. Lily's name is Lily.";
+                if (activeQuestion == 3 && (lowerInput.Contains("guitar") || lowerInput.Contains("anniversary")))
+                    return "The guitar? I don't know, buddy. You just stopped playing one day. Whatever happened, that's between you and Martha.";
                 if (lowerInput.Contains("help") || lowerInput.Contains("advice"))
-                    return "Look buddy, I can't tell you what to do. But I know you - you've never been one to shy away from a tough call.";
-                if (lowerInput.Contains("scared") || lowerInput.Contains("afraid"))
-                    return "Yeah. I'd be scared too. But you've faced worse, remember? That time on the mountain?";
-                return "I'm here, pal. Whatever you need to talk about.";
+                    return "I can't tell you what to do. But I know you — you've never been one to run from a hard thing. Not until now.";
+                return "I'm here, pal. Whatever you need to say.";
             }
 
-            if (lowerInput.Contains("photo") || lowerInput.Contains("wedding"))
-                return "Oh, that photo... We were so young. You wore your father's tie, remember? It was too short. *soft laugh*";
-            if (lowerInput.Contains("guitar") || lowerInput.Contains("music"))
-                return "I miss hearing you play on Sunday mornings. The house felt so alive with music.";
-            if (lowerInput.Contains("love"))
-                return "You know I do, dear. Forty-seven years and counting. Every single day.";
-            if (lowerInput.Contains("scared") || lowerInput.Contains("afraid"))
-                return "I know, love. I am too. But I'm right here. I'm not going anywhere.";
+            // Martha stubs — narrative-aware
+            if (shutdownMode)
+                return "I kept the pieces, Robert. In a box in the closet. Thirty-seven years.";
 
-            return "I'm here, dear. Whatever you need to say, I'm listening.";
+            if (guitarBreakdown)
+                return "You came home drunk. You had that look. I sat on the floor until morning, picking up pieces of the neck.";
+
+            if (activeQuestion == 1 && ContainsAny(lowerInput, "rope", "expedition", "mountain", "k2"))
+                return "He tried so hard, Robert. The storm was impossible. He fought to hold on. He couldn't save them. That's the truth of it.";
+
+            if (activeQuestion == 2 && ContainsAny(lowerInput, "money", "account", "investment"))
+                return "Bad investments, that's all. It was always just the two of us. You know that. We never needed anything more.";
+
+            if (activeQuestion == 3 && ContainsAny(lowerInput, "guitar", "anniversary", "song"))
+                return "It was our tenth anniversary. You stayed up all night writing it. The kitchen at sunrise, still in your dress shirt. I've never forgotten a single note.";
+
+            if (ContainsAny(lowerInput, "photo", "wedding"))
+                return "Your father's tie was too short. You were so nervous you didn't even notice. I loved you so much in that moment.";
+
+            return "I'm here, love. Whatever you need to say.";
+        }
+
+        private static bool ContainsAny(string input, params string[] keywords)
+        {
+            foreach (string kw in keywords)
+                if (input.Contains(kw)) return true;
+            return false;
         }
     }
 }
