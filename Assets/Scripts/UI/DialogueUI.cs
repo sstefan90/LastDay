@@ -92,8 +92,17 @@ namespace LastDay.UI
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
 
-            // Use story-aware opening line from CharacterPrompts
-            string greeting = CharacterPrompts.GetObjectOpeningLine(memoryId, "martha");
+            int activeQuestion = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion : 0;
+
+            // Guitar monologue: show the crack as a visual clue when Q3 is the active mystery
+            if (memoryId == "guitar" && activeQuestion == 3
+                && EventManager.Instance != null
+                && !EventManager.Instance.marthaGuitarBreakdown)
+            {
+                ShowMonologue("There's a massive crack down the back of the neck. It's broken.");
+            }
+
+            string greeting = CharacterPrompts.GetObjectOpeningLine(memoryId, "martha", activeQuestion);
             ShowResponse(greeting);
         }
 
@@ -137,7 +146,11 @@ namespace LastDay.UI
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.PhoneCall);
 
-            ShowResponse("Hey, old friend. Thought I'd give you a call today. How are you holding up?");
+            int activeQuestion = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion : 0;
+            string greeting = activeQuestion > 0
+                ? CharacterPrompts.GetObjectOpeningLine("phone", "david", activeQuestion)
+                : "Hey, old friend. Thought I'd give you a call today. How are you holding up?";
+            ShowResponse(greeting);
         }
 
         /// <summary>
@@ -188,8 +201,19 @@ namespace LastDay.UI
             if (characterNameText != null)
                 characterNameText.text = characterName;
 
-            if (characterPortrait != null && portrait != null)
-                characterPortrait.sprite = portrait;
+            if (characterPortrait != null)
+            {
+                if (portrait != null)
+                {
+                    characterPortrait.sprite = portrait;
+                    characterPortrait.color = Color.white;
+                }
+                else
+                {
+                    characterPortrait.sprite = null;
+                    characterPortrait.color = Color.clear;
+                }
+            }
 
             if (dialogueText != null)
                 dialogueText.text = "";
@@ -228,6 +252,23 @@ namespace LastDay.UI
 
             if (thinkingIndicator != null)
                 thinkingIndicator.SetActive(true);
+
+            // Guitar breakdown detection — if Q3 is active and player mentions
+            // the physical damage, set the breakdown flag before generating response
+            if (EventManager.Instance != null
+                && EventManager.Instance.activeSecurityQuestion == 3
+                && !EventManager.Instance.marthaGuitarBreakdown
+                && currentCharacter == "martha")
+            {
+                string lower = playerText.ToLower();
+                if (lower.Contains("crack") || lower.Contains("smash") || lower.Contains("broken")
+                    || lower.Contains("broke") || lower.Contains("shatter") || lower.Contains("damaged")
+                    || lower.Contains("neck") || lower.Contains("why is it"))
+                {
+                    EventManager.Instance.marthaGuitarBreakdown = true;
+                    GameEvents.MarthaBreakdownReady();
+                }
+            }
 
             string response;
             if (LocalLLMManager.Instance != null)

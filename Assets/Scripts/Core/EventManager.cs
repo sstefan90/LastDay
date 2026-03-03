@@ -29,9 +29,12 @@ namespace LastDay.Core
         public bool documentUnlocked;
         public bool phoneHasRung;
 
-        [Header("Settings")]
-        [SerializeField] private int memoriesRequiredForDocument = 2;
-        [SerializeField] private int memoriesRequiredForPhone = 2;
+        [Header("Security Questions")]
+        // 0 = no question active yet, 1-3 = which mystery the player is currently on
+        public int activeSecurityQuestion = 0;
+        public bool marthaShutdownMode = false;
+        public bool marthaGuitarBreakdown = false;
+
 
         private List<GameEvent> eventHistory = new List<GameEvent>();
 
@@ -98,9 +101,6 @@ namespace LastDay.Core
                 triggeredMemories.Add(evt.memoryId);
                 GameEvents.TriggerMemory(evt.memoryId);
                 Debug.Log($"[Event] Memory triggered: {evt.memoryId} (total: {triggeredMemories.Count})");
-
-                CheckDocumentUnlock();
-                CheckPhoneTrigger();
             }
 
             GameEvents.CompleteGaze(evt.objectId);
@@ -111,23 +111,47 @@ namespace LastDay.Core
             GameEvents.InteractWithObject(evt.objectId);
         }
 
-        private void CheckDocumentUnlock()
+        // Called by ComputerInteraction when all three security questions are answered.
+        public void OnAllSecurityQuestionsAnswered()
         {
-            if (!documentUnlocked && triggeredMemories.Count >= memoriesRequiredForDocument)
-            {
-                documentUnlocked = true;
-                GameEvents.UnlockDocument();
-                Debug.Log("[Event] Document unlocked!");
-            }
+            documentUnlocked = true;
+            marthaShutdownMode = true;
+            GameEvents.UnlockDocument();
+            GameEvents.AllQuestionsAnswered();
+            Debug.Log("[Event] All security questions answered — document unlocked, Martha shutdown.");
+        }
+
+        // Called by ComputerInteraction when a question is first SHOWN (not when answered).
+        // Sets activeSecurityQuestion so Martha/David LLM prompts shift immediately, and rings
+        // the phone as soon as Q1 is displayed — the player needs David to find the truth.
+        public void OnSecurityQuestionStarted(int questionIndex)
+        {
+            int newActive = questionIndex + 1;
+            if (newActive <= activeSecurityQuestion) return; // already at or past this question
+
+            activeSecurityQuestion = newActive;
+            Debug.Log($"[Event] Security question {questionIndex} started. Active question now: {activeSecurityQuestion}");
+
+            CheckPhoneTrigger();
+
+            if (activeSecurityQuestion == 3)
+                GameEvents.MarthaBreakdownReady();
+        }
+
+        // Called by ComputerInteraction each time a question is correctly answered.
+        public void OnSecurityQuestionAnswered(int questionIndex)
+        {
+            GameEvents.SecurityQuestionAnswered(questionIndex);
+            Debug.Log($"[Event] Security question {questionIndex} answered.");
         }
 
         private void CheckPhoneTrigger()
         {
-            if (!phoneHasRung && triggeredMemories.Count >= memoriesRequiredForPhone)
+            if (!phoneHasRung && activeSecurityQuestion >= 1)
             {
                 phoneHasRung = true;
                 GameEvents.RingPhone();
-                Debug.Log("[Event] Phone triggered!");
+                Debug.Log("[Event] Phone triggered — player needs David.");
             }
         }
 

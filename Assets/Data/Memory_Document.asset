@@ -17,9 +17,12 @@ MonoBehaviour:
   objectSprite: {fileID: 21300000, guid: 989fbf316a37340b998656b632cb787d, type: 3}
   glowSprite: {fileID: 21300000, guid: b9ecd1251fb1542239f39af529c037df, type: 3}
   shortDescription: A legal document. Medical Assistance in Dying request form.
-  fullStory: The choice that changes everything. Or the choice that acknowledges
-    nothing will change.
+    Locked behind three security questions.
+  fullStory: "Robert locked it himself. Three questions, three secrets. His past
+    self \u2014 driven by self-loathing \u2014 made sure he couldn\u2019t sign it
+    without facing what he had done."
   marthaContext: Martha found the pamphlet three months ago. She hasn't brought it
-    up. She won't. This has to be Robert's decision.
-  davidContext: David doesn't know about the document yet. When Robert tells him,
-    there will be a long silence on the phone.
+    up. She won't. This has to be Robert's decision. She doesn't know about the
+    security questions.
+  davidContext: "David knows the document exists. He lost Margaret without choices.
+    He will not take this one from Robert. But the questions must be answered first."
