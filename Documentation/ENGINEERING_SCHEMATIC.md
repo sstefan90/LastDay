@@ -1,4 +1,4 @@
-# Last Day - Complete Engineering Schematic v3 (Final)
+# Last Day - Complete Engineering Schematic v4
 
 ## Table of Contents
 1. [Game Overview](#1-game-overview)
@@ -27,28 +27,45 @@ TITLE: Last Day
 
 GENRE: 2D Point-and-Click Narrative Game
 
-PREMISE: 
-An elderly man named Robert, suffering from ALS, must decide whether 
-to sign papers for medical assistance in dying. Through conversations 
-with his wife Martha and phone calls with his best friend David, 
-players explore memories and perspectives on this deeply personal choice.
+PREMISE:
+Robert, an elderly man with ALS, is seated in his living room. His objective
+is to sign his end-of-life document on the computer — but his past self,
+driven by self-loathing, locked the document behind three security questions
+referencing his darkest secrets.
 
-CORE MECHANICS:
-- Point-and-click movement with A* pathfinding
-- AI-generated dialogue (local LLM)
-- Memory triggers via object interaction
-- Binary ending choice
+Martha (the wife) sits across from him. She is programmed to protect Robert
+from his guilt — she lies, deflects, and sanitizes their history.
+
+David (the best friend) is available via the phone. He is brutally honest
+and wants Robert to face his sins before he dies.
+
+The player must solve three mysteries by investigating objects, cross-
+referencing Martha's lies against David's truths, and typing the correct
+answers into the computer to unlock the document and face the final choice.
+
+CORE LOOP:
+1. Click Computer → see security question (the riddle)
+2. Click the relevant object → Martha gives her sanitized version
+3. Call David on the phone → he reveals the ugly truth
+4. Type the truth into the Computer → unlock the next question
+5. After all three → "Can you forgive yourself?" → Sign or Tear
+
+THREE MYSTERIES:
+  Q1 "Emergency Contact for the '98 K2 Expedition" → Answer: Arthur
+  Q2 "Beneficiary Name for Offshore Account 4014"  → Answer: Lily
+  Q3 "Date of Your Proudest Moment"                → Answer: 10th Anniversary
 
 TECHNICAL SHOWCASE:
 - Local LLM integration (Phi-3-mini via LLMUnity)
-- Context-aware AI responses based on triggered memories
+- Dynamic, state-driven NPC prompts (6 Martha personas, 4 David personas)
+- Guitar breakdown: player evidence forces LLM prompt shift mid-conversation
 - Pixel art aesthetic (Stardew Valley inspired)
 
 SCOPE:
 - 1 room
 - 2 NPCs (Martha in-room, David via phone)
-- 3-4 memory objects
-- 10-day development timeline
+- 5 interactive objects (ice_picks, wedding_photo, guitar, phone, computer)
+- 1 document object (locked until all questions answered)
 - 2-person team
 ```
 
@@ -142,46 +159,79 @@ CHARACTER ANIMATION:
 ### 2.2 Data Flow
 
 ```
-PLAYER CLICK → INTERACTION FLOW:
-════════════════════════════════
+CORE GAME LOOP — SECURITY QUESTION INVESTIGATION:
+══════════════════════════════════════════════════
+
+1. Player clicks Computer
+   │
+   ▼
+2. ComputerInteraction.OnInteract()
+   ├── Opens computerPanel, shows current question text
+   ├── EventManager.OnSecurityQuestionStarted(index)
+   │     ├── Sets activeSecurityQuestion (shifts Martha/David LLM prompts)
+   │     └── CheckPhoneTrigger() — rings phone on Q1 so player can call David
+   └── DialogueUI.ShowMonologue(hint) — internal monologue points to relevant object
+   │
+   ▼
+3. Player clicks relevant object (ice_picks / wedding_photo / guitar)
+   ├── ClickToMoveHandler → pathfind → arrive → InteractableObject2D.OnInteract()
+   ├── EventManager.PublishEvent("interact", memoryId)
+   └── DialogueUI.OpenForObject() → Martha gives her sanitized version
+   │
+   ▼
+4. Player calls David (clicks phone)
+   ├── DialogueUI.OpenForPhone()
+   ├── LocalLLMManager builds David's prompt using activeSecurityQuestion
+   └── David reveals the truth (names Arthur / Lily / admits blind spot)
+   │
+   ▼
+5. Player returns to Computer, types the answer
+   ├── ComputerInteraction.OnSubmitClicked()
+   ├── IsCorrectAnswer() validates input (case-insensitive, multiple accepted forms)
+   ├── EventManager.OnSecurityQuestionAnswered(index)
+   └── currentQuestionIndex++ → DisplayCurrentQuestion() for next mystery
+   │
+   ▼
+6. After all 3 answered:
+   ├── EventManager.OnAllSecurityQuestionsAnswered()
+   │     ├── documentUnlocked = true
+   │     ├── marthaShutdownMode = true (Martha's LLM prompt permanently shifts)
+   │     ├── GameEvents.UnlockDocument()
+   │     └── GameEvents.AllQuestionsAnswered()
+   └── ComputerInteraction.ShowFinalPrompt()
+         └── "Can you forgive yourself?" → Sign / Tear → GameManager.EndGame()
+
+
+DIALOGUE RESPONSE GENERATION:
+═════════════════════════════
+
+DialogueUI.SubmitInput()
+   │
+   ├── Guitar breakdown detection (Q3 + Martha + damage keywords)
+   │     └── Sets marthaGuitarBreakdown = true → shifts LLM prompt mid-conversation
+   │
+   ├── LocalLLMManager.GenerateResponse(playerInput, character, memories)
+   │     ├── Reads activeSecurityQuestion, shutdownMode, guitarBreakdown from EventManager
+   │     ├── Builds dynamic system prompt via CharacterPrompts.GetMarthaPrompt / GetDavidPrompt
+   │     └── Returns LLM response (or stub response in stub mode)
+   │
+   └── Response displayed with typewriter effect
+
+
+PLAYER CLICK → MOVEMENT FLOW (unchanged):
+══════════════════════════════════════════
 
 1. Player clicks on screen
-   │
    ▼
 2. ClickToMoveHandler detects click
    ├── Check: Is click on Interactable? → MoveToAndInteract()
    └── Check: Is click on Walkable area? → MoveTo()
-   │
    ▼
 3. SimplePathfinder.FindPath(start, destination)
-   │ Returns: List<Vector2> waypoints
-   │
    ▼
 4. PlayerController2D follows path
    ├── Updates CharacterAnimator (walk animation)
-   ├── Disables SubtleIdleMovement
-   └── On arrival: Re-enables idle, triggers callback
-   │
-   ▼
-5. If interacting with object:
-   ├── InteractableObject2D.OnInteract()
-   ├── EventManager.PublishEvent(memoryId)
-   └── DialogueUI.ShowDialogue()
-   │
-   ▼
-6. Player types message
-   │
-   ▼
-7. DialogueUI → LocalLLMManager
-   ├── Build context (memories, recent events)
-   ├── Select character prompt (Martha/David)
-   └── Generate response
-   │
-   ▼
-8. Response displayed with typewriter effect
-   │
-   ▼
-9. Player closes dialogue → Resume exploration
+   └── On arrival: triggers interaction callback
 ```
 
 ---
@@ -592,137 +642,130 @@ namespace LastDay.Core
 ### 4.3 EventManager.cs
 
 ```csharp
-// EventManager.cs
+// EventManager.cs — Centralized game state + security question progression
 using UnityEngine;
-using System;
 using System.Collections.Generic;
+using LastDay.Utilities;
 
 namespace LastDay.Core
 {
-    [Serializable]
-    public class GameEvent
+    [System.Serializable]
+    public struct GameEvent
     {
-        public string eventType;      // "gaze_complete", "interact", "dialogue"
+        public string eventType;   // "gaze_complete", "interact"
         public string objectId;
         public string memoryId;
         public float timestamp;
-        
-        public GameEvent(string type, string objId = "", string memId = "")
+
+        public GameEvent(string eventType, string objectId, string memoryId)
         {
-            eventType = type;
-            objectId = objId;
-            memoryId = memId;
-            timestamp = Time.time;
+            this.eventType = eventType;
+            this.objectId = objectId;
+            this.memoryId = memoryId;
+            this.timestamp = Time.time;
         }
     }
-    
-    public class EventManager : MonoBehaviour
+
+    public class EventManager : Singleton<EventManager>
     {
-        public static EventManager Instance { get; private set; }
-        
         [Header("Game Progress")]
         public List<string> triggeredMemories = new List<string>();
-        public bool hasAskedForHelp = false;
-        public bool documentUnlocked = false;
-        public bool phoneHasRung = false;
-        
-        [Header("Settings")]
-        public int memoriesRequiredForDocument = 2;
-        
-        // Recent events for AI context
-        private Queue<GameEvent> recentEvents = new Queue<GameEvent>();
-        private const int MAX_RECENT_EVENTS = 5;
-        
-        // Events
-        public static event Action<string> OnMemoryTriggered;
-        public static event Action OnDocumentUnlocked;
-        public static event Action OnPhoneRing;
-        
-        void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-        }
-        
+        public bool hasAskedForHelp;
+        public bool documentUnlocked;
+        public bool phoneHasRung;
+
+        [Header("Security Questions")]
+        // 0 = no question active yet, 1-3 = which mystery the player is currently on
+        public int activeSecurityQuestion = 0;
+        public bool marthaShutdownMode = false;
+        public bool marthaGuitarBreakdown = false;
+
+        private List<GameEvent> eventHistory = new List<GameEvent>();
+
+        // Subscribes to GameStateMachine.OnStateChanged to relay via GameEvents bus.
+        // (subscription code omitted for brevity — see full source)
+
         public void PublishEvent(GameEvent evt)
         {
-            // Add to recent events queue
-            recentEvents.Enqueue(evt);
-            if (recentEvents.Count > MAX_RECENT_EVENTS)
-                recentEvents.Dequeue();
-            
-            // Handle memory triggers
+            eventHistory.Add(evt);
+
+            switch (evt.eventType)
+            {
+                case "gaze_complete":
+                    HandleGazeComplete(evt);
+                    break;
+                case "interact":
+                    HandleInteract(evt);
+                    break;
+            }
+        }
+
+        private void HandleGazeComplete(GameEvent evt)
+        {
             if (!string.IsNullOrEmpty(evt.memoryId) && !triggeredMemories.Contains(evt.memoryId))
             {
                 triggeredMemories.Add(evt.memoryId);
-                OnMemoryTriggered?.Invoke(evt.memoryId);
-                
-                Debug.Log($"[Event] Memory triggered: {evt.memoryId} (Total: {triggeredMemories.Count})");
-                
-                CheckDocumentUnlock();
-                CheckPhoneTrigger();
+                GameEvents.TriggerMemory(evt.memoryId);
             }
+            GameEvents.CompleteGaze(evt.objectId);
         }
-        
-        private void CheckDocumentUnlock()
+
+        private void HandleInteract(GameEvent evt)
         {
-            if (!documentUnlocked && triggeredMemories.Count >= memoriesRequiredForDocument)
-            {
-                documentUnlocked = true;
-                OnDocumentUnlocked?.Invoke();
-                Debug.Log("[Event] Document unlocked!");
-            }
+            GameEvents.InteractWithObject(evt.objectId);
         }
-        
+
+        // ── Security Question API (called by ComputerInteraction) ──
+
+        // Called when a question is first SHOWN (not answered).
+        // Shifts Martha/David LLM prompts and rings the phone on Q1.
+        public void OnSecurityQuestionStarted(int questionIndex)
+        {
+            int newActive = questionIndex + 1;         // 0-indexed → 1-indexed
+            if (newActive <= activeSecurityQuestion) return;
+
+            activeSecurityQuestion = newActive;
+            CheckPhoneTrigger();
+
+            if (activeSecurityQuestion == 3)
+                GameEvents.MarthaBreakdownReady();      // Q3 active — guitar confrontation possible
+        }
+
+        // Called each time a question is correctly answered.
+        public void OnSecurityQuestionAnswered(int questionIndex)
+        {
+            GameEvents.SecurityQuestionAnswered(questionIndex);
+        }
+
+        // Called when all three security questions are answered.
+        public void OnAllSecurityQuestionsAnswered()
+        {
+            documentUnlocked = true;
+            marthaShutdownMode = true;
+            GameEvents.UnlockDocument();
+            GameEvents.AllQuestionsAnswered();
+        }
+
         private void CheckPhoneTrigger()
         {
-            if (!phoneHasRung && triggeredMemories.Count >= 2)
+            if (!phoneHasRung && activeSecurityQuestion >= 1)
             {
                 phoneHasRung = true;
-                OnPhoneRing?.Invoke();
-                Debug.Log("[Event] Phone will ring!");
+                GameEvents.RingPhone();
             }
         }
-        
-        public void SetAskedForHelp()
-        {
-            hasAskedForHelp = true;
-        }
-        
-        /// <summary>
-        /// Build context string for AI prompt
-        /// </summary>
-        public string BuildContextString()
-        {
-            var context = new System.Text.StringBuilder();
-            
-            // Recent events
-            foreach (var evt in recentEvents)
-            {
-                if (evt.eventType == "gaze_complete")
-                    context.AppendLine($"Robert looked at the {evt.objectId}.");
-                else if (evt.eventType == "interact")
-                    context.AppendLine($"Robert examined the {evt.objectId}.");
-            }
-            
-            // Game state
-            if (!hasAskedForHelp)
-                context.AppendLine("Robert hasn't asked for help getting up yet.");
-            
-            if (documentUnlocked)
-                context.AppendLine("The document is now available for Robert to sign.");
-            
-            return context.ToString();
-        }
-        
-        public List<GameEvent> GetRecentEvents() => new List<GameEvent>(recentEvents);
     }
 }
 ```
+
+**Key state fields read by LLM prompt builders:**
+
+| Field | Type | Meaning |
+|---|---|---|
+| `activeSecurityQuestion` | int 0-3 | Which mystery is active (0 = none, 1 = Mountain, 2 = Child, 3 = Guitar) |
+| `marthaShutdownMode` | bool | All questions answered — Martha's facade permanently dropped |
+| `marthaGuitarBreakdown` | bool | Player confronted Martha with guitar evidence — breakdown triggered |
+| `triggeredMemories` | List\<string\> | Memory IDs the player has gazed at (injected into LLM context) |
 
 ### 4.4 FadeManager.cs
 
@@ -1680,13 +1723,53 @@ namespace LastDay.Player
 
 ## 7. Dialogue & AI Integration
 
-### 7.1 LocalLLMManager.cs
+### 7.1 Architecture Overview
+
+The dialogue system uses **dynamic, state-driven LLM prompts**. Both Martha and David have multiple personas that shift based on `EventManager.activeSecurityQuestion`, `marthaShutdownMode`, and `marthaGuitarBreakdown`.
+
+```
+                    ┌─────────────────────────────────────────────────┐
+                    │           LocalLLMManager                        │
+                    │  ┌───────────────────────────────────────────┐  │
+                    │  │ GenerateResponse(playerInput, character)   │  │
+                    │  │                                            │  │
+                    │  │  1. Read state from EventManager:          │  │
+                    │  │     activeSecurityQuestion (0-3)           │  │
+                    │  │     marthaShutdownMode                     │  │
+                    │  │     marthaGuitarBreakdown                  │  │
+                    │  │                                            │  │
+                    │  │  2. Build system prompt:                   │  │
+                    │  │     CharacterPrompts.GetMarthaPrompt(...)  │  │
+                    │  │     CharacterPrompts.GetDavidPrompt(...)   │  │
+                    │  │                                            │  │
+                    │  │  3. LLM generates → Validate → Return     │  │
+                    │  └───────────────────────────────────────────┘  │
+                    └─────────────────────────────────────────────────┘
+
+MARTHA PROMPT STATE MACHINE:
+════════════════════════════
+  Q0 → Warm Caretaker (default — gentle, deflects pain)
+  Q1 → Hero Narrative  (K2: Robert was brave, NEVER says "cut", NEVER names Arthur)
+  Q2 → Defensive Wife   (Money: "bad investments", NEVER names Sarah or Lily)
+  Q3 → Romantic Lie     (Guitar: beautiful anniversary song, sunrise, coffee)
+  Q3 + guitarBreakdown → Breakdown (admits drunk night, smashed guitar, exhausted grief)
+  shutdownMode → Shutdown (raw grief, no comfort, no deflection, no pet names)
+
+DAVID PROMPT STATE MACHINE:
+═══════════════════════════
+  Q0 → Loyal Friend     (default — honest, won't push, lost Margaret)
+  Q1 → Cold / Arthur    (names Arthur, says Robert cut the rope, was on radio)
+  Q2 → Disappointed     (names Sarah and Lily, 25 years of child support)
+  Q3 → Blind Spot       (genuinely doesn't know about guitar, redirects to Martha)
+```
+
+### 7.2 LocalLLMManager.cs
 
 ```csharp
-// LocalLLMManager.cs
+// LocalLLMManager.cs — Manages LLM or stub responses with narrative-aware prompting
 using UnityEngine;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using LLMUnity;
 using LastDay.Core;
 
 namespace LastDay.Dialogue
@@ -1694,199 +1777,111 @@ namespace LastDay.Dialogue
     public class LocalLLMManager : MonoBehaviour
     {
         public static LocalLLMManager Instance { get; private set; }
-        
-        [Header("Model Settings")]
-        public int maxTokens = 80;
-        public float temperature = 0.7f;
-        public int contextSize = 2048;
-        
+
+        [Header("LLM Settings")]
+        [SerializeField] private int maxTokens = 80;
+        [SerializeField] private float temperature = 0.7f;
+
         [Header("State")]
-        public bool isInitialized = false;
-        public string currentCharacter = "partner";
-        
-        private LLM llm;
-        
-        void Awake()
-        {
-            Instance = this;
-        }
-        
-        public void Initialize(string modelPath)
-        {
-            llm = gameObject.AddComponent<LLM>();
-            llm.modelPath = modelPath;
-            llm.contextSize = contextSize;
-            llm.temperature = temperature;
-            llm.numPredict = maxTokens;
-            
-            // Warm up
-            _ = llm.Warmup();
-            
-            isInitialized = true;
-            Debug.Log("[LLM] Initialized successfully");
-        }
-        
-        public void SetCharacter(string characterName)
-        {
-            currentCharacter = characterName;
-        }
-        
-        public async Task<string> GenerateResponse(string playerInput)
-        {
-            if (!isInitialized)
-            {
-                return GetFallbackResponse();
-            }
-            
-            // Build the full prompt
-            string systemPrompt = CharacterPrompts.GetPrompt(currentCharacter);
-            string context = EventManager.Instance.BuildContextString();
-            string memoryContext = BuildMemoryContext();
-            
-            string fullPrompt = $@"{systemPrompt}
+        public bool isInitialized;
+        public string currentCharacter = "martha";
+        public bool useLLM = true;
 
-CURRENT SITUATION:
-{context}
+        // When LLMUNITY_AVAILABLE is defined, LLMAgent references are used.
+        // Otherwise, falls back to stub responses that mirror the narrative.
 
-MEMORIES TRIGGERED:
-{memoryContext}
+        public async Task<string> GenerateResponse(
+            string playerInput,
+            string character = null,
+            List<string> memories = null)
+        {
+            if (character != null) currentCharacter = character;
 
-Robert says: ""{playerInput}""
+            // 1. Read narrative state from EventManager
+            int activeQuestion   = EventManager.Instance?.activeSecurityQuestion ?? 0;
+            bool shutdownMode    = EventManager.Instance != null && EventManager.Instance.marthaShutdownMode;
+            bool guitarBreakdown = EventManager.Instance != null && EventManager.Instance.marthaGuitarBreakdown;
 
-Respond naturally in 1-3 sentences:";
-            
-            try
-            {
-                string response = await llm.Chat(fullPrompt);
-                return CleanResponse(response);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[LLM] Generation error: {e.Message}");
-                return GetFallbackResponse();
-            }
+            // 2. Build dynamic system prompt
+            string prompt = currentCharacter == "david"
+                ? CharacterPrompts.GetDavidPrompt(memories ?? new List<string>(), activeQuestion)
+                : CharacterPrompts.GetMarthaPrompt(memories ?? new List<string>(), activeQuestion, shutdownMode, guitarBreakdown);
+
+            // 3. Send to LLM (or return stub)
+            // ... (LLMAgent.Chat or stub fallback)
         }
-        
-        private string BuildMemoryContext()
-        {
-            var memories = EventManager.Instance.triggeredMemories;
-            if (memories.Count == 0) return "None yet.";
-            
-            var sb = new System.Text.StringBuilder();
-            foreach (var memoryId in memories)
-            {
-                var data = MemoryContext.GetMemory(memoryId);
-                if (data != null)
-                {
-                    sb.AppendLine($"- {data.shortDescription}");
-                }
-            }
-            return sb.ToString();
-        }
-        
-        private string CleanResponse(string response)
-        {
-            response = response.Trim();
-            
-            // Remove character name prefixes
-            if (response.StartsWith("Martha:"))
-                response = response.Substring(7).Trim();
-            if (response.StartsWith("David:"))
-                response = response.Substring(6).Trim();
-            
-            // Remove surrounding quotes
-            if (response.StartsWith("\"") && response.EndsWith("\""))
-                response = response.Substring(1, response.Length - 2);
-            
-            return response;
-        }
-        
-        private string GetFallbackResponse()
-        {
-            string[] fallbacks = new string[]
-            {
-                "I'm here with you, dear.",
-                "Take your time.",
-                "What's on your mind?",
-                "I understand."
-            };
-            return fallbacks[Random.Range(0, fallbacks.Length)];
-        }
+
+        // Stub responses are narrative-aware: they check activeQuestion,
+        // shutdownMode, guitarBreakdown, and keyword-match the player input
+        // to return appropriate hard-coded responses for each mystery state.
+        //
+        // See full implementation in Assets/Scripts/Dialogue/LocalLLMManager.cs
     }
 }
 ```
 
-### 7.2 CharacterPrompts.cs
+### 7.3 CharacterPrompts.cs
+
+The prompt system is fully dynamic. Each call to `GetMarthaPrompt` / `GetDavidPrompt` assembles a prompt from modular pieces:
 
 ```csharp
-// CharacterPrompts.cs
+// CharacterPrompts.cs — State-driven LLM prompts
 namespace LastDay.Dialogue
 {
     public static class CharacterPrompts
     {
-        public static string GetPrompt(string character)
+        // Martha: 6 possible states
+        public static string GetMarthaPrompt(
+            List<string> triggeredMemories,
+            int activeQuestion = 0,        // 0-3
+            bool shutdownMode = false,
+            bool guitarBreakdown = false)
         {
-            return character switch
-            {
-                "partner" => MARTHA_PROMPT,
-                "phone_friend" => DAVID_PROMPT,
-                _ => MARTHA_PROMPT
-            };
+            if (shutdownMode)              return GetMarthaShutdownPrompt();
+            if (activeQuestion == 3 && guitarBreakdown)
+                                           return GetMarthaGuitarBreakdownPrompt(triggeredMemories);
+
+            return BuildMarthaCore()
+                 + BuildMarthaQuestionState(activeQuestion)
+                 + BuildMarthaMemorySection(triggeredMemories, activeQuestion);
         }
-        
-        private const string MARTHA_PROMPT = @"You are Martha, 72 years old. Your husband Robert has ALS and today is his last day to decide about medical assistance in dying.
 
-WHO YOU ARE:
-- Married to Robert for 47 years
-- Former elementary school teacher, retired
-- His caregiver for the past 3 years
-- Exhausted but hiding it
+        // David: 4 possible states
+        public static string GetDavidPrompt(
+            List<string> triggeredMemories,
+            int activeQuestion = 0)
+        {
+            return BuildDavidCore()
+                 + BuildDavidQuestionState(activeQuestion)
+                 + BuildDavidMemorySection(triggeredMemories, activeQuestion);
+        }
 
-YOUR FEELINGS:
-- You love him deeply and hate seeing him suffer
-- Part of you wants his pain to end
-- Part of you isn't ready to let go
-- You support his choice but secretly hope for more time
-
-HOW YOU SPEAK:
-- Warm, gentle, sometimes tired
-- Call him ""dear"" or ""Robert""
-- Short sentences, no medical jargon
-- Never lecture or pressure
-- Reminisce when relevant
-
-IMPORTANT: Keep responses to 1-3 sentences. Be natural.";
-
-        private const string DAVID_PROMPT = @"You are David, 74 years old. Robert's best friend for 50 years. You're on a phone call from Seattle.
-
-WHO YOU ARE:
-- Retired Marine, served with Robert in Vietnam
-- Pragmatic and direct
-- Your wife passed from cancer 5 years ago
-- Visited Robert last week
-
-YOUR FEELINGS:
-- Support Robert's right to choose
-- Believe prolonging suffering is cruel
-- Already said your goodbyes in person
-- Love him like a brother
-
-HOW YOU SPEAK:
-- Direct but kind
-- Call him ""buddy"" or ""brother""
-- Share memories when helpful
-- Don't push, just share your view if asked
-
-IMPORTANT: Keep responses to 1-3 sentences.";
+        // Opening lines per object + active question (used by DialogueUI)
+        public static string GetObjectOpeningLine(
+            string memoryId,
+            string character = "martha",
+            int activeQuestion = 0) { ... }
     }
 }
 ```
+
+**Critical guardrails enforced in every Martha/David prompt:**
+- "Never mention being an AI, a model, or a character."
+- Martha Q1: "NEVER say 'cut' in relation to the rope. NEVER name Arthur."
+- Martha Q2: "NEVER mention Sarah. NEVER name any child. NEVER say 'Lily.'"
+- Martha Q3 pre-breakdown: Maintain the romantic version unless physically confronted.
+- David Q3: "Do not speculate. Do not invent. You are genuinely blind here."
+
+**Guitar breakdown trigger (in DialogueUI.SubmitInput):**
+When `activeSecurityQuestion == 3` and `currentCharacter == "martha"`, player input is scanned for keywords: `crack`, `smash`, `broken`, `broke`, `shatter`, `damaged`, `neck`, `why is it`. A match sets `marthaGuitarBreakdown = true` and the next LLM response uses the breakdown prompt.
 
 ---
 
 ## 8. Interactive Objects
 
-### 8.1 InteractableObject2D.cs
+### 8.1 InteractableObject2D.cs (Base Class)
+
+The base class handles hover glow, gaze timer, event publishing, and default dialogue opening. Subclasses override `OnInteract()` for custom behavior.
 
 ```csharp
 // InteractableObject2D.cs
@@ -1896,196 +1891,133 @@ using LastDay.Core;
 
 namespace LastDay.Interaction
 {
-    public class InteractableObject2D : MonoBehaviour, 
-        IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+    [RequireComponent(typeof(Collider2D))]
+    public class InteractableObject2D : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Header("Object Identity")]
-        public string objectId;
-        public string displayName;
-        
-        [Header("Memory Data")]
-        public bool triggersMemory = true;
-        public string memoryId;
-        
+        [SerializeField] private string objectId;
+        [SerializeField] private string displayName;
+        [SerializeField] private string memoryId;
+
         [Header("Visuals")]
-        public SpriteRenderer mainSprite;
-        public SpriteRenderer glowSprite;
-        public Color glowColor = new Color(1f, 1f, 0.8f, 0.4f);
-        
-        [Header("Gaze Detection")]
-        public float gazeTimeToTrigger = 2f;
-        private float currentGazeTime = 0f;
-        private bool isHovering = false;
-        private bool hasTriggeredGaze = false;
-        
-        [Header("Audio")]
-        public AudioClip hoverSound;
-        public AudioClip interactSound;
-        
-        public bool IsInteractable => GameStateMachine.Instance.CanInteract;
-        
-        void Start()
+        [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] private SpriteRenderer highlightRenderer;
+        [SerializeField] private Color highlightColor = new Color(1f, 1f, 0.8f, 0.3f);
+
+        [Header("Gaze/Hover")]
+        [SerializeField] private float hoverTimeToTrigger = 2f;
+
+        public string ObjectId => objectId;
+        public string DisplayName => displayName;
+        public string MemoryId => memoryId;
+
+        protected virtual void Start()  // virtual — ComputerInteraction overrides
         {
-            if (glowSprite != null)
-                glowSprite.enabled = false;
+            if (highlightRenderer != null) highlightRenderer.enabled = false;
         }
-        
-        void Update()
+
+        // Gaze timer → OnGazeComplete() → EventManager.PublishEvent("gaze_complete")
+        // OnPointerEnter / OnPointerExit → highlight management
+
+        public virtual void OnInteract()
         {
-            if (isHovering && !hasTriggeredGaze && triggersMemory)
-            {
-                currentGazeTime += Time.deltaTime;
-                
-                // Update glow intensity based on gaze progress
-                if (glowSprite != null)
-                {
-                    float progress = currentGazeTime / gazeTimeToTrigger;
-                    glowSprite.color = new Color(glowColor.r, glowColor.g, glowColor.b, glowColor.a * progress);
-                }
-                
-                if (currentGazeTime >= gazeTimeToTrigger)
-                {
-                    OnGazeComplete();
-                }
-            }
-        }
-        
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if (!IsInteractable) return;
-            
-            isHovering = true;
-            
-            if (glowSprite != null)
-                glowSprite.enabled = true;
-            
-            // Show interaction prompt
-            UI.InteractionPrompt.Instance?.Show($"Click to examine {displayName}");
-            
-            // Play hover sound
-            if (hoverSound != null)
-                AudioSource.PlayClipAtPoint(hoverSound, transform.position, 0.5f);
-        }
-        
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            isHovering = false;
-            currentGazeTime = 0f;
-            
-            if (glowSprite != null)
-                glowSprite.enabled = false;
-            
-            UI.InteractionPrompt.Instance?.Hide();
-        }
-        
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (!IsInteractable) return;
-            
-            // Player will walk to this object
-            // Actual interaction happens in OnPlayerArrived
-        }
-        
-        /// <summary>
-        /// Called when gaze timer completes
-        /// </summary>
-        protected virtual void OnGazeComplete()
-        {
-            hasTriggeredGaze = true;
-            
-            EventManager.Instance.PublishEvent(new GameEvent("gaze_complete", objectId, memoryId));
-            
-            Debug.Log($"[Object] Gaze triggered on {objectId}");
-        }
-        
-        /// <summary>
-        /// Called when player walks to this object and arrives
-        /// </summary>
-        public virtual void OnPlayerArrived()
-        {
-            // Publish interact event
-            EventManager.Instance.PublishEvent(new GameEvent("interact", objectId, memoryId));
-            
-            // Play sound
-            if (interactSound != null)
-                AudioSource.PlayClipAtPoint(interactSound, transform.position, 0.7f);
-            
-            // Open dialogue
-            OnInteract();
-        }
-        
-        /// <summary>
-        /// Override in subclasses for specific behavior
-        /// </summary>
-        protected virtual void OnInteract()
-        {
-            // Default: Open dialogue with Martha about this object
-            UI.DialogueUI.Instance.ShowDialogue("partner", memoryId);
+            // Default: open Martha dialogue about this object
+            var dialogueUI = FindObjectOfType<UI.DialogueUI>();
+            if (dialogueUI != null)
+                dialogueUI.OpenForObject(objectId, memoryId, displayName);
         }
     }
 }
 ```
 
-### 8.2 DocumentInteraction.cs
+### 8.2 ComputerInteraction.cs (NEW — Security Question Gate)
+
+The computer is the central hub of the game loop. It displays sequential security questions, validates player answers, advances the narrative state, and presents the final "Can you forgive yourself?" prompt.
 
 ```csharp
-// DocumentInteraction.cs
+// ComputerInteraction.cs
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using LastDay.Core;
 using LastDay.UI;
 
 namespace LastDay.Interaction
 {
+    public class ComputerInteraction : InteractableObject2D
+    {
+        [Header("Computer UI Panel")]
+        [SerializeField] private GameObject computerPanel;
+        [SerializeField] private TMP_Text questionText;
+        [SerializeField] private TMP_Text feedbackText;
+        [SerializeField] private TMP_InputField answerInputField;
+        [SerializeField] private Button submitButton;
+        [SerializeField] private Button closeButton;
+
+        [Header("Final Prompt UI")]
+        [SerializeField] private GameObject finalPromptPanel;
+        [SerializeField] private TMP_Text finalPromptText;
+        [SerializeField] private Button signButton;
+        [SerializeField] private Button tearButton;
+
+        [Header("Monologue Hints")]
+        [SerializeField] private string[] monologueHints = new string[]
+        {
+            "Emergency contact for the '98 K2 Expedition. I remember the mountain. I remember the rope.",
+            "Beneficiary for offshore account 4014. There was money going somewhere every month...",
+            "Date of my proudest moment. The guitar is in the corner. I should look at the guitar."
+        };
+
+        private static readonly string[] Questions = new string[]
+        {
+            "SECURITY CHECK 1\n\nEmergency Contact for the '98 K2 Expedition.",
+            "SECURITY CHECK 2\n\nBeneficiary Name for Offshore Account 4014.",
+            "SECURITY CHECK 3\n\nDate of Your Proudest Moment."
+        };
+
+        private static readonly string[][] Answers = new string[][]
+        {
+            new[] { "arthur" },
+            new[] { "lily" },
+            new[] { "10th anniversary", "10th", "tenth anniversary", "our 10th anniversary" }
+        };
+
+        private int currentQuestionIndex = 0;
+        private bool allAnswered = false;
+
+        // OnInteract() → opens computerPanel and displays current question
+        // DisplayCurrentQuestion() → calls EventManager.OnSecurityQuestionStarted()
+        // OnSubmitClicked() → validates via IsCorrectAnswer(), calls OnCorrectAnswer()
+        // OnCorrectAnswer() → advances index, calls OnAllSecurityQuestionsAnswered() if done
+        // ShowFinalPrompt() → "Can you forgive yourself?" + Sign/Tear buttons
+        // OnSignClicked() / OnTearClicked() → FadeManager → GameManager.EndGame()
+
+        // Start() syncs to saved progress:
+        //   currentQuestionIndex = Clamp(activeSecurityQuestion - 1, 0, Length)
+        //   allAnswered = marthaShutdownMode
+
+        // Subscribes to GameEvents.OnAllQuestionsAnswered for external triggers.
+        // DecisionUI yields to ComputerInteraction when both are in scene.
+    }
+}
+```
+
+### 8.3 DocumentInteraction.cs
+
+The document is now a secondary object. It unlocks via `GameEvents.OnDocumentUnlocked` (fired when all security questions are answered) but the primary Sign/Tear flow goes through `ComputerInteraction`.
+
+```csharp
+// DocumentInteraction.cs — Locked until all 3 security questions answered
+namespace LastDay.Interaction
+{
     public class DocumentInteraction : InteractableObject2D
     {
-        [Header("Document State")]
-        public bool isUnlocked = false;
-        
-        [Header("Locked Responses")]
-        [TextArea]
-        public string[] lockedResponses = new string[]
-        {
-            "Not yet. I need to think about this more.",
-            "I'm not ready to look at that.",
-            "I should talk to Martha first."
-        };
-        
-        void OnEnable()
-        {
-            EventManager.OnDocumentUnlocked += OnDocumentUnlocked;
-        }
-        
-        void OnDisable()
-        {
-            EventManager.OnDocumentUnlocked -= OnDocumentUnlocked;
-        }
-        
-        private void OnDocumentUnlocked()
-        {
-            isUnlocked = true;
-            
-            // Visual feedback - make glow more prominent
-            if (glowSprite != null)
-            {
-                glowSprite.enabled = true;
-                glowSprite.color = new Color(1f, 0.9f, 0.7f, 0.6f);
-            }
-        }
-        
-        protected override void OnInteract()
-        {
-            if (!isUnlocked)
-            {
-                // Show internal monologue
-                string response = lockedResponses[Random.Range(0, lockedResponses.Length)];
-                MonologueUI.Instance.Show(response);
-                return;
-            }
-            
-            // Show decision panel
-            GameStateMachine.Instance.ChangeState(GameState.Decision);
-            DecisionUI.Instance.Show();
-        }
+        [SerializeField] private string lockedMessage = "Not yet... I'm not ready to look at that.";
+        private bool isUnlocked;
+
+        // Subscribes to GameEvents.OnDocumentUnlocked
+        // OnInteract(): if locked → ShowMonologue(lockedMessage)
+        //               if unlocked → GameState.Decision → DecisionUI.Show()
     }
 }
 ```
@@ -2097,86 +2029,137 @@ namespace LastDay.Interaction
 ### 9.1 Complete Game Flow Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              GAME FLOW                                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────┐                                                            │
-│  │   LOADING   │ ◄─── Game Start                                            │
-│  │  (Download  │                                                            │
-│  │   Model)    │                                                            │
-│  └──────┬──────┘                                                            │
-│         │ Model Ready                                                        │
-│         ▼                                                                    │
-│  ┌─────────────┐                                                            │
-│  │   PLAYING   │ ◄───────────────────────────────────────┐                 │
-│  │  (Explore)  │                                          │                 │
-│  └──────┬──────┘                                          │                 │
-│         │                                                  │                 │
-│    ┌────┴────────────────┬──────────────────┐            │                 │
-│    │                     │                   │            │                 │
-│    ▼                     ▼                   ▼            │                 │
-│  ┌─────────────┐  ┌─────────────┐    ┌─────────────┐    │                 │
-│  │ IN_DIALOGUE │  │  PHONE_CALL │    │  DECISION   │    │                 │
-│  │  (Martha)   │  │   (David)   │    │ (Sign/Tear) │    │                 │
-│  └──────┬──────┘  └──────┬──────┘    └──────┬──────┘    │                 │
-│         │                 │                   │            │                 │
-│         │ Close           │ Hang Up           │            │                 │
-│         └─────────────────┴───────────────────┘            │                 │
-│                           │                                 │                 │
-│                           └────────── Return ───────────────┘                │
-│                                                                              │
-│                                       │ Choose                               │
-│                                       ▼                                      │
-│                               ┌─────────────┐                               │
-│                               │   ENDING    │                               │
-│                               │ (Fade Out)  │                               │
-│                               └──────┬──────┘                               │
-│                                      │                                       │
-│                                      ▼                                       │
-│                                   [QUIT]                                     │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              GAME FLOW                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  ┌─────────────┐                                                             │
+│  │   LOADING   │ ◄─── Game Start                                             │
+│  │  (Download  │                                                             │
+│  │   Model)    │                                                             │
+│  └──────┬──────┘                                                             │
+│         │ Model Ready                                                         │
+│         ▼                                                                     │
+│  ┌─────────────┐                                                             │
+│  │   PLAYING   │ ◄─────────────────────────────────┐                        │
+│  │  (Explore)  │                                    │                        │
+│  └──────┬──────┘                                    │                        │
+│         │                                            │                        │
+│    ┌────┴──────────────────┬─────────────────┐      │                        │
+│    │                       │                  │      │                        │
+│    ▼                       ▼                  ▼      │                        │
+│  ┌──────────────┐  ┌─────────────┐  ┌────────────┐ │                        │
+│  │ IN_DIALOGUE  │  │ PHONE_CALL  │  │ COMPUTER   │ │                        │
+│  │  (Martha +   │  │  (David)    │  │ (Security  │ │                        │
+│  │   Objects)   │  │             │  │  Questions)│ │                        │
+│  └──────┬───────┘  └──────┬──────┘  └─────┬──────┘ │                        │
+│         │ Close            │ Hang Up       │ Close   │                        │
+│         └──────────────────┴───────────────┴─────────┘                        │
+│                                                                               │
+│                            ┌──────────────────────┐                          │
+│     All 3 Answered ──────►│ Martha → Shutdown     │                          │
+│                            │ Phone rings (Q1 shown)│                          │
+│                            └──────────┬───────────┘                          │
+│                                       │                                       │
+│                                       ▼                                       │
+│                            ┌──────────────────────┐                          │
+│                            │     DECISION          │                          │
+│                            │ "Can you forgive      │                          │
+│                            │  yourself?"           │                          │
+│                            │                       │                          │
+│                            │  [SIGN]     [TEAR]    │                          │
+│                            └────┬───────────┬──────┘                          │
+│                                 │           │                                  │
+│                                 ▼           ▼                                  │
+│                          ┌───────────┐ ┌───────────┐                          │
+│                          │  ENDING   │ │  ENDING   │                          │
+│                          │ (Sign —   │ │ (Tear —   │                          │
+│                          │  Fade to  │ │ ending_   │                          │
+│                          │  black)   │ │ torn.wav) │                          │
+│                          └───────────┘ └───────────┘                          │
+│                                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 9.2 Memory Trigger Flow
+### 9.2 Security Question & Narrative Flow
 
 ```
-MEMORY SYSTEM FLOW:
-═══════════════════
+THREE-MYSTERY INVESTIGATION LOOP:
+══════════════════════════════════
 
-Player gazes at object (2+ seconds)
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                    MYSTERY 1: THE MOUNTAIN                               │
+  │                                                                          │
+  │  Computer shows: "Emergency Contact for the '98 K2 Expedition"          │
+  │  EventManager.activeSecurityQuestion → 1                                │
+  │  Phone rings (David available)                                          │
+  │                                                                          │
+  │  ice_picks.png → Martha: "He was brave. The storm was impossible."      │
+  │  phone.png     → David:  "His name was Arthur. You cut the rope."       │
+  │                                                                          │
+  │  Answer: Arthur                                                          │
+  └─────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                 MYSTERY 2: THE SECRET CHILD                              │
+  │                                                                          │
+  │  Computer shows: "Beneficiary Name for Offshore Account 4014"           │
+  │  EventManager.activeSecurityQuestion → 2                                │
+  │  Monologue: "I never invested. Where did the money go?"                 │
+  │                                                                          │
+  │  wedding_photo.png → Martha: "Bad investments. Just the two of us."     │
+  │  phone.png         → David:  "Sarah. Lily. 25 years of payments."      │
+  │                                                                          │
+  │  Answer: Lily                                                            │
+  └─────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │              MYSTERY 3: THE BROKEN MARRIAGE                              │
+  │                                                                          │
+  │  Computer shows: "Date of Your Proudest Moment"                         │
+  │  EventManager.activeSecurityQuestion → 3                                │
+  │  GameEvents.MarthaBreakdownReady() fired                                │
+  │                                                                          │
+  │  guitar.png → Monologue: "Crack down the back of the neck. Broken."    │
+  │            → Martha: "10th anniversary. Sunrise. Beautiful song."        │
+  │  phone.png → David:  "I don't know. That one's between you and Martha."│
+  │                                                                          │
+  │  CONFRONTATION: Player types evidence (crack/smash/broken keywords)     │
+  │  → marthaGuitarBreakdown = true                                         │
+  │  → Martha breaks down: admits drunk night, smashed guitar               │
+  │                                                                          │
+  │  Answer: 10th Anniversary                                                │
+  └─────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                      CLIMAX                                              │
+  │                                                                          │
+  │  marthaShutdownMode = true (raw grief, no comfort, no deflection)       │
+  │  documentUnlocked = true                                                 │
+  │                                                                          │
+  │  Computer: "FINAL SECURITY CHECK — Can you forgive yourself?"           │
+  │                                                                          │
+  │  [SIGN] → Robert signs. Fade to black. The coward's release.           │
+  │  [TEAR] → Robert tears. ending_torn.wav. He chooses to face it.        │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+
+MEMORY/GAZE SYSTEM (feeds LLM context, unchanged):
+═══════════════════════════════════════════════════
+
+Player hovers over object (2+ sec)
         │
         ▼
-OnGazeComplete()
+InteractableObject2D.OnGazeComplete()
         │
         ▼
 EventManager.PublishEvent("gaze_complete", memoryId)
-        │
-        ├──► Add to triggeredMemories list
-        │
-        ├──► Check: triggeredMemories.Count >= 2?
-        │           │
-        │           └── YES ──► Unlock Document
-        │                       Trigger Phone Ring
-        │
-        └──► Update AI context for next dialogue
-
-
-Player clicks object → walks to it → OnPlayerArrived()
-        │
-        ▼
-EventManager.PublishEvent("interact", memoryId)
-        │
-        ▼
-DialogueUI.ShowDialogue(character, memoryId)
-        │
-        ▼
-LocalLLMManager.GenerateResponse(playerInput)
-        │
-        ├──► Include memory context in prompt
-        │
-        └──► AI response references the memory naturally
+        ├── Add to triggeredMemories
+        ├── GameEvents.TriggerMemory(memoryId)
+        └── Injected into Martha/David LLM prompts as "WHAT MARTHA/DAVID IS AWARE OF"
 ```
 
 ---
@@ -2188,35 +2171,39 @@ LocalLLMManager.GenerateResponse(playerInput)
 ```
 Canvas (Screen Space - Overlay)
 │
-├── DialoguePanel
+├── DialoguePanel (shared by Martha objects + David phone calls)
 │   ├── Background (9-slice pixel art)
 │   ├── PortraitFrame
-│   │   └── PortraitImage
+│   │   └── PortraitImage (marthaPortrait / davidPortrait)
 │   ├── NamePlate
-│   │   └── NameText (TMP)
-│   ├── DialogueText (TMP)
+│   │   └── NameText (TMP) — "Martha" or "David (Phone)"
+│   ├── DialogueText (TMP) — typewriter effect
 │   ├── InputContainer
-│   │   ├── InputField (TMP)
+│   │   ├── InputField (TMP) — player types here; scanned for guitar breakdown keywords
 │   │   └── SendButton
+│   ├── CloseButton
 │   └── ThinkingIndicator
-│       ├── Dot1
-│       ├── Dot2
-│       └── Dot3
 │
-├── PhonePanel
-│   ├── PhoneBackground
-│   ├── CallerNameText
-│   ├── PhoneDialogueText
-│   ├── PhoneInputField
-│   └── HangUpButton
+├── ComputerPanel (NEW — managed by ComputerInteraction.cs)
+│   ├── Background (dark monitor aesthetic)
+│   ├── QuestionText (TMP) — "SECURITY CHECK 1\n\nEmergency Contact..."
+│   ├── AnswerInputField (TMP)
+│   ├── SubmitButton
+│   ├── FeedbackText (TMP) — "Incorrect. Think harder."
+│   └── CloseButton
 │
-├── MonologuePanel
+├── FinalPromptPanel (NEW — managed by ComputerInteraction.cs)
+│   ├── Background
+│   ├── FinalPromptText (TMP) — "Can you forgive yourself?"
+│   ├── SignButton
+│   └── TearButton
+│
+├── MonologuePanel (Robert's internal monologue / subconscious)
 │   └── MonologueText (TMP, italicized)
 │
-├── DecisionPanel
+├── DecisionPanel (fallback — only used if ComputerInteraction is absent)
 │   ├── DimBackground
-│   ├── DocumentImage
-│   ├── PromptText
+│   ├── PromptText — "FINAL SECURITY CHECK\n\nCan you forgive yourself?"
 │   ├── SignButton
 │   └── TearButton
 │
@@ -2240,193 +2227,77 @@ Canvas (Screen Space - Overlay)
 ### 10.2 DialogueUI.cs
 
 ```csharp
-// DialogueUI.cs
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections;
-using System.Threading.Tasks;
-using LastDay.Core;
-using LastDay.Dialogue;
+// DialogueUI.cs — Shared dialogue panel for Martha (objects) and David (phone)
+// Key narrative responsibilities:
+//   - Guitar breakdown detection via keyword scan in SubmitInput()
+//   - Opening lines from CharacterPrompts.GetObjectOpeningLine() (narrative-aware)
+//   - Monologue display for Robert's internal voice
 
 namespace LastDay.UI
 {
     public class DialogueUI : MonoBehaviour
     {
         public static DialogueUI Instance { get; private set; }
-        
+
         [Header("Panel")]
-        public GameObject dialoguePanel;
-        
+        [SerializeField] private GameObject dialoguePanel;
+
         [Header("Character Display")]
-        public Image portraitImage;
-        public TMP_Text nameText;
-        public Sprite[] marthaPortraits;  // 0:neutral, 1:sad, 2:hopeful, 3:concerned
-        
-        [Header("Dialogue")]
-        public TMP_Text dialogueText;
-        public float typewriterSpeed = 0.03f;
-        
-        [Header("Input")]
-        public TMP_InputField inputField;
-        public Button sendButton;
-        
+        [SerializeField] private Image characterPortrait;
+        [SerializeField] private TMP_Text characterNameText;
+        [SerializeField] private TMP_Text dialogueText;
+
+        [Header("Player Input")]
+        [SerializeField] private TMP_InputField inputField;
+        [SerializeField] private Button sendButton;
+        [SerializeField] private Button closeButton;
+
         [Header("Thinking Indicator")]
-        public GameObject thinkingIndicator;
-        
-        [Header("Audio")]
-        public AudioClip[] textBlips;
-        public AudioSource audioSource;
-        
-        // State
-        private string currentCharacter;
-        private string currentMemoryContext;
-        private bool isTyping;
-        private bool isWaitingForResponse;
-        private Coroutine typewriterCoroutine;
-        
-        void Awake()
-        {
-            Instance = this;
-            dialoguePanel.SetActive(false);
-        }
-        
-        void Start()
-        {
-            sendButton.onClick.AddListener(OnSendClicked);
-            inputField.onSubmit.AddListener(_ => OnSendClicked());
-        }
-        
-        public void ShowDialogue(string character, string memoryId = "")
-        {
-            currentCharacter = character;
-            currentMemoryContext = memoryId;
-            
-            // Set up character display
-            if (character == "partner")
-            {
-                nameText.text = "Martha";
-                portraitImage.sprite = marthaPortraits[0];
-            }
-            
-            dialoguePanel.SetActive(true);
-            inputField.text = "";
-            inputField.Select();
-            
-            // Change game state
-            GameStateMachine.Instance.ChangeState(GameState.InDialogue);
-            
-            // Set character for LLM
-            LocalLLMManager.Instance.SetCharacter(character);
-            
-            // If this is a memory interaction, show initial context
-            if (!string.IsNullOrEmpty(memoryId))
-            {
-                ShowInitialMemoryResponse(memoryId);
-            }
-        }
-        
-        private async void ShowInitialMemoryResponse(string memoryId)
-        {
-            // Generate an initial response about the memory
-            string prompt = $"Robert is looking at the {memoryId}. Comment on it briefly.";
-            
-            thinkingIndicator.SetActive(true);
-            string response = await LocalLLMManager.Instance.GenerateResponse(prompt);
-            thinkingIndicator.SetActive(false);
-            
-            StartTypewriter(response);
-        }
-        
-        public void HideDialogue()
-        {
-            dialoguePanel.SetActive(false);
-            GameStateMachine.Instance.ChangeState(GameState.Playing);
-        }
-        
-        public async void OnSendClicked()
-        {
-            if (isWaitingForResponse || isTyping) return;
-            
-            string playerText = inputField.text.Trim();
-            if (string.IsNullOrEmpty(playerText)) return;
-            
-            isWaitingForResponse = true;
-            inputField.interactable = false;
-            sendButton.interactable = false;
-            inputField.text = "";
-            
-            thinkingIndicator.SetActive(true);
-            
-            // Check for help request (game start)
-            CheckHelpRequest(playerText);
-            
-            // Get AI response
-            string response = await LocalLLMManager.Instance.GenerateResponse(playerText);
-            
-            thinkingIndicator.SetActive(false);
-            
-            // Display response
-            StartTypewriter(response);
-            
-            isWaitingForResponse = false;
-            inputField.interactable = true;
-            sendButton.interactable = true;
-            inputField.Select();
-        }
-        
-        private void CheckHelpRequest(string input)
-        {
-            if (EventManager.Instance.hasAskedForHelp) return;
-            
-            string lower = input.ToLower();
-            string[] helpWords = { "help", "stand", "up", "can't", "need", "please", "water", "cane" };
-            
-            foreach (var word in helpWords)
-            {
-                if (lower.Contains(word))
-                {
-                    EventManager.Instance.SetAskedForHelp();
-                    break;
-                }
-            }
-        }
-        
-        private void StartTypewriter(string text)
-        {
-            if (typewriterCoroutine != null)
-                StopCoroutine(typewriterCoroutine);
-            
-            typewriterCoroutine = StartCoroutine(TypewriterEffect(text));
-        }
-        
-        private IEnumerator TypewriterEffect(string text)
-        {
-            isTyping = true;
-            dialogueText.text = "";
-            
-            foreach (char c in text)
-            {
-                dialogueText.text += c;
-                
-                // Play blip sound
-                if (c != ' ' && textBlips.Length > 0)
-                {
-                    audioSource.pitch = Random.Range(0.95f, 1.05f);
-                    audioSource.PlayOneShot(textBlips[Random.Range(0, textBlips.Length)], 0.4f);
-                }
-                
-                yield return new WaitForSeconds(typewriterSpeed);
-            }
-            
-            isTyping = false;
-        }
-        
-        public void SetPortraitEmotion(int index)
-        {
-            if (index < marthaPortraits.Length)
-                portraitImage.sprite = marthaPortraits[index];
-        }
+        [SerializeField] private GameObject thinkingIndicator;
+
+        [Header("Monologue")]
+        [SerializeField] private GameObject monologuePanel;
+        [SerializeField] private TMP_Text monologueText;
+
+        [Header("Typewriter")]
+        [SerializeField] private float typewriterSpeed = 0.03f;
+
+        [Header("Character Portraits")]
+        [SerializeField] private Sprite marthaPortrait;
+        [SerializeField] private Sprite davidPortrait;
+
+        // ── Entry Points ──
+
+        // OpenForObject(objectId, memoryId, displayName)
+        //   Sets character = "martha", shows Martha's opening line
+        //   If guitar + Q3 active → ShowMonologue("crack in the neck")
+
+        // OpenForNPC(npcId, npcName)
+        //   Direct NPC click — uses character-specific greeting
+
+        // OpenForPhone()
+        //   Sets character = "david", GameState → PhoneCall
+        //   Greeting is narrative-aware via GetObjectOpeningLine("phone", "david", activeQuestion)
+
+        // ShowMonologue(text)
+        //   Robert's internal monologue — auto-hides after 3 seconds
+
+        // ── Narrative Logic in SubmitInput() ──
+
+        // GUITAR BREAKDOWN DETECTION:
+        // When activeSecurityQuestion == 3, currentCharacter == "martha",
+        // and player input contains any of:
+        //   crack, smash, broken, broke, shatter, damaged, neck, "why is it"
+        // → Sets EventManager.marthaGuitarBreakdown = true
+        // → Fires GameEvents.MarthaBreakdownReady()
+        // → The next LLM response uses the breakdown prompt
+        //
+        // This happens BEFORE GenerateResponse() so the LLM gets the shifted prompt.
+
+        // ── Response Flow ──
+        // SubmitInput → LocalLLMManager.GenerateResponse(playerText, character, memories)
+        // → ShowResponse(text) → TypewriterEffect coroutine
+        // → GameEvents.ReceiveDialogue(character, response)
     }
 }
 ```
@@ -2645,11 +2516,12 @@ click.wav, hover.wav
 │                                                                  │
 │  INTERACTIVE OBJECTS (32×32 px each + glow variant)            │
 │  ═══════════════════════════════════════════════                │
-│  wedding_photo.png + wedding_photo_glow.png                     │
-│  ice_picks.png + ice_picks_glow.png                             │
-│  guitar.png + guitar_glow.png                                   │
-│  phone.png + phone_glow.png                                     │
-│  document.png + document_glow.png                               │
+│  wedding_photo.png + wedding_photo_glow.png  (Mystery 2 clue)  │
+│  ice_picks.png + ice_picks_glow.png          (Mystery 1 clue)  │
+│  guitar.png + guitar_glow.png                (Mystery 3 clue)  │
+│  phone.png + phone_glow.png                  (David access)     │
+│  computer.png + computer_glow.png            (Security Q hub)   │
+│  document.png + document_glow.png            (End-of-life doc)  │
 │                                                                  │
 │  FURNITURE (decorative, various sizes)                          │
 │  ═════════════════════════════════════                          │
@@ -2803,7 +2675,18 @@ MainRoom (Scene)
 │
 ├── ═══ INTERACTABLES ═══
 ├── Interactables
-│   ├── WeddingPhoto
+│   ├── Computer (NEW — central hub)
+│   │   ├── SpriteRenderer (Order: 1) → computer.png
+│   │   ├── GlowSprite (child, Order: 0) → computer_glow.png
+│   │   ├── BoxCollider2D (Layer: Interactables)
+│   │   └── ComputerInteraction.cs
+│   │       ├── Object ID: "computer"
+│   │       ├── Memory ID: "computer"
+│   │       ├── computerPanel → Canvas/ComputerPanel
+│   │       ├── finalPromptPanel → Canvas/FinalPromptPanel
+│   │       └── monologueHints[3] (one per mystery)
+│   │
+│   ├── WeddingPhoto (Mystery 2 clue)
 │   │   ├── SpriteRenderer (Order: 1)
 │   │   ├── GlowSprite (child, Order: 0)
 │   │   ├── BoxCollider2D (Layer: Interactables)
@@ -2811,18 +2694,18 @@ MainRoom (Scene)
 │   │       ├── Object ID: "wedding_photo"
 │   │       └── Memory ID: "wedding_photo"
 │   │
-│   ├── IcePicks
-│   │   └── (same structure)
+│   ├── IcePicks (Mystery 1 clue)
+│   │   └── (same structure, memoryId: "ice_picks")
 │   │
-│   ├── Guitar
-│   │   └── (same structure)
+│   ├── Guitar (Mystery 3 clue)
+│   │   └── (same structure, memoryId: "guitar")
 │   │
-│   ├── Phone
-│   │   ├── (same structure)
+│   ├── Phone (David access)
+│   │   ├── (same structure, memoryId: "phone")
 │   │   └── PhoneInteraction.cs
 │   │
-│   └── Document
-│       ├── (same structure)
+│   └── Document (locked until all questions answered)
+│       ├── (same structure, memoryId: "document")
 │       └── DocumentInteraction.cs
 │
 ├── ═══ UI ═══
@@ -2832,16 +2715,19 @@ MainRoom (Scene)
     │   └── Reference Resolution: 480×270
     │
     ├── DialoguePanel (inactive by default)
-    │   └── DialogueUI.cs
+    │   └── DialogueUI.cs (shared for Martha + David)
     │
-    ├── PhonePanel (inactive by default)
-    │   └── PhoneUI.cs
+    ├── ComputerPanel (inactive by default, NEW)
+    │   └── Managed by ComputerInteraction.cs (security questions)
+    │
+    ├── FinalPromptPanel (inactive by default, NEW)
+    │   └── Managed by ComputerInteraction.cs ("Can you forgive yourself?")
     │
     ├── MonologuePanel (inactive by default)
-    │   └── MonologueUI.cs
+    │   └── Managed by DialogueUI.ShowMonologue()
     │
-    ├── DecisionPanel (inactive by default)
-    │   └── DecisionUI.cs
+    ├── DecisionPanel (inactive by default — fallback only)
+    │   └── DecisionUI.cs (yields to ComputerInteraction when present)
     │
     ├── InteractionPrompt (inactive by default)
     │   └── InteractionPrompt.cs
@@ -2949,57 +2835,62 @@ PERSISTENT DATA PATHS:
 
 ```
 PRE-DEVELOPMENT:
-☐ Create Unity 2D project
-☐ Import TextMeshPro
-☐ Import 2D Pixel Perfect package
-☐ Import LLMUnity package
-☐ Set up folder structure
-☐ Configure layers and sorting layers
-☐ Set up .gitignore
+☑ Create Unity 2D project
+☑ Import TextMeshPro
+☑ Import 2D Pixel Perfect package
+☑ Import LLMUnity package
+☑ Set up folder structure
+☑ Configure layers and sorting layers
+☑ Set up .gitignore
 
-DAY 1-2 (Foundation):
-☐ GameManager, EventManager, GameStateMachine
-☐ SimplePathfinder with debug visualization
-☐ PlayerController2D with basic movement
-☐ CharacterAnimator with placeholder animations
-☐ Basic Canvas with DialoguePanel
+FOUNDATION:
+☑ GameManager, EventManager, GameStateMachine
+☑ SimplePathfinder with debug visualization
+☑ PlayerController2D with basic movement
+☑ CharacterAnimator with placeholder animations
+☑ Basic Canvas with DialoguePanel
 
-DAY 3-4 (Core Loop):
-☐ LocalLLMManager integration
-☐ ModelDownloader with progress UI
-☐ Character prompts (Martha, David)
-☐ DialogueUI with typewriter effect
-☐ Click-to-move working end-to-end
+CORE LOOP — SECURITY QUESTIONS:
+☑ ComputerInteraction.cs (question display, answer validation, final prompt)
+☑ EventManager security question API (OnSecurityQuestionStarted/Answered/All)
+☑ GameEvents for question progression (OnSecurityQuestionAnswered, OnAllQuestionsAnswered)
+☑ Phone rings on Q1 display (CheckPhoneTrigger)
+☑ Computer panel UI (ComputerPanel + FinalPromptPanel in Canvas)
 
-DAY 5-6 (Content):
-☐ Import character sprite sheets (from LPC generator)
-☐ Create animation clips and Animator controllers
-☐ SubtleIdleMovement on characters
-☐ InteractableObject2D with glow effect
-☐ 3 memory objects configured
+NARRATIVE-AWARE DIALOGUE:
+☑ CharacterPrompts.cs (6 Martha states, 4 David states, dynamic assembly)
+☑ LocalLLMManager narrative-state reading (activeQuestion, shutdown, breakdown)
+☑ Stub responses for all mystery states
+☑ Guitar breakdown keyword detection in DialogueUI.SubmitInput()
+☑ Opening lines per object + active question
+☑ AI identity guardrails in ALL prompt states (including breakdown + shutdown)
 
-DAY 7-8 (Phone & Endings):
-☐ PhoneInteraction triggering after 2 memories
-☐ PhoneUI variant
-☐ DocumentInteraction with lock/unlock
-☐ DecisionUI with Sign/Tear buttons
+MEMORY OBJECTS & ASSETS:
+☑ InteractableObject2D base class (virtual Start, gaze, glow)
+☑ 5 memory ScriptableObjects (ice_picks, wedding_photo, guitar, phone, computer)
+☑ Memory_Document.asset updated for security question narrative
+☑ Placeholder computer sprites (computer.png, computer_glow.png)
+☐ Final art assets for all objects
+☐ Character sprite sheets (Robert, Martha)
+
+PHONE & ENDINGS:
+☑ PhoneInteraction triggering on Q1 display
+☑ DialogueUI.OpenForPhone() with narrative-aware greeting
+☑ DocumentInteraction with lock/unlock (fallback path)
+☑ DecisionUI yields to ComputerInteraction (no double-panel)
+☑ FadeManager transitions for Sign/Tear endings
 ☐ EndScreen with quotes
-☐ FadeManager transitions
+☐ ending_torn.wav audio asset
 
-DAY 9 (Assets & Polish):
-☐ Import final art assets
-☐ Import music and SFX
+POLISH & TESTING:
+☑ NarrativeTests.cs (answer validation, state progression, prompt selection)
+☑ GameplayTests.cs updated for new opening lines
+☑ KEYWORD_REFERENCE.md documentation
+☐ Full playthrough testing with LLM enabled
 ☐ AudioManager with crossfade
-☐ Full playthrough testing
-☐ Bug fixes
-
-DAY 10 (Ship):
-☐ Final playthrough
+☐ Final art and SFX import
 ☐ Build for macOS
-☐ Build for Windows
 ☐ Test on fresh machine
-☐ Create README
-☐ Package and submit
 ```
 
 ---
@@ -3007,56 +2898,59 @@ DAY 10 (Ship):
 ## Quick Reference Card
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    LAST DAY - QUICK REFERENCE                                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  CORE LOOP:                                                                 │
-│  Click object → Pathfind → Walk (animated) → Arrive → Interact → Dialogue  │
-│                                                                              │
-│  KEY SCRIPTS:                                                               │
-│  ├── PlayerController2D.cs  - Movement + pathfinding                       │
-│  ├── CharacterAnimator.cs   - Walk/idle animation states                   │
-│  ├── SubtleIdleMovement.cs  - Breathing, sway, tremor                      │
-│  ├── SimplePathfinder.cs    - A* grid pathfinding                          │
-│  ├── InteractableObject2D.cs- Clickable objects                            │
-│  ├── DialogueUI.cs          - Dialogue panel + typewriter                  │
-│  └── LocalLLMManager.cs     - AI response generation                       │
-│                                                                              │
-│  SPRITE SIZES:                                                              │
-│  ├── Characters: 32×48 px per frame                                        │
-│  ├── Objects: 32×32 px                                                      │
-│  ├── Portraits: 64×64 px                                                    │
-│  └── Background: 480×270 px                                                 │
-│                                                                              │
-│  ANIMATION TIMING:                                                          │
-│  ├── Walk: 4 frames @ 0.15 sec = 0.6 sec cycle                             │
-│  ├── Idle: 3 frames @ 0.5 sec = 1.5 sec cycle                              │
-│  └── Breathing code: 0.4 Hz (2.5 sec per breath)                           │
-│                                                                              │
-│  CAMERA:                                                                    │
-│  ├── Orthographic, Size: 4.2                                               │
-│  ├── Reference Resolution: 480×270                                         │
-│  └── Pixels Per Unit: 32                                                    │
-│                                                                              │
-│  PATHFINDING:                                                               │
-│  ├── Grid Cell Size: 0.25 units                                            │
-│  ├── Obstacle Layer: "Obstacles"                                            │
-│  └── Walkable Layer: "Walkable"                                             │
-│                                                                              │
-│  LLM:                                                                       │
-│  ├── Model: Phi-3-mini-4k-instruct-q4 (2.2 GB)                             │
-│  ├── Max Tokens: 80                                                         │
-│  └── Expected Latency: ~2 sec on M4 Mac                                    │
-│                                                                              │
-│  MEMORY SYSTEM:                                                             │
-│  ├── Gaze for 2 sec → triggers memory                                      │
-│  ├── 2 memories → unlock document                                          │
-│  └── 2 memories → trigger phone call                                       │
-│                                                                              │
-│  ENDINGS:                                                                   │
-│  ├── Sign → Fade to black → Viktor Frankl quote                           │
-│  └── Tear → Fade to black → Cicero quote                                  │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    LAST DAY - QUICK REFERENCE                                 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  CORE LOOP:                                                                  │
+│  Computer (question) → Object (Martha lies) → Phone (David's truth) →       │
+│  Computer (type answer) → Next question → ... → "Can you forgive yourself?" │
+│                                                                               │
+│  THREE MYSTERIES:                                                            │
+│  ├── Q1 "Emergency Contact, '98 K2"    → ice_picks → Arthur                │
+│  ├── Q2 "Beneficiary, Account 4014"    → wedding_photo → Lily              │
+│  └── Q3 "Date of Proudest Moment"      → guitar → 10th Anniversary         │
+│                                                                               │
+│  KEY SCRIPTS:                                                                │
+│  ├── ComputerInteraction.cs  - Security question hub + final decision       │
+│  ├── CharacterPrompts.cs     - 6 Martha personas, 4 David personas          │
+│  ├── LocalLLMManager.cs      - Narrative-aware LLM/stub response gen        │
+│  ├── EventManager.cs         - activeSecurityQuestion, shutdown, breakdown  │
+│  ├── DialogueUI.cs           - Dialogue + guitar breakdown keyword scan     │
+│  ├── InteractableObject2D.cs - Base clickable object (gaze, hover, glow)    │
+│  ├── DocumentInteraction.cs  - Locked document (fallback decision)          │
+│  ├── PlayerController2D.cs   - Movement + pathfinding                       │
+│  └── GameStateMachine.cs     - Loading→Playing↔InDialogue/Phone/Decision   │
+│                                                                               │
+│  MARTHA PROMPT STATES:                                                       │
+│  ├── Q0: Warm Caretaker (default)                                           │
+│  ├── Q1: Hero Narrative  (NEVER says "cut", NEVER names Arthur)             │
+│  ├── Q2: Defensive Wife  (NEVER names Sarah or Lily)                        │
+│  ├── Q3: Romantic Lie    (beautiful anniversary song)                        │
+│  ├── Q3+breakdown: Admits drunk night, smashed guitar                       │
+│  └── Shutdown: Raw grief, no comfort, no deflection                         │
+│                                                                               │
+│  DAVID PROMPT STATES:                                                        │
+│  ├── Q0: Loyal Friend    │  Q2: Names Sarah & Lily                          │
+│  ├── Q1: Names Arthur    │  Q3: Blind spot — redirects to Martha            │
+│                                                                               │
+│  GUITAR BREAKDOWN KEYWORDS (DialogueUI):                                     │
+│  crack, smash, broken, broke, shatter, damaged, neck, "why is it"           │
+│                                                                               │
+│  PHONE TIMING: Rings when Q1 is first SHOWN (not answered)                  │
+│                                                                               │
+│  ENDINGS:                                                                    │
+│  ├── Sign → Fade to black (Robert takes the coward's release)               │
+│  └── Tear → ending_torn.wav (Robert accepts guilt, chooses to live)         │
+│                                                                               │
+│  LLM:                                                                        │
+│  ├── Model: Phi-3-mini-4k-instruct-q4 (2.2 GB)                              │
+│  ├── Max Tokens: 80  │  Temperature: 0.7                                    │
+│  └── Expected Latency: ~2 sec on M4 Mac                                     │
+│                                                                               │
+│  SPRITE SIZES:                                                               │
+│  ├── Characters: 32×48 px   │  Objects: 32×32 px                            │
+│  ├── Portraits: 64×64 px    │  Background: 480×270 px                       │
+│                                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```

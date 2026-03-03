@@ -145,11 +145,233 @@ public class SceneSetupEditor : EditorWindow
         PatchAddCloseButton();
         PatchWireCharacterLayer();
         PatchWireNullSafeManagers();
+        PatchAddComputerAndSecurityUI();
+        PatchFixEventManagerAndDecisionUI();
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
 
         Debug.Log("[Patch] All patches applied.");
+    }
+
+    [MenuItem("LastDay/Patch: Add Computer + Security UI", priority = 2)]
+    public static void PatchAddComputerAndSecurityUI()
+    {
+        int interactLayer = LayerMask.NameToLayer("Interactables");
+
+        // ── 1. Computer interactable ──────────────────────────
+        var interactables = GameObject.Find("interactables");
+        if (interactables == null)
+        {
+            Debug.LogError("[Patch] 'interactables' root not found. Run full scene setup first.");
+            return;
+        }
+
+        var existingComputer = interactables.transform.Find("Computer");
+        if (existingComputer != null)
+        {
+            Debug.Log("[Patch] Computer interactable already exists, skipping creation.");
+        }
+        else
+        {
+            var compGo = CreateChild(interactables, "Computer");
+            compGo.transform.localPosition = new Vector3(2f, 0.5f, 0);
+            SetLayer(compGo, interactLayer, false);
+
+            var sr = compGo.AddComponent<SpriteRenderer>();
+            sr.sprite = LoadSprite("Objects/computer.png");
+            SetSortingLayer(sr, "Objects", 0);
+
+            var col = compGo.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(0.6f, 0.5f);
+
+            var glowGo = CreateChild(compGo, "Glow");
+            var glowSr = glowGo.AddComponent<SpriteRenderer>();
+            glowSr.sprite = LoadSprite("Objects/computer_glow.png");
+            SetSortingLayer(glowSr, "Objects", -1);
+
+            var compInteract = compGo.AddComponent<ComputerInteraction>();
+            SetPrivateField(compInteract, "objectId", "computer");
+            SetPrivateField(compInteract, "displayName", "Computer");
+            SetPrivateField(compInteract, "memoryId", "computer");
+            SetPrivateField(compInteract, "spriteRenderer", sr);
+            SetPrivateField(compInteract, "highlightRenderer", glowSr);
+
+            Debug.Log("[Patch] Computer interactable created under 'interactables'.");
+        }
+
+        // ── 2. Computer UI panels under Canvas ────────────────
+        var canvas = GameObject.Find("Canvas");
+        if (canvas == null)
+        {
+            Debug.LogError("[Patch] Canvas not found.");
+            return;
+        }
+
+        var computerInteraction = interactables.GetComponentInChildren<ComputerInteraction>();
+        if (computerInteraction == null)
+        {
+            Debug.LogError("[Patch] ComputerInteraction component not found.");
+            return;
+        }
+
+        // ComputerPanel
+        if (canvas.transform.Find("ComputerPanel") == null)
+        {
+            var compPanel = CreateUIPanel(canvas, "ComputerPanel",
+                new Color32(10, 12, 18, 240), AnchorPreset.Center, 400f);
+            var cpRect = compPanel.GetComponent<RectTransform>();
+            cpRect.anchorMin = new Vector2(0.2f, 0.15f);
+            cpRect.anchorMax = new Vector2(0.8f, 0.85f);
+            cpRect.offsetMin = Vector2.zero;
+            cpRect.offsetMax = Vector2.zero;
+
+            var questionText = CreateUIText(compPanel, "QuestionText", "", 22, new Color(0.0f, 0.85f, 0.35f));
+            var qtRect = questionText.GetComponent<RectTransform>();
+            qtRect.anchorMin = new Vector2(0.05f, 0.55f);
+            qtRect.anchorMax = new Vector2(0.95f, 0.92f);
+            qtRect.offsetMin = Vector2.zero;
+            qtRect.offsetMax = Vector2.zero;
+            var qtTmp = questionText.GetComponent<TMP_Text>();
+            qtTmp.alignment = TextAlignmentOptions.Center;
+            qtTmp.enableWordWrapping = true;
+
+            var answerInput = CreateUIInputField(compPanel, "AnswerInput", "Type your answer...");
+            var aiRect = answerInput.GetComponent<RectTransform>();
+            aiRect.anchorMin = new Vector2(0.1f, 0.3f);
+            aiRect.anchorMax = new Vector2(0.7f, 0.45f);
+            aiRect.offsetMin = Vector2.zero;
+            aiRect.offsetMax = Vector2.zero;
+
+            var submitBtn = CreateUIButton(compPanel, "SubmitButton", "SUBMIT");
+            var sbRect = submitBtn.GetComponent<RectTransform>();
+            sbRect.anchorMin = new Vector2(0.72f, 0.3f);
+            sbRect.anchorMax = new Vector2(0.9f, 0.45f);
+            sbRect.offsetMin = Vector2.zero;
+            sbRect.offsetMax = Vector2.zero;
+            submitBtn.GetComponent<Image>().color = new Color32(0, 100, 40, 255);
+
+            var feedbackText = CreateUIText(compPanel, "FeedbackText", "", 16, new Color(1f, 0.3f, 0.3f));
+            var fbRect = feedbackText.GetComponent<RectTransform>();
+            fbRect.anchorMin = new Vector2(0.1f, 0.18f);
+            fbRect.anchorMax = new Vector2(0.9f, 0.28f);
+            fbRect.offsetMin = Vector2.zero;
+            fbRect.offsetMax = Vector2.zero;
+            feedbackText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
+            var closeBtn = CreateUIButton(compPanel, "CloseButton", "\u2715");
+            var cbRect = closeBtn.GetComponent<RectTransform>();
+            cbRect.anchorMin = new Vector2(1, 1);
+            cbRect.anchorMax = new Vector2(1, 1);
+            cbRect.pivot = new Vector2(1, 1);
+            cbRect.anchoredPosition = new Vector2(-8, -8);
+            cbRect.sizeDelta = new Vector2(40, 40);
+            closeBtn.GetComponent<Image>().color = new Color32(80, 40, 40, 200);
+
+            compPanel.SetActive(false);
+
+            // Wire to ComputerInteraction
+            SetPrivateField(computerInteraction, "computerPanel", compPanel);
+            SetPrivateField(computerInteraction, "questionText", qtTmp);
+            SetPrivateField(computerInteraction, "feedbackText", feedbackText.GetComponent<TMP_Text>());
+            SetPrivateField(computerInteraction, "answerInputField", answerInput.GetComponent<TMP_InputField>());
+            SetPrivateField(computerInteraction, "submitButton", submitBtn.GetComponent<Button>());
+            SetPrivateField(computerInteraction, "closeButton", closeBtn.GetComponent<Button>());
+
+            Debug.Log("[Patch] ComputerPanel created and wired.");
+        }
+        else
+        {
+            Debug.Log("[Patch] ComputerPanel already exists, skipping.");
+        }
+
+        // FinalPromptPanel
+        if (canvas.transform.Find("FinalPromptPanel") == null)
+        {
+            var finalPanel = CreateUIPanel(canvas, "FinalPromptPanel",
+                new Color32(10, 10, 20, 250), AnchorPreset.Center, 300f);
+            var fpRect = finalPanel.GetComponent<RectTransform>();
+            fpRect.anchorMin = new Vector2(0.25f, 0.25f);
+            fpRect.anchorMax = new Vector2(0.75f, 0.75f);
+            fpRect.offsetMin = Vector2.zero;
+            fpRect.offsetMax = Vector2.zero;
+
+            var finalText = CreateUIText(finalPanel, "FinalPromptText",
+                "FINAL SECURITY CHECK\n\nCan you forgive yourself?", 24, Color.white);
+            var ftRect = finalText.GetComponent<RectTransform>();
+            ftRect.anchorMin = new Vector2(0.05f, 0.5f);
+            ftRect.anchorMax = new Vector2(0.95f, 0.95f);
+            ftRect.offsetMin = Vector2.zero;
+            ftRect.offsetMax = Vector2.zero;
+            finalText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
+            var signBtn = CreateUIButton(finalPanel, "SignButton", "Sign");
+            var signRect = signBtn.GetComponent<RectTransform>();
+            signRect.anchorMin = new Vector2(0.1f, 0.08f);
+            signRect.anchorMax = new Vector2(0.45f, 0.35f);
+            signRect.offsetMin = Vector2.zero;
+            signRect.offsetMax = Vector2.zero;
+            signBtn.GetComponent<Image>().color = new Color32(100, 40, 40, 255);
+
+            var tearBtn = CreateUIButton(finalPanel, "TearButton", "Tear Up");
+            var tearRect = tearBtn.GetComponent<RectTransform>();
+            tearRect.anchorMin = new Vector2(0.55f, 0.08f);
+            tearRect.anchorMax = new Vector2(0.9f, 0.35f);
+            tearRect.offsetMin = Vector2.zero;
+            tearRect.offsetMax = Vector2.zero;
+            tearBtn.GetComponent<Image>().color = new Color32(40, 60, 100, 255);
+
+            finalPanel.SetActive(false);
+
+            SetPrivateField(computerInteraction, "finalPromptPanel", finalPanel);
+            SetPrivateField(computerInteraction, "finalPromptText", finalText.GetComponent<TMP_Text>());
+            SetPrivateField(computerInteraction, "signButton", signBtn.GetComponent<Button>());
+            SetPrivateField(computerInteraction, "tearButton", tearBtn.GetComponent<Button>());
+
+            Debug.Log("[Patch] FinalPromptPanel created and wired.");
+        }
+        else
+        {
+            Debug.Log("[Patch] FinalPromptPanel already exists, skipping.");
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        Debug.Log("[Patch] Computer + Security UI patch complete. Save the scene.");
+    }
+
+    [MenuItem("LastDay/Patch: Fix EventManager + DecisionUI", priority = 2)]
+    public static void PatchFixEventManagerAndDecisionUI()
+    {
+        // Fix DecisionUI prompt message
+        var canvas = GameObject.Find("Canvas");
+        if (canvas != null)
+        {
+            var decisionUI = canvas.GetComponent<DecisionUI>();
+            if (decisionUI != null)
+            {
+                SetPrivateField(decisionUI, "promptMessage", "FINAL SECURITY CHECK\n\nCan you forgive yourself?");
+                Debug.Log("[Patch] DecisionUI prompt updated.");
+            }
+        }
+
+        // EventManager: clear stale serialized fields (Unity drops missing fields on save)
+        var emGo = GameObject.Find("EventManager");
+        if (emGo != null)
+        {
+            var em = emGo.GetComponent<EventManager>();
+            if (em != null)
+            {
+                SetPrivateField(em, "activeSecurityQuestion", 0);
+                SetPrivateField(em, "marthaShutdownMode", false);
+                SetPrivateField(em, "marthaGuitarBreakdown", false);
+                Debug.Log("[Patch] EventManager security question fields initialized.");
+            }
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        Debug.Log("[Patch] EventManager + DecisionUI patch complete.");
     }
 
     public static void PatchWireCharacterLayer()
@@ -241,6 +463,12 @@ public class SceneSetupEditor : EditorWindow
             "The choice that changes everything. Or the choice that acknowledges nothing will change.",
             "Martha found the pamphlet three months ago. She hasn't brought it up. She won't. This has to be Robert's decision.",
             "David doesn't know about the document yet. When Robert tells him, there will be a long silence on the phone.");
+
+        CreateMemory(dataPath, "Memory_Computer", "computer", "Computer",
+            "Robert's old desktop computer. The screen glows with a security prompt.",
+            "The MAID document is locked behind three security questions. Each answer is a key to Robert's darkest secrets.",
+            "Martha doesn't like that computer. It knows things she's spent decades trying to bury.",
+            "David never trusted machines with secrets. But he respects that some doors need to be opened.");
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
@@ -644,6 +872,10 @@ public class SceneSetupEditor : EditorWindow
             new Vector3(1f, -0.5f, 0), "Objects/document.png", "Objects/document_glow.png",
             "document", "The Document", "document", new Vector2(0.5f, 0.4f));
 
+        CreateInteractable<ComputerInteraction>(root, "Computer", interactLayer,
+            new Vector3(2f, 0.5f, 0), "Objects/computer.png", "Objects/computer_glow.png",
+            "computer", "Computer", "computer", new Vector2(0.6f, 0.5f));
+
         Debug.Log("[SceneSetup] Interactables created.");
     }
 
@@ -881,6 +1113,93 @@ public class SceneSetupEditor : EditorWindow
 
         endPanel.SetActive(false);
 
+        // ── Computer Panel ────────────────────────────
+        var compPanel = CreateUIPanel(canvasGo, "ComputerPanel",
+            new Color32(10, 12, 18, 240), AnchorPreset.Center, 400f);
+        var cpRect = compPanel.GetComponent<RectTransform>();
+        cpRect.anchorMin = new Vector2(0.2f, 0.15f);
+        cpRect.anchorMax = new Vector2(0.8f, 0.85f);
+        cpRect.offsetMin = Vector2.zero;
+        cpRect.offsetMax = Vector2.zero;
+
+        var questionText = CreateUIText(compPanel, "QuestionText", "", 22, new Color(0.0f, 0.85f, 0.35f));
+        var qtRect = questionText.GetComponent<RectTransform>();
+        qtRect.anchorMin = new Vector2(0.05f, 0.55f);
+        qtRect.anchorMax = new Vector2(0.95f, 0.92f);
+        qtRect.offsetMin = Vector2.zero;
+        qtRect.offsetMax = Vector2.zero;
+        questionText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
+        var answerInput = CreateUIInputField(compPanel, "AnswerInput", "Type your answer...");
+        var answerRect = answerInput.GetComponent<RectTransform>();
+        answerRect.anchorMin = new Vector2(0.1f, 0.3f);
+        answerRect.anchorMax = new Vector2(0.7f, 0.45f);
+        answerRect.offsetMin = Vector2.zero;
+        answerRect.offsetMax = Vector2.zero;
+
+        var compSubmitBtn = CreateUIButton(compPanel, "SubmitButton", "SUBMIT");
+        var csbRect = compSubmitBtn.GetComponent<RectTransform>();
+        csbRect.anchorMin = new Vector2(0.72f, 0.3f);
+        csbRect.anchorMax = new Vector2(0.9f, 0.45f);
+        csbRect.offsetMin = Vector2.zero;
+        csbRect.offsetMax = Vector2.zero;
+        compSubmitBtn.GetComponent<Image>().color = new Color32(0, 100, 40, 255);
+
+        var feedbackText = CreateUIText(compPanel, "FeedbackText", "", 16, new Color(1f, 0.3f, 0.3f));
+        var fbRect = feedbackText.GetComponent<RectTransform>();
+        fbRect.anchorMin = new Vector2(0.1f, 0.18f);
+        fbRect.anchorMax = new Vector2(0.9f, 0.28f);
+        fbRect.offsetMin = Vector2.zero;
+        fbRect.offsetMax = Vector2.zero;
+        feedbackText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
+        var compCloseBtn = CreateUIButton(compPanel, "CloseButton", "\u2715");
+        var ccbRect = compCloseBtn.GetComponent<RectTransform>();
+        ccbRect.anchorMin = new Vector2(1, 1);
+        ccbRect.anchorMax = new Vector2(1, 1);
+        ccbRect.pivot = new Vector2(1, 1);
+        ccbRect.anchoredPosition = new Vector2(-8, -8);
+        ccbRect.sizeDelta = new Vector2(40, 40);
+        compCloseBtn.GetComponent<Image>().color = new Color32(80, 40, 40, 200);
+
+        compPanel.SetActive(false);
+
+        // ── Final Prompt Panel ───────────────────────────
+        var finalPanel = CreateUIPanel(canvasGo, "FinalPromptPanel",
+            new Color32(10, 10, 20, 250), AnchorPreset.Center, 300f);
+        var fpRect = finalPanel.GetComponent<RectTransform>();
+        fpRect.anchorMin = new Vector2(0.25f, 0.25f);
+        fpRect.anchorMax = new Vector2(0.75f, 0.75f);
+        fpRect.offsetMin = Vector2.zero;
+        fpRect.offsetMax = Vector2.zero;
+
+        var finalText = CreateUIText(finalPanel, "FinalPromptText",
+            "FINAL SECURITY CHECK\n\nCan you forgive yourself?", 24, Color.white);
+        var ftRect = finalText.GetComponent<RectTransform>();
+        ftRect.anchorMin = new Vector2(0.05f, 0.5f);
+        ftRect.anchorMax = new Vector2(0.95f, 0.95f);
+        ftRect.offsetMin = Vector2.zero;
+        ftRect.offsetMax = Vector2.zero;
+        finalText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
+        var finalSignBtn = CreateUIButton(finalPanel, "SignButton", "Sign");
+        var fsRect = finalSignBtn.GetComponent<RectTransform>();
+        fsRect.anchorMin = new Vector2(0.1f, 0.08f);
+        fsRect.anchorMax = new Vector2(0.45f, 0.35f);
+        fsRect.offsetMin = Vector2.zero;
+        fsRect.offsetMax = Vector2.zero;
+        finalSignBtn.GetComponent<Image>().color = new Color32(100, 40, 40, 255);
+
+        var finalTearBtn = CreateUIButton(finalPanel, "TearButton", "Tear Up");
+        var ftbRect = finalTearBtn.GetComponent<RectTransform>();
+        ftbRect.anchorMin = new Vector2(0.55f, 0.08f);
+        ftbRect.anchorMax = new Vector2(0.9f, 0.35f);
+        ftbRect.offsetMin = Vector2.zero;
+        ftbRect.offsetMax = Vector2.zero;
+        finalTearBtn.GetComponent<Image>().color = new Color32(40, 60, 100, 255);
+
+        finalPanel.SetActive(false);
+
         // ── Interaction Prompt ────────────────────────
         var promptRoot = new GameObject("InteractionPrompt", typeof(RectTransform));
         promptRoot.transform.SetParent(canvasGo.transform, false);
@@ -926,6 +1245,7 @@ public class SceneSetupEditor : EditorWindow
         SetPrivateField(decisionUI, "signButton", signBtn.GetComponent<Button>());
         SetPrivateField(decisionUI, "tearButton", tearBtn.GetComponent<Button>());
         SetPrivateField(decisionUI, "promptText", decPrompt.GetComponent<TMP_Text>());
+        SetPrivateField(decisionUI, "promptMessage", "FINAL SECURITY CHECK\n\nCan you forgive yourself?");
 
         var endScreen = canvasGo.AddComponent<EndScreen>();
         SetPrivateField(endScreen, "endPanel", endPanel);
@@ -984,6 +1304,43 @@ public class SceneSetupEditor : EditorWindow
         if (mcGo != null)
         {
             WireMemoryAssets(mcGo.GetComponent<MemoryContext>());
+        }
+
+        // Wire ComputerInteraction to its UI panels
+        var computerGo = GameObject.Find("Computer");
+        if (computerGo != null)
+        {
+            var compInteract = computerGo.GetComponent<ComputerInteraction>();
+            if (compInteract != null)
+            {
+                var compPanel = canvas.transform.Find("ComputerPanel");
+                if (compPanel != null)
+                {
+                    SetPrivateField(compInteract, "computerPanel", compPanel.gameObject);
+                    var qt = compPanel.Find("QuestionText");
+                    if (qt != null) SetPrivateField(compInteract, "questionText", qt.GetComponent<TMP_Text>());
+                    var fb = compPanel.Find("FeedbackText");
+                    if (fb != null) SetPrivateField(compInteract, "feedbackText", fb.GetComponent<TMP_Text>());
+                    var ai = compPanel.Find("AnswerInput");
+                    if (ai != null) SetPrivateField(compInteract, "answerInputField", ai.GetComponent<TMP_InputField>());
+                    var sb = compPanel.Find("SubmitButton");
+                    if (sb != null) SetPrivateField(compInteract, "submitButton", sb.GetComponent<Button>());
+                    var cb = compPanel.Find("CloseButton");
+                    if (cb != null) SetPrivateField(compInteract, "closeButton", cb.GetComponent<Button>());
+                }
+
+                var finalPanel = canvas.transform.Find("FinalPromptPanel");
+                if (finalPanel != null)
+                {
+                    SetPrivateField(compInteract, "finalPromptPanel", finalPanel.gameObject);
+                    var ft = finalPanel.Find("FinalPromptText");
+                    if (ft != null) SetPrivateField(compInteract, "finalPromptText", ft.GetComponent<TMP_Text>());
+                    var fsb = finalPanel.Find("SignButton");
+                    if (fsb != null) SetPrivateField(compInteract, "signButton", fsb.GetComponent<Button>());
+                    var ftb = finalPanel.Find("TearButton");
+                    if (ftb != null) SetPrivateField(compInteract, "tearButton", ftb.GetComponent<Button>());
+                }
+            }
         }
 
         Debug.Log("[SceneSetup] Cross-references wired.");
