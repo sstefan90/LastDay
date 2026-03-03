@@ -16,10 +16,13 @@ MonoBehaviour:
   objectName: Guitar
   objectSprite: {fileID: 21300000, guid: bbb245fb0a2d841df90286b4edb786f8, type: 3}
   glowSprite: {fileID: 21300000, guid: 19ff9d2db23c748f180e5c1ea218991e, type: 3}
-  shortDescription: "Robert's acoustic guitar, dusty now. He hasn't played in months
-    \u2014 his fingers won't cooperate."
-  fullStory: Sunday mornings were for music. The whole house would fill with sound.
-  marthaContext: Martha misses the music most. She'd hum along from the kitchen.
-    The silence in the house now is the loudest thing she's ever heard.
-  davidContext: David and Robert used to jam together. David on harmonica, Robert
-    on guitar. They were terrible, but it didn't matter.
+  shortDescription: "Robert's acoustic guitar. There's a massive crack down the back
+    of the neck. It's broken."
+  fullStory: "The 10th anniversary. Martha says he wrote her a beautiful song. The
+    guitar neck is cracked. These two facts cannot both be true."
+  marthaContext: "The 10th anniversary was the proudest moment \u2014 he stayed up
+    all night writing a song, played it at sunrise in his dress shirt, coffee going
+    cold. It was beautiful. The most beautiful thing she had ever heard."
+  davidContext: "David doesn\u2019t know what happened with the guitar. Robert stopped
+    playing one day and never said why. Martha never said why. David learned not
+    to push on that door. Whatever happened, it\u2019s between Robert and Martha."

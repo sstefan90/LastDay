@@ -16,10 +16,11 @@ MonoBehaviour:
   objectName: Phone
   objectSprite: {fileID: 21300000, guid: 8fb5145498598445eb75cddaa77ed451, type: 3}
   glowSprite: {fileID: 21300000, guid: dbe92ebdff9004793834892db7a10ea4, type: 3}
-  shortDescription: The house phone. It hasn't rung in a while.
-  fullStory: David calls when he can. The conversations get harder.
-  marthaContext: "Martha answers the phone when Robert can't. She and David don't
-    talk about the hard things \u2014 they just coordinate care and pretend everything
-    is fine."
-  davidContext: "David calls because he doesn't know what else to do. Hearing Robert's
-    voice \u2014 even diminished \u2014 is better than imagining the worst."
+  shortDescription: The house phone. David is the only one who calls.
+  fullStory: "David has been calling more often. He is honest in a way Martha is
+    not. He knows things Martha doesn\u2019t. He will say them, if asked."
+  marthaContext: "David called again this morning, before Robert was up. She answered.
+    They coordinated and pretended. She and David don\u2019t talk about hard things.
+    But David knows where to find them."
+  davidContext: "David calls because Robert is running out of time. He has things
+    to say that he should have said years ago. He is waiting for Robert to ask."

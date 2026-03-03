@@ -2,12 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using LastDay.Core;
+using LastDay.Interaction;
 
 namespace LastDay.UI
 {
     /// <summary>
-    /// The Sign / Tear decision panel that appears when the player interacts
-    /// with the unlocked document.
+    /// The Sign / Tear decision panel. Activated when all three security questions
+    /// are answered and "Can you forgive yourself?" is presented as the final check.
+    /// ComputerInteraction handles this directly via its own UI; DecisionUI acts as
+    /// a fallback panel for scenes that don't use the ComputerInteraction prefab.
     /// </summary>
     public class DecisionUI : MonoBehaviour
     {
@@ -20,7 +23,7 @@ namespace LastDay.UI
 
         [Header("Text")]
         [SerializeField] private TMP_Text promptText;
-        [SerializeField] private string promptMessage = "The document lies before you. What do you do?";
+        [SerializeField] private string promptMessage = "FINAL SECURITY CHECK\n\nCan you forgive yourself?";
 
         void Awake()
         {
@@ -34,6 +37,21 @@ namespace LastDay.UI
                 signButton.onClick.AddListener(OnSignClicked);
             if (tearButton != null)
                 tearButton.onClick.AddListener(OnTearClicked);
+
+            GameEvents.OnAllQuestionsAnswered += OnAllQuestionsAnswered;
+        }
+
+        void OnDestroy()
+        {
+            GameEvents.OnAllQuestionsAnswered -= OnAllQuestionsAnswered;
+        }
+
+        private void OnAllQuestionsAnswered()
+        {
+            if (FindObjectOfType<Interaction.ComputerInteraction>() != null)
+                return;
+
+            Show();
         }
 
         public void Show()

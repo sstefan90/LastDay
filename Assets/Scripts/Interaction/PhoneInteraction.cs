@@ -84,6 +84,8 @@ namespace LastDay.Interaction
 
             if (isRinging)
                 AnswerPhone();
+            else if (hasBeenAnswered)
+                CallDavidBack();
         }
 
         private void AnswerPhone()
@@ -94,13 +96,27 @@ namespace LastDay.Interaction
             if (pickupSound != null)
                 AudioSource.PlayClipAtPoint(pickupSound, transform.position);
 
-            GameStateMachine.Instance.ChangeState(GameState.PhoneCall);
+            OpenDavidDialogue();
+            Debug.Log("[Phone] Phone answered. Talking to David.");
+        }
+
+        private void CallDavidBack()
+        {
+            if (pickupSound != null)
+                AudioSource.PlayClipAtPoint(pickupSound, transform.position);
+
+            OpenDavidDialogue();
+            Debug.Log("[Phone] Calling David back.");
+        }
+
+        private void OpenDavidDialogue()
+        {
+            if (GameStateMachine.Instance != null)
+                GameStateMachine.Instance.ChangeState(GameState.PhoneCall);
 
             var dialogueUI = FindObjectOfType<LastDay.UI.DialogueUI>();
             if (dialogueUI != null)
                 dialogueUI.OpenForPhone();
-
-            Debug.Log("[Phone] Phone answered. Talking to David.");
         }
     }
 }

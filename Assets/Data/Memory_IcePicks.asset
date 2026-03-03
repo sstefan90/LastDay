@@ -17,11 +17,12 @@ MonoBehaviour:
   objectSprite: {fileID: 21300000, guid: d931935c9ef3942ab9731a1812287caf, type: 3}
   glowSprite: {fileID: 21300000, guid: 3042cabc8c73a40a097d80c2d4b8e894, type: 3}
   shortDescription: A pair of old ice climbing picks, mounted on the wall. Scuffed
-    and well-used.
-  fullStory: "1989 \u2014 Robert and David climbed Mount Washington in February.
-    Nearly died. Best weekend of their lives."
-  marthaContext: "Martha was furious when they came home frostbitten. She made Robert
-    promise never again. He kept that promise \u2014 she's not sure if that was the
-    right thing to ask."
-  davidContext: David still has his pair too. That climb was the day they stopped
-    being friends and became brothers.
+    and well-used. K2, 1998.
+  fullStory: "1998 \u2014 The K2 expedition. There was a storm. Three men on the
+    rope. One came home."
+  marthaContext: "Robert was brave. The storm was impossible. He tried to hold the
+    rope \u2014 he fought as hard as any man could. He couldn\u2019t save them. David
+    was on the radio at basecamp. It was a tragedy. Not Robert\u2019s fault."
+  davidContext: "David was at basecamp on the radio during the K2 storm. He heard
+    Arthur screaming before the line went quiet. Then Robert cut his comms. David
+    has never said this to Robert\u2019s face. Not until now."

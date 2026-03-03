@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c247c7b3acb51426ea61cfb91acd65e9, type: 3}
+  m_Name: Memory_Computer
+  m_EditorClassIdentifier: 
+  memoryId: computer
+  objectName: Computer
+  objectSprite: {fileID: 21300000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6, type: 3}
+  glowSprite: {fileID: 21300000, guid: b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7, type: 3}
+  shortDescription: "Robert's computer. Three security questions stand between him\
+    \ and the document. His past self made sure of that."
+  fullStory: "He locked it himself. He typed the questions in the middle of a night\
+    \ he cannot quite remember. He wanted to make it hard. He wanted to make himself\
+    \ face it."
+  marthaContext: "Martha doesn\u2019t know about the security questions. She knows\
+    \ about the document \u2014 she found it weeks ago. She has said nothing. But\
+    \ the questions are Robert\u2019s alone."
+  davidContext: "David knows Robert has been at the computer. He knows what Robert\
+    \ is looking for. He is waiting to be asked."
