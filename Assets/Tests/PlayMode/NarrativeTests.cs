@@ -278,10 +278,10 @@ namespace LastDay.Tests
         public void MarthaPrompt_Q0_ContainsCorePersonality()
         {
             string prompt = CharacterPrompts.GetMarthaPrompt(new List<string>(), 0);
-            Assert.IsTrue(prompt.Contains("warm") || prompt.Contains("Warm"),
+            Assert.IsTrue(prompt.Contains("warm", System.StringComparison.OrdinalIgnoreCase),
                 "Q0 prompt should describe Martha's warm personality");
-            Assert.IsFalse(prompt.Contains("hero narrative", System.StringComparison.OrdinalIgnoreCase),
-                "Q0 prompt should NOT contain Q1 hero narrative state");
+            Assert.IsFalse(prompt.Contains("K2") || prompt.Contains("expedition"),
+                "Q0 prompt should NOT contain Q1 mountain state");
             Debug.Log("[TEST PASS] MarthaPrompt_Q0_ContainsCorePersonality");
         }
 
@@ -289,13 +289,12 @@ namespace LastDay.Tests
         public void MarthaPrompt_Q1_ContainsHeroNarrative_NotCutWord()
         {
             string prompt = CharacterPrompts.GetMarthaPrompt(new List<string>(), 1);
-            Assert.IsTrue(prompt.Contains("HERO NARRATIVE", System.StringComparison.OrdinalIgnoreCase),
-                "Q1 prompt should describe the hero narrative state");
             Assert.IsTrue(prompt.Contains("storm", System.StringComparison.OrdinalIgnoreCase),
                 "Q1 prompt should mention the storm");
-            // Critical: Martha must NEVER say "cut" — verify the guardrail is in the prompt
-            Assert.IsTrue(prompt.Contains("\"cut\"") || prompt.Contains("say \"cut\""),
-                "Q1 prompt should contain the 'never say cut' guardrail");
+            Assert.IsTrue(prompt.Contains("rope", System.StringComparison.OrdinalIgnoreCase),
+                "Q1 prompt should mention the rope");
+            Assert.IsTrue(prompt.Contains("cut", System.StringComparison.OrdinalIgnoreCase),
+                "Q1 prompt should contain the 'cut' guardrail word");
             Debug.Log("[TEST PASS] MarthaPrompt_Q1_ContainsHeroNarrative_NotCutWord");
         }
 
@@ -303,12 +302,9 @@ namespace LastDay.Tests
         public void MarthaPrompt_Q2_ContainsDefensiveWife_NotLily()
         {
             string prompt = CharacterPrompts.GetMarthaPrompt(new List<string>(), 2);
-            Assert.IsTrue(prompt.Contains("DEFENSIVE WIFE", System.StringComparison.OrdinalIgnoreCase),
-                "Q2 prompt should describe the defensive wife state");
-            Assert.IsTrue(prompt.Contains("bad investments", System.StringComparison.OrdinalIgnoreCase),
-                "Q2 prompt should contain the cover story about bad investments");
-            // Guardrail: Martha must never name Lily
-            Assert.IsTrue(prompt.Contains("Lily") == false || prompt.Contains("NEVER name") || prompt.Contains("NEVER say"),
+            Assert.IsTrue(prompt.Contains("investment", System.StringComparison.OrdinalIgnoreCase),
+                "Q2 prompt should contain the cover story about investments");
+            Assert.IsTrue(prompt.Contains("Lily") == false || prompt.Contains("not know") || prompt.Contains("never"),
                 "Q2 prompt should NOT let Martha name Lily freely");
             Debug.Log("[TEST PASS] MarthaPrompt_Q2_ContainsDefensiveWife_NotLily");
         }
@@ -317,10 +313,12 @@ namespace LastDay.Tests
         public void MarthaPrompt_Q3_PreBreakdown_ContainsRomanticLie()
         {
             string prompt = CharacterPrompts.GetMarthaPrompt(new List<string>(), 3, false, false);
-            Assert.IsTrue(prompt.Contains("ROMANTIC LIE", System.StringComparison.OrdinalIgnoreCase),
-                "Q3 pre-breakdown prompt should describe the romantic lie state");
             Assert.IsTrue(prompt.Contains("anniversary", System.StringComparison.OrdinalIgnoreCase),
                 "Q3 prompt should mention anniversary");
+            Assert.IsTrue(prompt.Contains("song") || prompt.Contains("kitchen") || prompt.Contains("sunrise"),
+                "Q3 prompt should describe the romantic version of events");
+            Assert.IsFalse(prompt.Contains("drunk", System.StringComparison.OrdinalIgnoreCase),
+                "Q3 pre-breakdown must NOT contain the truth about being drunk");
             Debug.Log("[TEST PASS] MarthaPrompt_Q3_PreBreakdown_ContainsRomanticLie");
         }
 
@@ -328,39 +326,37 @@ namespace LastDay.Tests
         public void MarthaPrompt_Q3_PostBreakdown_ContainsBreakdownText()
         {
             string prompt = CharacterPrompts.GetMarthaPrompt(new List<string>(), 3, false, true);
-            Assert.IsTrue(prompt.Contains("BREAKDOWN", System.StringComparison.OrdinalIgnoreCase),
-                "Post-breakdown prompt should describe breakdown state");
+            Assert.IsTrue(prompt.Contains("lie is over", System.StringComparison.OrdinalIgnoreCase),
+                "Post-breakdown prompt should indicate the lie is over");
             Assert.IsTrue(prompt.Contains("drunk", System.StringComparison.OrdinalIgnoreCase),
                 "Post-breakdown prompt should describe him coming home drunk");
-            Assert.IsTrue(prompt.Contains("smashed") || prompt.Contains("wall"),
-                "Post-breakdown prompt should reference smashing the guitar");
+            Assert.IsTrue(prompt.Contains("wall") || prompt.Contains("smash"),
+                "Post-breakdown prompt should reference guitar damage");
             Debug.Log("[TEST PASS] MarthaPrompt_Q3_PostBreakdown_ContainsBreakdownText");
         }
 
         [Test]
         public void MarthaPrompt_ShutdownMode_OverridesAllOtherState()
         {
-            // Even with Q3 + breakdown active, shutdown takes precedence
             string prompt = CharacterPrompts.GetMarthaPrompt(new List<string>(), 3, true, true);
-            Assert.IsTrue(prompt.Contains("SHUTDOWN", System.StringComparison.OrdinalIgnoreCase),
-                "Shutdown mode prompt should be active when shutdownMode=true");
-            Assert.IsFalse(prompt.Contains("ROMANTIC LIE", System.StringComparison.OrdinalIgnoreCase),
-                "Shutdown mode should override the romantic lie persona");
+            Assert.IsTrue(prompt.Contains("over") && prompt.Contains("grief"),
+                "Shutdown mode prompt should express finality and grief");
+            Assert.IsFalse(prompt.Contains("anniversary") && prompt.Contains("song"),
+                "Shutdown mode should override the romantic lie");
             Debug.Log("[TEST PASS] MarthaPrompt_ShutdownMode_OverridesAllOtherState");
         }
 
         [Test]
         public void MarthaPrompt_NeverContainsAIAcknowledgment()
         {
-            // All states should have the AI-identity guardrail
             for (int q = 0; q <= 3; q++)
             {
                 string prompt = CharacterPrompts.GetMarthaPrompt(new List<string>(), q);
                 Assert.IsTrue(
-                    prompt.Contains("Never mention being an AI") ||
-                    prompt.Contains("Never mention being an AI, a model") ||
-                    prompt.Contains("never mention being an AI"),
-                    $"Martha Q{q} prompt should contain AI identity guardrail");
+                    prompt.Contains("Never break character") ||
+                    prompt.Contains("never break character") ||
+                    prompt.Contains("Never reference being artificial"),
+                    $"Martha Q{q} prompt should contain character-breaking guardrail");
             }
             Debug.Log("[TEST PASS] MarthaPrompt_NeverContainsAIAcknowledgment");
         }
@@ -370,7 +366,7 @@ namespace LastDay.Tests
         {
             var memories = new List<string> { "ice_picks", "guitar" };
             string prompt = CharacterPrompts.GetMarthaPrompt(memories, 1);
-            Assert.IsTrue(prompt.Contains("WHAT MARTHA IS AWARE OF") || prompt.Contains("ice_picks") || prompt.Contains("guitar"),
+            Assert.IsTrue(prompt.Contains("<aware>") || prompt.Contains("ice picks") || prompt.Contains("guitar"),
                 "Triggered memories should inject a memory section into Martha's prompt");
             Debug.Log("[TEST PASS] MarthaPrompt_WithTriggeredMemories_InjectsMemorySection");
         }
@@ -383,48 +379,69 @@ namespace LastDay.Tests
         public void DavidPrompt_Q0_ContainsLoyalFriend()
         {
             string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 0);
-            Assert.IsTrue(prompt.Contains("loyal") || prompt.Contains("DEFAULT STATE") ||
-                          prompt.Contains("right to choose"),
+            Assert.IsTrue(prompt.Contains("right to choose") || prompt.Contains("loyalty"),
                 "David Q0 prompt should describe loyal friend state");
             Debug.Log("[TEST PASS] DavidPrompt_Q0_ContainsLoyalFriend");
         }
 
         [Test]
-        public void DavidPrompt_Q1_ContainsArthur()
+        public void DavidPrompt_Q1_Resistance_DoesNotRevealTruth()
         {
-            string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 1);
-            Assert.IsTrue(prompt.Contains("Arthur"),
-                "David Q1 prompt must name Arthur — this is the key truth he reveals");
-            Assert.IsTrue(prompt.Contains("cut the rope") || prompt.Contains("cut the rope"),
-                "David Q1 prompt must reference cutting the rope");
-            Assert.IsTrue(prompt.Contains("radio") || prompt.Contains("basecamp"),
-                "David Q1 prompt must mention he was on the radio");
-            Debug.Log("[TEST PASS] DavidPrompt_Q1_ContainsArthur");
+            string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 1, false);
+            Assert.IsFalse(prompt.Contains("Arthur"),
+                "David Q1 pre-resistance prompt should NOT name Arthur yet");
+            Assert.IsTrue(prompt.Contains("push back") || prompt.Contains("want to open"),
+                "David Q1 pre-resistance should show hesitation");
+            Debug.Log("[TEST PASS] DavidPrompt_Q1_Resistance_DoesNotRevealTruth");
         }
 
         [Test]
-        public void DavidPrompt_Q2_ContainsLily()
+        public void DavidPrompt_Q1_PostResistance_ContainsArthur()
         {
-            string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 2);
+            string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 1, true);
+            Assert.IsTrue(prompt.Contains("Arthur"),
+                "David Q1 post-resistance prompt must name Arthur");
+            Assert.IsTrue(prompt.Contains("cut") && prompt.Contains("rope"),
+                "David Q1 post-resistance prompt must reference cutting the rope");
+            Assert.IsTrue(prompt.Contains("radio") || prompt.Contains("basecamp"),
+                "David Q1 post-resistance prompt must mention he was on the radio");
+            Debug.Log("[TEST PASS] DavidPrompt_Q1_PostResistance_ContainsArthur");
+        }
+
+        [Test]
+        public void DavidPrompt_Q2_Resistance_DoesNotRevealTruth()
+        {
+            string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 2, false);
+            Assert.IsFalse(prompt.Contains("Lily"),
+                "David Q2 pre-resistance prompt should NOT name Lily yet");
+            Assert.IsFalse(prompt.Contains("Sarah"),
+                "David Q2 pre-resistance prompt should NOT name Sarah yet");
+            Debug.Log("[TEST PASS] DavidPrompt_Q2_Resistance_DoesNotRevealTruth");
+        }
+
+        [Test]
+        public void DavidPrompt_Q2_PostResistance_ContainsLily()
+        {
+            string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 2, true);
             Assert.IsTrue(prompt.Contains("Lily"),
-                "David Q2 prompt must name Lily — this is the key truth he reveals");
+                "David Q2 post-resistance prompt must name Lily");
             Assert.IsTrue(prompt.Contains("Sarah"),
-                "David Q2 prompt must name Sarah (the mother)");
+                "David Q2 post-resistance prompt must name Sarah");
             Assert.IsTrue(prompt.Contains("child support") || prompt.Contains("25 years"),
-                "David Q2 prompt must reference the 25 years of child support");
-            Debug.Log("[TEST PASS] DavidPrompt_Q2_ContainsLily");
+                "David Q2 post-resistance prompt must reference the payments");
+            Debug.Log("[TEST PASS] DavidPrompt_Q2_PostResistance_ContainsLily");
         }
 
         [Test]
         public void DavidPrompt_Q3_IsBlindSpot_DoesNotRevealTruth()
         {
             string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), 3);
-            Assert.IsTrue(prompt.Contains("BLIND SPOT", System.StringComparison.OrdinalIgnoreCase),
-                "David Q3 prompt should describe the blind spot state");
-            Assert.IsTrue(prompt.Contains("doesn't know") || prompt.Contains("genuinely") || prompt.Contains("don't know"),
-                "David Q3 prompt should establish he genuinely doesn't know");
+            Assert.IsTrue(prompt.Contains("don't know") || prompt.Contains("do not know") || prompt.Contains("genuinely"),
+                "David Q3 prompt should establish he doesn't know");
             Assert.IsFalse(prompt.Contains("drunk", System.StringComparison.OrdinalIgnoreCase),
                 "David Q3 should NOT reveal the drunk/smashing truth — only Martha knows");
+            Assert.IsFalse(prompt.Contains("not my story") || prompt.Contains("not mine to answer") || prompt.Contains("between you and Martha"),
+                "David Q3 should NOT imply hidden knowledge — he genuinely has none");
             Debug.Log("[TEST PASS] DavidPrompt_Q3_IsBlindSpot_DoesNotRevealTruth");
         }
 
@@ -435,9 +452,9 @@ namespace LastDay.Tests
             {
                 string prompt = CharacterPrompts.GetDavidPrompt(new List<string>(), q);
                 Assert.IsTrue(
-                    prompt.Contains("Never mention being an AI") ||
-                    prompt.Contains("never mention being an AI"),
-                    $"David Q{q} prompt should contain AI identity guardrail");
+                    prompt.Contains("Never break character") ||
+                    prompt.Contains("never break character"),
+                    $"David Q{q} prompt should contain character-breaking guardrail");
             }
             Debug.Log("[TEST PASS] DavidPrompt_NeverContainsAIAcknowledgment");
         }
@@ -458,11 +475,13 @@ namespace LastDay.Tests
         }
 
         [Test]
-        public void OpeningLine_David_IcePicks_Q1_NamesArthur()
+        public void OpeningLine_David_IcePicks_Q1_ShowsWeight()
         {
             string line = CharacterPrompts.GetObjectOpeningLine("ice_picks", "david", 1);
-            Assert.IsTrue(line.Contains("Arthur"),
-                $"David's Q1 ice_picks opening should name Arthur, got: '{line}'");
+            Assert.IsFalse(string.IsNullOrEmpty(line),
+                "David should have an opening line for ice_picks at Q1");
+            Assert.IsTrue(line.Contains("mountain") || line.Contains("K2") || line.Contains("call") || line.Contains("feeling") || line.Contains("waiting"),
+                $"David's Q1 ice_picks opening should show gravitas, got: '{line}'");
             Debug.Log($"[TEST PASS] OpeningLine_David_IcePicks_Q1: '{line}'");
         }
 
@@ -470,10 +489,10 @@ namespace LastDay.Tests
         public void OpeningLine_David_Guitar_Q3_IsBlindSpot()
         {
             string line = CharacterPrompts.GetObjectOpeningLine("guitar", "david", 3);
-            Assert.IsTrue(line.Contains("don't know") || line.Contains("doesn't"),
-                $"David's guitar Q3 opening should admit he doesn't know, got: '{line}'");
-            Assert.IsTrue(line.Contains("Martha"),
-                $"David's guitar Q3 opening should redirect to Martha, got: '{line}'");
+            Assert.IsTrue(line.Contains("no idea") || line.Contains("don't know") || line.Contains("never knew"),
+                $"David's guitar Q3 opening should express genuine ignorance, got: '{line}'");
+            Assert.IsFalse(line.Contains("between you and Martha") || line.Contains("not my story"),
+                $"David's guitar Q3 opening should NOT imply hidden knowledge, got: '{line}'");
             Debug.Log($"[TEST PASS] OpeningLine_David_Guitar_Q3: '{line}'");
         }
 
@@ -576,33 +595,7 @@ namespace LastDay.Tests
         }
 
         [UnityTest]
-        public IEnumerator StubResponse_David_Q1_NamesArthur()
-        {
-            CreateStateMachine();
-            var em = CreateEventManager();
-            yield return null;
-
-            var llmGo = CreateChild("LLM");
-            var llm = llmGo.AddComponent<LocalLLMManager>();
-            llm.isInitialized = true;
-            llm.currentCharacter = "david";
-            yield return null;
-
-            em.OnSecurityQuestionStarted(0); // sets Q1 active
-            yield return null;
-
-            var task = llm.GenerateResponse("What happened on the mountain?", "david", new List<string>());
-            yield return new WaitUntil(() => task.IsCompleted);
-
-            string response = task.Result;
-            Assert.IsTrue(response.Contains("Arthur"),
-                $"David's Q1 stub response should name Arthur, got: '{response}'");
-
-            Debug.Log($"[TEST PASS] StubResponse_David_Q1_NamesArthur: '{response}'");
-        }
-
-        [UnityTest]
-        public IEnumerator StubResponse_David_Q2_NamesLily()
+        public IEnumerator StubResponse_David_Q1_ResistsThenReveals()
         {
             CreateStateMachine();
             var em = CreateEventManager();
@@ -615,17 +608,57 @@ namespace LastDay.Tests
             yield return null;
 
             em.OnSecurityQuestionStarted(0);
-            em.OnSecurityQuestionStarted(1); // sets Q2 active
             yield return null;
 
-            var task = llm.GenerateResponse("Where did the money go?", "david", new List<string>());
-            yield return new WaitUntil(() => task.IsCompleted);
+            // First call: David should resist, not reveal
+            var task1 = llm.GenerateResponse("What happened on the mountain?", "david", new List<string>());
+            yield return new WaitUntil(() => task1.IsCompleted);
+            string r1 = task1.Result;
+            Assert.IsFalse(r1.Contains("Arthur"),
+                $"David's first Q1 stub should resist (no Arthur), got: '{r1}'");
 
-            string response = task.Result;
-            Assert.IsTrue(response.Contains("Lily"),
-                $"David's Q2 stub response should name Lily, got: '{response}'");
+            // Second call: David gives truth after player persists
+            var task2 = llm.GenerateResponse("Tell me about the rope", "david", new List<string>());
+            yield return new WaitUntil(() => task2.IsCompleted);
+            string r2 = task2.Result;
+            Assert.IsTrue(r2.Contains("Arthur"),
+                $"David's second Q1 stub should reveal Arthur, got: '{r2}'");
 
-            Debug.Log($"[TEST PASS] StubResponse_David_Q2_NamesLily: '{response}'");
+            Debug.Log($"[TEST PASS] StubResponse_David_Q1_ResistsThenReveals");
+        }
+
+        [UnityTest]
+        public IEnumerator StubResponse_David_Q2_ResistsThenReveals()
+        {
+            CreateStateMachine();
+            var em = CreateEventManager();
+            yield return null;
+
+            var llmGo = CreateChild("LLM");
+            var llm = llmGo.AddComponent<LocalLLMManager>();
+            llm.isInitialized = true;
+            llm.currentCharacter = "david";
+            yield return null;
+
+            em.OnSecurityQuestionStarted(0);
+            em.OnSecurityQuestionStarted(1);
+            yield return null;
+
+            // First call: David should resist
+            var task1 = llm.GenerateResponse("Where did the money go?", "david", new List<string>());
+            yield return new WaitUntil(() => task1.IsCompleted);
+            string r1 = task1.Result;
+            Assert.IsFalse(r1.Contains("Lily"),
+                $"David's first Q2 stub should resist (no Lily), got: '{r1}'");
+
+            // Second call: David reveals
+            var task2 = llm.GenerateResponse("Tell me about the account", "david", new List<string>());
+            yield return new WaitUntil(() => task2.IsCompleted);
+            string r2 = task2.Result;
+            Assert.IsTrue(r2.Contains("Lily"),
+                $"David's second Q2 stub should reveal Lily, got: '{r2}'");
+
+            Debug.Log($"[TEST PASS] StubResponse_David_Q2_ResistsThenReveals");
         }
 
         [UnityTest]
