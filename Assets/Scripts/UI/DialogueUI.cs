@@ -8,7 +8,7 @@ using LastDay.Dialogue;
 
 namespace LastDay.UI
 {
-    public class DialogueUI : MonoBehaviour
+    public class DialogueUI : MonoBehaviour, IDialogueUI
     {
         public static DialogueUI Instance { get; private set; }
 
@@ -48,6 +48,7 @@ namespace LastDay.UI
         void Awake()
         {
             Instance = this;
+            DialogueSession.Current = this;
 
             if (dialoguePanel != null)
                 dialoguePanel.SetActive(false);
@@ -55,6 +56,14 @@ namespace LastDay.UI
                 monologuePanel.SetActive(false);
             if (thinkingIndicator != null)
                 thinkingIndicator.SetActive(false);
+        }
+
+        void OnDestroy()
+        {
+            if (ReferenceEquals(DialogueSession.Current, this))
+                DialogueSession.Current = null;
+            if (ReferenceEquals(Instance, this))
+                Instance = null;
         }
 
         void Start()

@@ -7,7 +7,6 @@ using System.IO;
 using System.Reflection;
 using LastDay.Core;
 using LastDay.Player;
-using LastDay.Pathfinding;
 using LastDay.Interaction;
 using LastDay.Dialogue;
 using LastDay.NPC;
@@ -101,6 +100,189 @@ public class SceneSetupEditor : EditorWindow
         Debug.Log("[SceneSetup] Scene setup complete. Save the scene (Ctrl+S / Cmd+S).");
     }
 
+    [MenuItem("LastDay/Scene view: Match Game camera", priority = 2)]
+    public static void SceneViewMatchGameCamera()
+    {
+        var camGo = GameObject.Find("Main Camera");
+        UnityEngine.Camera mainCam = camGo != null ? camGo.GetComponent<UnityEngine.Camera>() : null;
+        if (mainCam == null)
+        {
+            Debug.LogWarning("[SceneSetup] Main Camera not found. Create the scene first.");
+            return;
+        }
+
+        var sceneView = SceneView.lastActiveSceneView;
+        if (sceneView == null)
+        {
+            Debug.LogWarning("[SceneSetup] No active Scene view.");
+            return;
+        }
+
+        Vector3 camPos = mainCam.transform.position;
+        sceneView.pivot = new Vector3(camPos.x, camPos.y, 0f);
+        sceneView.size = mainCam.orthographicSize;
+        sceneView.orthographic = true;
+        sceneView.rotation = Quaternion.identity;
+        sceneView.Repaint();
+        Debug.Log("[SceneSetup] Scene view aligned to Game camera (same scale and framing).");
+    }
+
+    [MenuItem("LastDay/Create iteration: Interview-style scene", priority = 2)]
+    public static void CreateInterviewStyleScene()
+    {
+        string sourcePath = "Assets/Scenes/MainRoom.unity";
+        string destPath = "Assets/Scenes/MainRoom_InterviewStyle.unity";
+
+        if (!System.IO.File.Exists(sourcePath))
+        {
+            Debug.LogError($"[SceneSetup] Template not found: {sourcePath}");
+            return;
+        }
+        if (System.IO.File.Exists(destPath))
+        {
+            if (!EditorUtility.DisplayDialog("Interview-style scene exists",
+                $"'{destPath}' already exists. Overwrite?", "Overwrite", "Cancel"))
+                return;
+        }
+
+        System.IO.File.Copy(sourcePath, destPath, true);
+        AssetDatabase.Refresh();
+
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(destPath);
+        PatchApplyInterviewStyle();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        Debug.Log($"[SceneSetup] Created {destPath} from MainRoom template. Apply Interview-style UI and save (Ctrl+S).");
+    }
+
+    [MenuItem("LastDay/Patch: Apply Interview-style UI to current scene", priority = 2)]
+    public static void PatchApplyInterviewStyle()
+    {
+        var canvas = GameObject.Find("Canvas");
+        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
+
+        var martha = GameObject.Find("Martha");
+        if (martha == null) { Debug.LogError("[Patch] Martha not found."); return; }
+
+        var dialogueUI = canvas.GetComponent<DialogueUI>();
+        if (dialogueUI != null)
+        {
+            UnityEngine.Object.DestroyImmediate(dialogueUI);
+            Debug.Log("[Patch] Removed DialogueUI (replacing with Interview-style).");
+        }
+
+        var dialoguePanel = canvas.transform.Find("DialoguePanel");
+        if (dialoguePanel != null)
+            dialoguePanel.gameObject.SetActive(false);
+
+        var inputBar = canvas.transform.Find("InputBarPanel");
+        if (inputBar == null)
+        {
+            inputBar = CreateInterviewInputBar(canvas);
+            Debug.Log("[Patch] Created permanent InputBarPanel.");
+        }
+
+        var floatingBubble = canvas.transform.Find("FloatingDialogueBubble");
+        if (floatingBubble == null)
+        {
+            floatingBubble = CreateFloatingDialogueBubble(canvas, martha.transform);
+            Debug.Log("[Patch] Created FloatingDialogueBubble above Martha.");
+        }
+
+        var interviewUI = canvas.GetComponent<InterviewDialogueUI>();
+        if (interviewUI == null)
+        {
+            interviewUI = canvas.AddComponent<InterviewDialogueUI>();
+            var inputField = inputBar.Find("InputField")?.GetComponent<TMP_InputField>();
+            var sendBtn = inputBar.Find("SendButton")?.GetComponent<Button>();
+            var label = inputBar.Find("PlayerLabel")?.GetComponent<TMP_Text>();
+            var floating = floatingBubble.GetComponent<FloatingDialogueDisplay>();
+            var monoPanel = canvas.transform.Find("MonologuePanel")?.gameObject;
+            var monoText = monoPanel?.transform.Find("MonologueText")?.GetComponent<TMP_Text>();
+            var thinking = canvas.transform.Find("DialoguePanel")?.Find("ThinkingIndicator")?.gameObject;
+
+            SetPrivateField(interviewUI, "inputBarPanel", inputBar.gameObject);
+            SetPrivateField(interviewUI, "playerLabelText", label);
+            SetPrivateField(interviewUI, "inputField", inputField);
+            SetPrivateField(interviewUI, "sendButton", sendBtn);
+            SetPrivateField(interviewUI, "floatingDisplay", floating);
+            SetPrivateField(interviewUI, "monologuePanel", monoPanel);
+            SetPrivateField(interviewUI, "monologueText", monoText);
+            SetPrivateField(interviewUI, "thinkingIndicator", thinking);
+            Debug.Log("[Patch] InterviewDialogueUI added and wired.");
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+    }
+
+    static Transform CreateInterviewInputBar(GameObject canvas)
+    {
+        var panel = CreateUIPanel(canvas, "InputBarPanel",
+            new Color32(30, 30, 50, 220), AnchorPreset.BottomStretch, 80f);
+        SetStretchBottom(panel, 80f, 24f);
+
+        var label = CreateUIText(panel, "PlayerLabel", "Robert says:", 16, Color.white);
+        var labelRect = label.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0f, 0.5f);
+        labelRect.anchorMax = new Vector2(0.12f, 0.9f);
+        labelRect.offsetMin = new Vector2(12f, 4f);
+        labelRect.offsetMax = new Vector2(-4f, -4f);
+
+        var inputGo = CreateUIInputField(panel, "InputField", "What do you want to say...");
+        var inputRect = inputGo.GetComponent<RectTransform>();
+        inputRect.anchorMin = new Vector2(0.13f, 0.15f);
+        inputRect.anchorMax = new Vector2(0.85f, 0.85f);
+        inputRect.offsetMin = new Vector2(4f, 4f);
+        inputRect.offsetMax = new Vector2(-4f, -4f);
+
+        var sendBtn = CreateUIButton(panel, "SendButton", "Send");
+        var sendRect = sendBtn.GetComponent<RectTransform>();
+        sendRect.anchorMin = new Vector2(0.86f, 0.15f);
+        sendRect.anchorMax = new Vector2(1f, 0.85f);
+        sendRect.offsetMin = new Vector2(4f, 4f);
+        sendRect.offsetMax = new Vector2(-12f, -4f);
+
+        return panel.transform;
+    }
+
+    static Transform CreateFloatingDialogueBubble(GameObject canvas, Transform martha)
+    {
+        var go = new GameObject("FloatingDialogueBubble", typeof(RectTransform));
+        go.transform.SetParent(canvas.transform, false);
+
+        var rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.sizeDelta = new Vector2(400f, 120f);
+        rect.anchoredPosition = Vector2.zero;
+
+        var img = go.AddComponent<UnityEngine.UI.Image>();
+        img.color = new Color32(0, 0, 0, 180);
+
+        var textGo = new GameObject("Text", typeof(RectTransform));
+        textGo.transform.SetParent(go.transform, false);
+        var textRect = textGo.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(12f, 8f);
+        textRect.offsetMax = new Vector2(-12f, -8f);
+        var tmp = textGo.AddComponent<TextMeshProUGUI>();
+        tmp.text = "";
+        tmp.fontSize = 16;
+        tmp.color = Color.white;
+        tmp.enableWordWrapping = true;
+        tmp.alignment = TextAlignmentOptions.TopLeft;
+
+        var floating = go.AddComponent<FloatingDialogueDisplay>();
+        SetPrivateField(floating, "targetCharacter", martha);
+        SetPrivateField(floating, "textComponent", tmp);
+        SetPrivateField(floating, "screenOffsetY", 60f);
+
+        go.SetActive(false);
+        return go.transform;
+    }
+
     [MenuItem("LastDay/Patch: Add Close Button to Dialogue", priority = 2)]
     public static void PatchAddCloseButton()
     {
@@ -137,6 +319,76 @@ public class SceneSetupEditor : EditorWindow
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
 
         Debug.Log("[Patch] Close button added to DialoguePanel. Save the scene.");
+    }
+
+    [MenuItem("LastDay/Patch: Apply game view layout and room background", priority = 2)]
+    public static void PatchApplyGameViewLayoutAndBackground()
+    {
+        var cam = UnityEngine.Camera.main;
+        if (cam != null)
+        {
+            cam.rect = new Rect(0f, 0f, 1f, 1f);
+            Debug.Log("[Patch] Camera viewport set to full screen.");
+        }
+        else
+            Debug.LogWarning("[Patch] Main Camera not found.");
+
+        var canvas = GameObject.Find("Canvas");
+        if (canvas != null)
+        {
+            var notesPanel = canvas.transform.Find("NotesPanel");
+            if (notesPanel != null)
+            {
+                UnityEngine.Object.DestroyImmediate(notesPanel.gameObject);
+                Debug.Log("[Patch] NotesPanel removed.");
+            }
+
+            var dialoguePanel = canvas.transform.Find("DialoguePanel");
+            if (dialoguePanel != null)
+            {
+                const float dialogueHeight = 180f;
+                SetStretchBottom(dialoguePanel.gameObject, dialogueHeight, 24f);
+                dialoguePanel.SetAsLastSibling();
+                Debug.Log("[Patch] DialoguePanel set to full-width bottom.");
+            }
+
+            if (canvas.GetComponent<GameViewLayout>() == null)
+            {
+                var layout = canvas.AddComponent<GameViewLayout>();
+                SetPrivateField(layout, "dialoguePanelHeight", 180f);
+                Debug.Log("[Patch] GameViewLayout added to Canvas.");
+            }
+        }
+        else
+            Debug.LogWarning("[Patch] Canvas not found.");
+
+        var env = GameObject.Find("Environment");
+        if (env != null)
+        {
+            var roomBg = env.transform.Find("RoomBackground");
+            if (roomBg != null)
+            {
+                var sr = roomBg.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    var sprite = LoadSprite("Environment/Gemini_Generated_Image_r43rqr43rqr43rqr.png");
+                    if (sprite != null)
+                    {
+                        sr.sprite = sprite;
+                        Debug.Log("[Patch] Room background replaced with Gemini image.");
+                    }
+                }
+                roomBg.localScale = Vector3.one;
+                if (roomBg.GetComponent<BackgroundFitCamera>() == null)
+                {
+                    roomBg.gameObject.AddComponent<BackgroundFitCamera>();
+                    Debug.Log("[Patch] BackgroundFitCamera added so full image is visible.");
+                }
+            }
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
     }
 
     [MenuItem("LastDay/Patch: Apply All Fixes", priority = 2)]
@@ -461,13 +713,11 @@ public class SceneSetupEditor : EditorWindow
 
         int characterLayerMask = 1 << LayerMask.NameToLayer("Characters");
         int interactableLayerMask = 1 << LayerMask.NameToLayer("Interactables");
-        int walkableLayerMask = 1 << LayerMask.NameToLayer("Walkable");
 
         SetPrivateField(clickHandler, "characterLayer", characterLayerMask);
         SetPrivateField(clickHandler, "interactableLayer", interactableLayerMask);
-        SetPrivateField(clickHandler, "walkableLayer", walkableLayerMask);
 
-        Debug.Log("[Patch] ClickToMoveHandler: characterLayer, interactableLayer, walkableLayer wired.");
+        Debug.Log("[Patch] ClickToMoveHandler: characterLayer, interactableLayer wired (static scene).");
     }
 
     public static void PatchWireNullSafeManagers()
@@ -747,6 +997,7 @@ public class SceneSetupEditor : EditorWindow
         cam.orthographicSize = 5f;
         cam.backgroundColor = HexColor("#1A1A2E");
         cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.rect = new Rect(0f, 0f, 1f, 1f);
         camGo.transform.position = new Vector3(0, 0, -10);
 
         if (camGo.GetComponent<Physics2DRaycaster>() == null)
@@ -835,13 +1086,13 @@ public class SceneSetupEditor : EditorWindow
         root.transform.position = Vector3.zero;
 
         int obstacleLayer = LayerMask.NameToLayer("Obstacles");
-        int walkableLayer = LayerMask.NameToLayer("Walkable");
 
         var bgGo = CreateChild(root, "RoomBackground");
         var bgSr = bgGo.AddComponent<SpriteRenderer>();
-        bgSr.sprite = LoadSprite("Environment/room_background.png");
+        bgSr.sprite = LoadSprite("Environment/Gemini_Generated_Image_r43rqr43rqr43rqr.png");
         SetSortingLayer(bgSr, "Background", 0);
-        bgGo.transform.localScale = new Vector3(10f, 6f, 1f);
+        bgGo.transform.localScale = Vector3.one;
+        bgGo.AddComponent<BackgroundFitCamera>();
 
         CreateFurniture(root, "Desk", "Environment/furniture_desk.png", new Vector3(2f, -1f, 0),
             "Midground", 0, obstacleLayer, new Vector2(1f, 0.8f));
@@ -852,14 +1103,7 @@ public class SceneSetupEditor : EditorWindow
         CreateFurniture(root, "Bookshelf", "Environment/furniture_bookshelf.png", new Vector3(-3f, 0f, 0),
             "Midground", 0, obstacleLayer, new Vector2(1f, 1.5f));
 
-        var floorGo = CreateChild(root, "WalkableFloor");
-        SetLayer(floorGo, walkableLayer);
-        var floorCol = floorGo.AddComponent<BoxCollider2D>();
-        floorCol.size = new Vector2(8f, 4f);
-        floorCol.offset = new Vector2(0f, -1f);
-        floorCol.isTrigger = true;
-
-        Debug.Log("[SceneSetup] Environment created.");
+        Debug.Log("[SceneSetup] Environment created (static scene, no walkable floor).");
     }
 
     static void CreateFurniture(GameObject parent, string name, string spritePath, Vector3 pos,
@@ -884,9 +1128,8 @@ public class SceneSetupEditor : EditorWindow
     static void SetupRobert()
     {
         int charLayer = LayerMask.NameToLayer("Characters");
-        int obstacleLayerMask = 1 << LayerMask.NameToLayer("Obstacles");
         int interactableLayerMask = 1 << LayerMask.NameToLayer("Interactables");
-        int walkableLayerMask = 1 << LayerMask.NameToLayer("Walkable");
+        int characterLayerMask = 1 << LayerMask.NameToLayer("Characters");
 
         var robert = new GameObject("Robert");
         robert.transform.position = new Vector3(0f, -1f, 0f);
@@ -903,14 +1146,6 @@ public class SceneSetupEditor : EditorWindow
         var rb = robert.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
 
-        var pathfinder = robert.AddComponent<SimplePathfinder>();
-        SetPrivateField(pathfinder, "gridOrigin", new Vector2(-5f, -3f));
-        SetPrivateField(pathfinder, "gridSize", new Vector2(10f, 6f));
-        SetPrivateField(pathfinder, "cellSize", 0.5f);
-        SetPrivateField(pathfinder, "obstacleLayer", obstacleLayerMask);
-        SetPrivateField(pathfinder, "showDebugGrid", true);
-        SetPrivateField(pathfinder, "showPath", true);
-
         var charAnim = robert.AddComponent<CharacterAnimator>();
         SetPrivateField(charAnim, "spriteRenderer", sr);
 
@@ -918,18 +1153,14 @@ public class SceneSetupEditor : EditorWindow
         SetPrivateField(idleMove, "spriteRoot", spriteChild.transform);
 
         var controller = robert.AddComponent<PlayerController2D>();
-        SetPrivateField(controller, "pathfinder", pathfinder);
         controller.characterAnimator = charAnim;
         controller.idleMovement = idleMove;
 
-        int characterLayerMask = 1 << LayerMask.NameToLayer("Characters");
-
         var clickHandler = robert.AddComponent<ClickToMoveHandler>();
         SetPrivateField(clickHandler, "interactableLayer", interactableLayerMask);
-        SetPrivateField(clickHandler, "walkableLayer", walkableLayerMask);
         SetPrivateField(clickHandler, "characterLayer", characterLayerMask);
 
-        Debug.Log("[SceneSetup] Robert (player) created.");
+        Debug.Log("[SceneSetup] Robert (player) created — static scene, point-and-click only.");
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -1063,20 +1294,22 @@ public class SceneSetupEditor : EditorWindow
 
         canvasGo.AddComponent<GraphicRaycaster>();
 
-        // ── Dialogue Panel ────────────────────────────
+        // ── Dialogue Panel (bottom, full width) ──────────────────────
+        const float dialoguePanelHeight = 180f;
         var dialoguePanel = CreateUIPanel(canvasGo, "DialoguePanel",
-            new Color32(30, 30, 50, 220), AnchorPreset.BottomStretch, 250f);
-        SetStretchBottom(dialoguePanel, 250f, 50f);
+            new Color32(30, 30, 50, 220), AnchorPreset.BottomStretch, dialoguePanelHeight);
+        SetStretchBottom(dialoguePanel, dialoguePanelHeight, 24f);
+        dialoguePanel.transform.SetAsLastSibling();
 
-        var portrait = CreateUIImage(dialoguePanel, "CharacterPortrait", 100, 100);
-        SetAnchored(portrait, new Vector2(0, 0), new Vector2(0, 0), new Vector2(70, 130), new Vector2(100, 100));
+        var portrait = CreateUIImage(dialoguePanel, "CharacterPortrait", 72, 72);
+        SetAnchored(portrait, new Vector2(0, 0), new Vector2(0, 0), new Vector2(50, 90), new Vector2(72, 72));
         var portraitImg = portrait.GetComponent<Image>();
         portraitImg.sprite = LoadSprite("Characters/Martha/martha_portrait.png");
 
-        var charName = CreateUIText(dialoguePanel, "CharacterName", "Martha", 22, Color.white);
-        SetAnchored(charName, new Vector2(0, 1), new Vector2(0, 1), new Vector2(200, -20), new Vector2(300, 40));
+        var charName = CreateUIText(dialoguePanel, "CharacterName", "Martha", 18, Color.white);
+        SetAnchored(charName, new Vector2(0, 1), new Vector2(0, 1), new Vector2(160, -14), new Vector2(240, 32));
 
-        var dialogueText = CreateUIText(dialoguePanel, "DialogueText", "", 16, new Color(0.87f, 0.87f, 0.87f));
+        var dialogueText = CreateUIText(dialoguePanel, "DialogueText", "", 14, new Color(0.87f, 0.87f, 0.87f));
         var dialogueRect = dialogueText.GetComponent<RectTransform>();
         dialogueRect.anchorMin = new Vector2(0.12f, 0.25f);
         dialogueRect.anchorMax = new Vector2(0.98f, 0.85f);
@@ -1088,28 +1321,28 @@ public class SceneSetupEditor : EditorWindow
 
         var inputFieldGo = CreateUIInputField(dialoguePanel, "InputField", "What do you want to say...");
         var inputRect = inputFieldGo.GetComponent<RectTransform>();
-        inputRect.anchorMin = new Vector2(0.12f, 0f);
-        inputRect.anchorMax = new Vector2(0.85f, 0.2f);
-        inputRect.offsetMin = new Vector2(5, 10);
-        inputRect.offsetMax = new Vector2(-5, -5);
+        inputRect.anchorMin = new Vector2(0.14f, 0f);
+        inputRect.anchorMax = new Vector2(0.82f, 0.22f);
+        inputRect.offsetMin = new Vector2(4, 6);
+        inputRect.offsetMax = new Vector2(-4, -4);
 
         var sendBtn = CreateUIButton(dialoguePanel, "SendButton", "Send");
         var sendRect = sendBtn.GetComponent<RectTransform>();
-        sendRect.anchorMin = new Vector2(0.86f, 0f);
-        sendRect.anchorMax = new Vector2(1f, 0.2f);
-        sendRect.offsetMin = new Vector2(5, 10);
-        sendRect.offsetMax = new Vector2(-10, -5);
+        sendRect.anchorMin = new Vector2(0.84f, 0f);
+        sendRect.anchorMax = new Vector2(1f, 0.22f);
+        sendRect.offsetMin = new Vector2(4, 6);
+        sendRect.offsetMax = new Vector2(-8, -4);
 
         var closeBtn = CreateUIButton(dialoguePanel, "CloseButton", "\u2715  Esc");
         var closeRect = closeBtn.GetComponent<RectTransform>();
         closeRect.anchorMin = new Vector2(1, 1);
         closeRect.anchorMax = new Vector2(1, 1);
         closeRect.pivot = new Vector2(1, 1);
-        closeRect.anchoredPosition = new Vector2(-8, -8);
-        closeRect.sizeDelta = new Vector2(80, 30);
+        closeRect.anchoredPosition = new Vector2(-6, -6);
+        closeRect.sizeDelta = new Vector2(64, 26);
         closeBtn.GetComponent<Image>().color = new Color32(80, 40, 40, 200);
         var closeTmp = closeBtn.GetComponentInChildren<TMP_Text>();
-        if (closeTmp != null) closeTmp.fontSize = 14;
+        if (closeTmp != null) closeTmp.fontSize = 12;
 
         var thinkingGo = new GameObject("ThinkingIndicator", typeof(RectTransform));
         thinkingGo.transform.SetParent(dialoguePanel.transform, false);
@@ -1315,6 +1548,10 @@ public class SceneSetupEditor : EditorWindow
             fadeCg = fadeOverlay.AddComponent<CanvasGroup>();
         fadeCg.alpha = 0f;
         fadeCg.blocksRaycasts = false;
+
+        // ── Game view layout (full-screen camera, dialogue at bottom) ─
+        var layout = canvasGo.AddComponent<GameViewLayout>();
+        SetPrivateField(layout, "dialoguePanelHeight", dialoguePanelHeight);
 
         // ── Attach UI scripts to Canvas ───────────────
         var dialogueUI = canvasGo.AddComponent<DialogueUI>();
