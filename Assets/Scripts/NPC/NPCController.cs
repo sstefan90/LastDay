@@ -61,10 +61,10 @@ namespace LastDay.NPC
                     characterAnimator.FacePosition(player.transform.position);
             }
 
-            if (DialogueUI.Instance != null)
-                DialogueUI.Instance.OpenForNPC(npcId, displayName);
+            if (DialogueSession.Current != null)
+                DialogueSession.Current.OpenForNPC(npcId, displayName);
             else
-                Debug.LogWarning($"[NPC] DialogueUI.Instance is null, cannot open dialogue for {displayName}");
+                Debug.LogWarning($"[NPC] No dialogue UI found, cannot open dialogue for {displayName}");
         }
     }
 }

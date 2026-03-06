@@ -124,10 +124,9 @@ namespace LastDay.Interaction
                 ));
             }
 
-            var dialogueUI = FindObjectOfType<LastDay.UI.DialogueUI>();
-            if (dialogueUI != null)
+            if (LastDay.UI.DialogueSession.Current != null)
             {
-                dialogueUI.OpenForObject(objectId, memoryId, displayName);
+                LastDay.UI.DialogueSession.Current.OpenForObject(objectId, memoryId, displayName);
             }
         }
     }

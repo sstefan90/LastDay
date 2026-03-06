@@ -58,9 +58,8 @@ namespace LastDay.Interaction
         {
             Debug.Log($"[Document] Locked: {lockedMessage}");
 
-            var dialogueUI = FindObjectOfType<LastDay.UI.DialogueUI>();
-            if (dialogueUI != null)
-                dialogueUI.ShowMonologue(lockedMessage);
+            if (LastDay.UI.DialogueSession.Current != null)
+                LastDay.UI.DialogueSession.Current.ShowMonologue(lockedMessage);
         }
     }
 }

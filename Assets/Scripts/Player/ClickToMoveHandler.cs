@@ -11,7 +11,6 @@ namespace LastDay.Player
     {
         [Header("Layers")]
         [SerializeField] private LayerMask interactableLayer;
-        [SerializeField] private LayerMask walkableLayer;
         [SerializeField] private LayerMask characterLayer;
 
         [Header("Click Feedback")]
@@ -62,6 +61,11 @@ namespace LastDay.Player
 
             if (PlayerController2D.Instance == null) return;
 
+            int charactersLayer = LayerMask.NameToLayer("Characters");
+            LayerMask npcLayer = characterLayer;
+            if (npcLayer == 0 && charactersLayer >= 0)
+                npcLayer = 1 << charactersLayer;
+
             // Check interactable objects first
             Collider2D interactableHit = Physics2D.OverlapPoint(mouseWorldPos, interactableLayer);
             if (interactableHit != null)
@@ -75,11 +79,11 @@ namespace LastDay.Player
                 }
             }
 
-            // Check NPC characters (Martha)
-            Collider2D characterHit = Physics2D.OverlapPoint(mouseWorldPos, characterLayer);
+            // Check NPC characters (Martha) — use GetComponentInParent so clicks on her or her sprite child both work
+            Collider2D characterHit = Physics2D.OverlapPoint(mouseWorldPos, npcLayer);
             if (characterHit != null && characterHit.gameObject != gameObject)
             {
-                var npc = characterHit.GetComponent<NPCController>();
+                var npc = characterHit.GetComponentInParent<NPCController>();
                 if (npc != null)
                 {
                     PlayerController2D.Instance.MoveToAndTalk(npc);
@@ -88,13 +92,7 @@ namespace LastDay.Player
                 }
             }
 
-            // Then check walkable area
-            Collider2D walkableHit = Physics2D.OverlapPoint(mouseWorldPos, walkableLayer);
-            if (walkableHit != null)
-            {
-                PlayerController2D.Instance.MoveTo(mouseWorldPos);
-                ShowClickIndicator(mouseWorldPos);
-            }
+            // Static scene: no walk-to. Only interactables and NPCs respond to clicks.
         }
 
         private void ShowClickIndicator(Vector2 position)

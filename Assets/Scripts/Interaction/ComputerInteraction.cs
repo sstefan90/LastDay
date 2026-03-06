@@ -121,8 +121,8 @@ namespace LastDay.Interaction
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
 
             // Trigger the matching monologue hint so the player knows where to investigate
-            if (DialogueUI.Instance != null && currentQuestionIndex < monologueHints.Length)
-                DialogueUI.Instance.ShowMonologue(monologueHints[currentQuestionIndex]);
+            if (DialogueSession.Current != null && currentQuestionIndex < monologueHints.Length)
+                DialogueSession.Current.ShowMonologue(monologueHints[currentQuestionIndex]);
         }
 
         private void DisplayCurrentQuestion()

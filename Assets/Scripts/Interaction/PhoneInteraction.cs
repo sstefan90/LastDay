@@ -114,9 +114,8 @@ namespace LastDay.Interaction
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.PhoneCall);
 
-            var dialogueUI = FindObjectOfType<LastDay.UI.DialogueUI>();
-            if (dialogueUI != null)
-                dialogueUI.OpenForPhone();
+            if (LastDay.UI.DialogueSession.Current != null)
+                LastDay.UI.DialogueSession.Current.OpenForPhone();
         }
     }
 }
