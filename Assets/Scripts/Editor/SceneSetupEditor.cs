@@ -147,6 +147,7 @@ public class SceneSetupEditor : EditorWindow
         PatchWireNullSafeManagers();
         PatchAddComputerAndSecurityUI();
         PatchFixEventManagerAndDecisionUI();
+        PatchWireAudioClips();
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
@@ -372,6 +373,82 @@ public class SceneSetupEditor : EditorWindow
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
         Debug.Log("[Patch] EventManager + DecisionUI patch complete.");
+    }
+
+    [MenuItem("LastDay/Patch: Wire Audio Clips", priority = 2)]
+    public static void PatchWireAudioClips()
+    {
+        var amGo = GameObject.Find("AudioManager");
+        if (amGo == null)
+        {
+            Debug.LogError("[Patch] AudioManager not found in scene.");
+            return;
+        }
+
+        var audioMgr = amGo.GetComponent<AudioManager>();
+        if (audioMgr == null)
+        {
+            Debug.LogError("[Patch] AudioManager component not found.");
+            return;
+        }
+
+        var ambient = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Music/ambient.mp3");
+        var phoneRing = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/phone_ringing.mp3");
+        var typingClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/typing.mp3");
+        var tearingPaper = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/tearing_paper.wav");
+        var clockTick = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/clock_ticking.wav");
+
+        int wired = 0;
+        if (ambient != null) { SetPrivateField(audioMgr, "ambientLoop", ambient); wired++; }
+        else Debug.LogWarning("[Patch] ambient.mp3 not found at Assets/Audio/Music/ambient.mp3");
+
+        if (phoneRing != null) { SetPrivateField(audioMgr, "phoneRinging", phoneRing); wired++; }
+        else Debug.LogWarning("[Patch] phone_ringing.mp3 not found at Assets/Audio/SFX/phone_ringing.mp3");
+
+        if (typingClip != null) { SetPrivateField(audioMgr, "typing", typingClip); wired++; }
+        else Debug.LogWarning("[Patch] typing.mp3 not found at Assets/Audio/SFX/typing.mp3");
+
+        if (tearingPaper != null) { SetPrivateField(audioMgr, "paperTear", tearingPaper); wired++; }
+        else Debug.LogWarning("[Patch] tearing_paper.wav not found at Assets/Audio/SFX/tearing_paper.wav");
+
+        if (clockTick != null) { SetPrivateField(audioMgr, "clockTicking", clockTick); wired++; }
+        else Debug.LogWarning("[Patch] clock_ticking.wav not found at Assets/Audio/SFX/clock_ticking.wav");
+
+        // Also wire phone ring to PhoneInteraction if present
+        var phoneGo = GameObject.Find("phone");
+        if (phoneGo != null && phoneRing != null)
+        {
+            var phoneInteract = phoneGo.GetComponent<LastDay.Interaction.PhoneInteraction>();
+            if (phoneInteract != null)
+            {
+                SetPrivateField(phoneInteract, "ringSound", phoneRing);
+                Debug.Log("[Patch] PhoneInteraction.ringSound wired.");
+            }
+        }
+
+        // Ensure AudioManager has AudioSources
+        var sources = amGo.GetComponents<AudioSource>();
+        if (sources.Length < 3)
+        {
+            Debug.Log("[Patch] AudioManager missing AudioSources, adding them...");
+            while (amGo.GetComponents<AudioSource>().Length < 3)
+                amGo.AddComponent<AudioSource>();
+
+            sources = amGo.GetComponents<AudioSource>();
+            sources[0].playOnAwake = false;
+            sources[0].loop = true;
+            sources[1].playOnAwake = false;
+            sources[2].playOnAwake = false;
+
+            SetPrivateField(audioMgr, "musicSource", sources[0]);
+            SetPrivateField(audioMgr, "sfxSource", sources[1]);
+            SetPrivateField(audioMgr, "dialogueBlipSource", sources[2]);
+            Debug.Log("[Patch] AudioSources created and wired.");
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        Debug.Log($"[Patch] Audio clips wired: {wired}/5.");
     }
 
     public static void PatchWireCharacterLayer()
@@ -717,6 +794,19 @@ public class SceneSetupEditor : EditorWindow
         SetPrivateField(audioMgr, "musicSource", musicSrc);
         SetPrivateField(audioMgr, "sfxSource", sfxSrc);
         SetPrivateField(audioMgr, "dialogueBlipSource", blipSrc);
+
+        // Wire audio clips from project assets
+        var ambient = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Music/ambient.mp3");
+        var phoneRing = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/phone_ringing.mp3");
+        var typingClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/typing.mp3");
+        var tearingPaper = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/tearing_paper.wav");
+        var clockTick = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/clock_ticking.wav");
+
+        if (ambient != null) SetPrivateField(audioMgr, "ambientLoop", ambient);
+        if (phoneRing != null) SetPrivateField(audioMgr, "phoneRinging", phoneRing);
+        if (typingClip != null) SetPrivateField(audioMgr, "typing", typingClip);
+        if (tearingPaper != null) SetPrivateField(audioMgr, "paperTear", tearingPaper);
+        if (clockTick != null) SetPrivateField(audioMgr, "clockTicking", clockTick);
 
         var llmGo = CreateChild(root, "LocalLLMManager");
         llmGo.AddComponent<LocalLLMManager>();
@@ -1340,6 +1430,18 @@ public class SceneSetupEditor : EditorWindow
                     var ftb = finalPanel.Find("TearButton");
                     if (ftb != null) SetPrivateField(compInteract, "tearButton", ftb.GetComponent<Button>());
                 }
+            }
+        }
+
+        // Wire phone ring and pickup clips
+        var phoneGo = GameObject.Find("Phone");
+        if (phoneGo != null)
+        {
+            var phoneInteract = phoneGo.GetComponent<PhoneInteraction>();
+            if (phoneInteract != null)
+            {
+                var ringClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/phone_ringing.mp3");
+                if (ringClip != null) SetPrivateField(phoneInteract, "ringSound", ringClip);
             }
         }
 

@@ -35,6 +35,12 @@ namespace LastDay.Core
         public bool marthaShutdownMode = false;
         public bool marthaGuitarBreakdown = false;
 
+        [Header("David Resistance")]
+        // Tracks whether David has already pushed back on each mystery (keyed by activeQuestion 1-3)
+        private HashSet<int> davidResistanceUsed = new HashSet<int>();
+
+        public bool HasDavidResisted(int questionIndex) => davidResistanceUsed.Contains(questionIndex);
+        public void MarkDavidResisted(int questionIndex) => davidResistanceUsed.Add(questionIndex);
 
         private List<GameEvent> eventHistory = new List<GameEvent>();
 
