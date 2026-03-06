@@ -1,0 +1,866 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="93" result="Failed(Child)" total="93" passed="89" failed="4" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:47:12Z" duration="16.7710358">
+  <test-suite type="TestSuite" id="1000" name="LastDay" fullname="LastDay" runstate="Runnable" testcasecount="93" result="Failed" site="Child" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:47:12Z" duration="16.771036" total="93" passed="89" failed="4" inconclusive="0" skipped="0" asserts="0">
+    <properties />
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1097" name="LastDay.Tests.PlayMode.dll" fullname="/Users/stephone/Documents/LastDay/Library/ScriptAssemblies/LastDay.Tests.PlayMode.dll" runstate="Runnable" testcasecount="93" result="Failed" site="Child" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:47:12Z" duration="16.767469" total="93" passed="89" failed="4" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="30171" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1098" name="LastDay" fullname="LastDay" runstate="Runnable" testcasecount="93" result="Failed" site="Child" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:47:12Z" duration="16.767030" total="93" passed="89" failed="4" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1099" name="Tests" fullname="LastDay.Tests" runstate="Runnable" testcasecount="93" result="Failed" site="Child" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:47:12Z" duration="16.766645" total="93" passed="89" failed="4" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestFixture" id="1001" name="AudioTests" fullname="LastDay.Tests.AudioTests" classname="LastDay.Tests.AudioTests" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:46:56Z" duration="0.241144" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1003" name="AudioManager_Awake_ConfiguresSourceSettings" fullname="LastDay.Tests.AudioTests.AudioManager_Awake_ConfiguresSourceSettings" methodname="AudioManager_Awake_ConfiguresSourceSettings" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1328063760" result="Passed" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:46:55Z" duration="0.013763" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] AudioManager_Awake_ConfiguresSourceSettings
+]]></output>
+            </test-case>
+            <test-case id="1002" name="AudioManager_Awake_RegistersMusicClips" fullname="LastDay.Tests.AudioTests.AudioManager_Awake_RegistersMusicClips" methodname="AudioManager_Awake_RegistersMusicClips" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="478985480" result="Passed" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:46:55Z" duration="0.001897" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] AudioManager_Awake_RegistersMusicClips
+]]></output>
+            </test-case>
+            <test-case id="1015" name="AudioManager_HasClockTickingField" fullname="LastDay.Tests.AudioTests.AudioManager_HasClockTickingField" methodname="AudioManager_HasClockTickingField" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="529878552" result="Passed" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:46:55Z" duration="0.001155" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] AudioManager_HasClockTickingField
+]]></output>
+            </test-case>
+            <test-case id="1016" name="AudioManager_HasPaperTearField" fullname="LastDay.Tests.AudioTests.AudioManager_HasPaperTearField" methodname="AudioManager_HasPaperTearField" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="304121571" result="Passed" start-time="2026-03-04 01:46:55Z" end-time="2026-03-04 01:46:56Z" duration="0.000480" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] AudioManager_HasPaperTearField
+]]></output>
+            </test-case>
+            <test-case id="1013" name="AudioManager_HasPhoneRingingField" fullname="LastDay.Tests.AudioTests.AudioManager_HasPhoneRingingField" methodname="AudioManager_HasPhoneRingingField" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1205896613" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000395" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] AudioManager_HasPhoneRingingField
+]]></output>
+            </test-case>
+            <test-case id="1014" name="AudioManager_HasTypingField" fullname="LastDay.Tests.AudioTests.AudioManager_HasTypingField" methodname="AudioManager_HasTypingField" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="2100179265" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000323" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] AudioManager_HasTypingField
+]]></output>
+            </test-case>
+            <test-case id="1011" name="PlayMusic_InvalidClipName_LogsWarning" fullname="LastDay.Tests.AudioTests.PlayMusic_InvalidClipName_LogsWarning" methodname="PlayMusic_InvalidClipName_LogsWarning" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1971548953" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.002075" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[Audio] Music clip not found or null: nonexistent_track
+[TEST PASS] PlayMusic_InvalidClipName_LogsWarning
+]]></output>
+            </test-case>
+            <test-case id="1012" name="PlayMusic_NullSource_DoesNotThrow" fullname="LastDay.Tests.AudioTests.PlayMusic_NullSource_DoesNotThrow" methodname="PlayMusic_NullSource_DoesNotThrow" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="30028236" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.001334" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] PlayMusic_NullSource_DoesNotThrow
+]]></output>
+            </test-case>
+            <test-case id="1010" name="PlayMusic_ValidClip_PlaysOnSource" fullname="LastDay.Tests.AudioTests.PlayMusic_ValidClip_PlaysOnSource" methodname="PlayMusic_ValidClip_PlaysOnSource" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="547954934" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.001620" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[Audio] Playing music: ambient_loop
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+[TEST PASS] PlayMusic_ValidClip_PlaysOnSource
+]]></output>
+            </test-case>
+            <test-case id="1004" name="PlaySFX_AllNamedClips_DoNotThrow" fullname="LastDay.Tests.AudioTests.PlaySFX_AllNamedClips_DoNotThrow" methodname="PlaySFX_AllNamedClips_DoNotThrow" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1813928962" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.001324" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] PlaySFX_AllNamedClips_DoNotThrow
+]]></output>
+            </test-case>
+            <test-case id="1006" name="PlaySFX_NullSource_DoesNotThrow" fullname="LastDay.Tests.AudioTests.PlaySFX_NullSource_DoesNotThrow" methodname="PlaySFX_NullSource_DoesNotThrow" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1804015319" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.001087" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] PlaySFX_NullSource_DoesNotThrow
+]]></output>
+            </test-case>
+            <test-case id="1005" name="PlaySFX_UnknownName_DoesNotThrow" fullname="LastDay.Tests.AudioTests.PlaySFX_UnknownName_DoesNotThrow" methodname="PlaySFX_UnknownName_DoesNotThrow" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1013289178" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000898" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] PlaySFX_UnknownName_DoesNotThrow
+]]></output>
+            </test-case>
+            <test-case id="1007" name="StartClockTick_CreatesLoopingSource" fullname="LastDay.Tests.AudioTests.StartClockTick_CreatesLoopingSource" methodname="StartClockTick_CreatesLoopingSource" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1245395937" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.001307" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+[TEST PASS] StartClockTick_CreatesLoopingSource
+]]></output>
+            </test-case>
+            <test-case id="1008" name="StartClockTick_NullClip_DoesNothing" fullname="LastDay.Tests.AudioTests.StartClockTick_NullClip_DoesNothing" methodname="StartClockTick_NullClip_DoesNothing" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="1489062546" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000979" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] StartClockTick_NullClip_DoesNothing
+]]></output>
+            </test-case>
+            <test-case id="1009" name="StopClockTick_StopsPlayback" fullname="LastDay.Tests.AudioTests.StopClockTick_StopsPlayback" methodname="StopClockTick_StopsPlayback" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="592686161" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.102026" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+[TEST PASS] StopClockTick_StopsPlayback
+]]></output>
+            </test-case>
+            <test-case id="1017" name="StopMusic_StopsPlayback" fullname="LastDay.Tests.AudioTests.StopMusic_StopsPlayback" methodname="StopMusic_StopsPlayback" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="24361916" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.101907" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[Audio] Playing music: ambient_loop
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+[TEST PASS] StopMusic_StopsPlayback
+]]></output>
+            </test-case>
+            <test-case id="1018" name="StopMusic_WhenNotPlaying_DoesNotThrow" fullname="LastDay.Tests.AudioTests.StopMusic_WhenNotPlaying_DoesNotThrow" methodname="StopMusic_WhenNotPlaying_DoesNotThrow" classname="LastDay.Tests.AudioTests" runstate="Runnable" seed="978504665" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.001037" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] StopMusic_WhenNotPlaying_DoesNotThrow
+]]></output>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1019" name="GameplayTests" fullname="LastDay.Tests.GameplayTests" classname="LastDay.Tests.GameplayTests" runstate="Runnable" testcasecount="38" result="Failed" site="Child" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:47:07Z" duration="11.418749" total="38" passed="34" failed="4" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-case id="1046" name="CharacterIdleMovement_BreathingConfig_Default_HasExpectedValues" fullname="LastDay.Tests.GameplayTests.CharacterIdleMovement_BreathingConfig_Default_HasExpectedValues" methodname="CharacterIdleMovement_BreathingConfig_Default_HasExpectedValues" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1489575455" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.003141" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] CharacterIdleMovement_BreathingConfig_Default_HasExpectedValues
+]]></output>
+            </test-case>
+            <test-case id="1042" name="CharacterIdleMovement_OnStartWalking_DisablesComponent" fullname="LastDay.Tests.GameplayTests.CharacterIdleMovement_OnStartWalking_DisablesComponent" methodname="CharacterIdleMovement_OnStartWalking_DisablesComponent" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1906776485" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.002342" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] CharacterIdleMovement_OnStartWalking_DisablesComponent
+]]></output>
+            </test-case>
+            <test-case id="1043" name="CharacterIdleMovement_OnStopWalking_EnablesComponent" fullname="LastDay.Tests.GameplayTests.CharacterIdleMovement_OnStopWalking_EnablesComponent" methodname="CharacterIdleMovement_OnStopWalking_EnablesComponent" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="825537773" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000876" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] CharacterIdleMovement_OnStopWalking_EnablesComponent
+]]></output>
+            </test-case>
+            <test-case id="1047" name="CharacterIdleMovement_SwayConfig_Default_HasExpectedValues" fullname="LastDay.Tests.GameplayTests.CharacterIdleMovement_SwayConfig_Default_HasExpectedValues" methodname="CharacterIdleMovement_SwayConfig_Default_HasExpectedValues" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1669363748" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000395" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] CharacterIdleMovement_SwayConfig_Default_HasExpectedValues
+]]></output>
+            </test-case>
+            <test-case id="1045" name="CharacterIdleMovement_TremorConfig_Default_HasTremorEnabled" fullname="LastDay.Tests.GameplayTests.CharacterIdleMovement_TremorConfig_Default_HasTremorEnabled" methodname="CharacterIdleMovement_TremorConfig_Default_HasTremorEnabled" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1126598094" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000439" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] CharacterIdleMovement_TremorConfig_Default_HasTremorEnabled
+]]></output>
+            </test-case>
+            <test-case id="1044" name="CharacterIdleMovement_TremorConfig_None_HasTremorDisabled" fullname="LastDay.Tests.GameplayTests.CharacterIdleMovement_TremorConfig_None_HasTremorDisabled" methodname="CharacterIdleMovement_TremorConfig_None_HasTremorDisabled" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="718837444" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.000331" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] CharacterIdleMovement_TremorConfig_None_HasTremorDisabled
+]]></output>
+            </test-case>
+            <test-case id="1048" name="CharacterIdleMovement_UpdateDoesNotThrow_WithoutSpriteRoot" fullname="LastDay.Tests.GameplayTests.CharacterIdleMovement_UpdateDoesNotThrow_WithoutSpriteRoot" methodname="CharacterIdleMovement_UpdateDoesNotThrow_WithoutSpriteRoot" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1498877842" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.001096" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[TEST PASS] CharacterIdleMovement_UpdateDoesNotThrow_WithoutSpriteRoot
+]]></output>
+            </test-case>
+            <test-case id="1036" name="Dialogue_Close_ResetsState" fullname="LastDay.Tests.GameplayTests.Dialogue_Close_ResetsState" methodname="Dialogue_Close_ResetsState" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1814324258" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.073548" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[GameState] InDialogue -> Playing
+[TEST PASS] Dialogue_Close_ResetsState
+]]></output>
+            </test-case>
+            <test-case id="1038" name="Dialogue_ClosePhoneCall_ReturnsToPlaying" fullname="LastDay.Tests.GameplayTests.Dialogue_ClosePhoneCall_ReturnsToPlaying" methodname="Dialogue_ClosePhoneCall_ReturnsToPlaying" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1220587212" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.004616" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[LLM] Switched to character: david
+[GameState] Playing -> PhoneCall
+[GameState] PhoneCall -> Playing
+[TEST PASS] Dialogue_ClosePhoneCall_ReturnsToPlaying
+]]></output>
+            </test-case>
+            <test-case id="1035" name="Dialogue_EmptyInput_DoesNotSend" fullname="LastDay.Tests.GameplayTests.Dialogue_EmptyInput_DoesNotSend" methodname="Dialogue_EmptyInput_DoesNotSend" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1374525711" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.603189" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[TEST PASS] Dialogue_EmptyInput_DoesNotSend
+]]></output>
+            </test-case>
+            <test-case id="1039" name="Dialogue_MultipleOpens_NoErrors" fullname="LastDay.Tests.GameplayTests.Dialogue_MultipleOpens_NoErrors" methodname="Dialogue_MultipleOpens_NoErrors" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1888291466" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:56Z" duration="0.008795" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[GameState] InDialogue -> Playing
+[GameState] Playing -> InDialogue
+[GameState] InDialogue -> Playing
+[GameState] Playing -> InDialogue
+[GameState] InDialogue -> Playing
+[TEST PASS] Dialogue_MultipleOpens_NoErrors
+]]></output>
+            </test-case>
+            <test-case id="1033" name="Dialogue_OpenForNPC_ShowsMarthaGreeting" fullname="LastDay.Tests.GameplayTests.Dialogue_OpenForNPC_ShowsMarthaGreeting" methodname="Dialogue_OpenForNPC_ShowsMarthaGreeting" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1241878777" result="Passed" start-time="2026-03-04 01:46:56Z" end-time="2026-03-04 01:46:57Z" duration="0.102976" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[TEST PASS] Dialogue_OpenForNPC_ShowsMarthaGreeting
+]]></output>
+            </test-case>
+            <test-case id="1032" name="Dialogue_OpenForObject_ShowsGreeting" fullname="LastDay.Tests.GameplayTests.Dialogue_OpenForObject_ShowsGreeting" methodname="Dialogue_OpenForObject_ShowsGreeting" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1319958732" result="Failed" start-time="2026-03-04 01:46:57Z" end-time="2026-03-04 01:46:57Z" duration="0.004835" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <failure>
+                <message><![CDATA[  Panel should start hidden
+  Expected: False
+  But was:  True
+]]></message>
+                <stack-trace><![CDATA[at LastDay.Tests.GameplayTests+<Dialogue_OpenForObject_ShowsGreeting>d__27.MoveNext () [0x00080] in /Users/stephone/Documents/LastDay/Assets/Tests/PlayMode/GameplayTests.cs:571
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in ./Library/PackageCache/com.unity.test-framework@1.1.33/UnityEngine.TestRunner/NUnitExtensions/Attributes/TestEnumerator.cs:46
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[[GameState] Loading -> Playing
+]]></output>
+            </test-case>
+            <test-case id="1037" name="Dialogue_PhoneCall_SwitchesToDavid" fullname="LastDay.Tests.GameplayTests.Dialogue_PhoneCall_SwitchesToDavid" methodname="Dialogue_PhoneCall_SwitchesToDavid" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1225337840" result="Passed" start-time="2026-03-04 01:46:57Z" end-time="2026-03-04 01:46:57Z" duration="0.103482" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[LLM] Switched to character: david
+[GameState] Playing -> PhoneCall
+[TEST PASS] Dialogue_PhoneCall_SwitchesToDavid
+]]></output>
+            </test-case>
+            <test-case id="1034" name="Dialogue_SubmitInput_GetsStubResponse" fullname="LastDay.Tests.GameplayTests.Dialogue_SubmitInput_GetsStubResponse" methodname="Dialogue_SubmitInput_GetsStubResponse" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="218688965" result="Passed" start-time="2026-03-04 01:46:57Z" end-time="2026-03-04 01:47:00Z" duration="3.103077" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[TEST PASS] Dialogue_SubmitInput_GetsStubResponse: 'Your hands are doing that thing again. Are you cold, or just thinking?'
+]]></output>
+            </test-case>
+            <test-case id="1056" name="LLM_Initialize_WithEmptyPath_InitializesInStubMode" fullname="LastDay.Tests.GameplayTests.LLM_Initialize_WithEmptyPath_InitializesInStubMode" methodname="LLM_Initialize_WithEmptyPath_InitializesInStubMode" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="761761132" result="Passed" start-time="2026-03-04 01:47:00Z" end-time="2026-03-04 01:47:00Z" duration="0.102244" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[LLM] Initialized in stub mode.
+[TEST PASS] LLM_Initialize_WithEmptyPath_InitializesInStubMode
+]]></output>
+            </test-case>
+            <test-case id="1057" name="LLM_Initialize_WithInvalidPath_InitializesInStubMode" fullname="LastDay.Tests.GameplayTests.LLM_Initialize_WithInvalidPath_InitializesInStubMode" methodname="LLM_Initialize_WithInvalidPath_InitializesInStubMode" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1377448252" result="Passed" start-time="2026-03-04 01:47:00Z" end-time="2026-03-04 01:47:00Z" duration="0.101449" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[LLM] Initialized in stub mode.
+[TEST PASS] LLM_Initialize_WithInvalidPath_InitializesInStubMode
+]]></output>
+            </test-case>
+            <test-case id="1055" name="LLM_Initialize_WithNullPath_InitializesInStubMode" fullname="LastDay.Tests.GameplayTests.LLM_Initialize_WithNullPath_InitializesInStubMode" methodname="LLM_Initialize_WithNullPath_InitializesInStubMode" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="988090195" result="Passed" start-time="2026-03-04 01:47:00Z" end-time="2026-03-04 01:47:00Z" duration="0.101675" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[LLM] Initialized in stub mode.
+[TEST PASS] LLM_Initialize_WithNullPath_InitializesInStubMode
+]]></output>
+            </test-case>
+            <test-case id="1053" name="ModelDownloader_EnsureModelReady_WhenFileExists_ReturnsPath" fullname="LastDay.Tests.GameplayTests.ModelDownloader_EnsureModelReady_WhenFileExists_ReturnsPath" methodname="ModelDownloader_EnsureModelReady_WhenFileExists_ReturnsPath" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="2082124227" result="Passed" start-time="2026-03-04 01:47:00Z" end-time="2026-03-04 01:47:00Z" duration="0.003440" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[ModelDownloader] Model already present at: /Users/stephone/Library/Application Support/DefaultCompany/LastDay/Models/phi3-mini.gguf
+[TEST PASS] ModelDownloader_EnsureModelReady_WhenFileExists_ReturnsPath
+]]></output>
+            </test-case>
+            <test-case id="1052" name="ModelDownloader_EnsureModelReady_WhenFileExists_SetsReadyTrue" fullname="LastDay.Tests.GameplayTests.ModelDownloader_EnsureModelReady_WhenFileExists_SetsReadyTrue" methodname="ModelDownloader_EnsureModelReady_WhenFileExists_SetsReadyTrue" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="2080570444" result="Passed" start-time="2026-03-04 01:47:00Z" end-time="2026-03-04 01:47:00Z" duration="0.001843" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[ModelDownloader] Model already present at: /Users/stephone/Library/Application Support/DefaultCompany/LastDay/Models/phi3-mini.gguf
+[TEST PASS] ModelDownloader_EnsureModelReady_WhenFileExists_SetsReadyTrue
+]]></output>
+            </test-case>
+            <test-case id="1054" name="ModelDownloader_EnsureModelReady_WhenFileMissing_ReturnsNull" fullname="LastDay.Tests.GameplayTests.ModelDownloader_EnsureModelReady_WhenFileMissing_ReturnsNull" methodname="ModelDownloader_EnsureModelReady_WhenFileMissing_ReturnsNull" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1864954569" result="Passed" start-time="2026-03-04 01:47:00Z" end-time="2026-03-04 01:47:02Z" duration="2.000877" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[ModelDownloader] Model not found. Starting download to: /Users/stephone/Library/Application Support/DefaultCompany/LastDay/Models/phi3-mini.gguf
+[TEST PASS] ModelDownloader_EnsureModelReady_WhenFileMissing_ReturnsNull
+]]></output>
+            </test-case>
+            <test-case id="1050" name="ModelDownloader_IsDownloading_FalseOnCreation" fullname="LastDay.Tests.GameplayTests.ModelDownloader_IsDownloading_FalseOnCreation" methodname="ModelDownloader_IsDownloading_FalseOnCreation" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1516013167" result="Passed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:02Z" duration="0.000655" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] ModelDownloader_IsDownloading_FalseOnCreation
+]]></output>
+            </test-case>
+            <test-case id="1049" name="ModelDownloader_IsModelReady_FalseOnCreation" fullname="LastDay.Tests.GameplayTests.ModelDownloader_IsModelReady_FalseOnCreation" methodname="ModelDownloader_IsModelReady_FalseOnCreation" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1910124225" result="Passed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:02Z" duration="0.000400" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] ModelDownloader_IsModelReady_FalseOnCreation
+]]></output>
+            </test-case>
+            <test-case id="1051" name="ModelDownloader_StatusMessage_HasInitialValue" fullname="LastDay.Tests.GameplayTests.ModelDownloader_StatusMessage_HasInitialValue" methodname="ModelDownloader_StatusMessage_HasInitialValue" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1308745388" result="Passed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:02Z" duration="0.000373" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] ModelDownloader_StatusMessage_HasInitialValue
+]]></output>
+            </test-case>
+            <test-case id="1041" name="NPC_InteractDirectly_OpensDialogue" fullname="LastDay.Tests.GameplayTests.NPC_InteractDirectly_OpensDialogue" methodname="NPC_InteractDirectly_OpensDialogue" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1082652389" result="Failed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:02Z" duration="0.103171" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <failure>
+                <message><![CDATA[  Should show Martha's greeting, got: 'Is everything alright? You have that look.'
+  Expected: True
+  But was:  False
+]]></message>
+                <stack-trace><![CDATA[at LastDay.Tests.GameplayTests+<NPC_InteractDirectly_OpensDialogue>d__37.MoveNext () [0x000e3] in /Users/stephone/Documents/LastDay/Assets/Tests/PlayMode/GameplayTests.cs:852
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in ./Library/PackageCache/com.unity.test-framework@1.1.33/UnityEngine.TestRunner/NUnitExtensions/Attributes/TestEnumerator.cs:46
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+]]></output>
+            </test-case>
+            <test-case id="1040" name="NPC_WalkToMartha_OpensDialogue" fullname="LastDay.Tests.GameplayTests.NPC_WalkToMartha_OpensDialogue" methodname="NPC_WalkToMartha_OpensDialogue" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1592476347" result="Failed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:02Z" duration="0.004674" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <failure>
+                <message><![CDATA[  Dialogue should be closed initially
+  Expected: False
+  But was:  True
+]]></message>
+                <stack-trace><![CDATA[at LastDay.Tests.GameplayTests+<NPC_WalkToMartha_OpensDialogue>d__36.MoveNext () [0x00154] in /Users/stephone/Documents/LastDay/Assets/Tests/PlayMode/GameplayTests.cs:809
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in ./Library/PackageCache/com.unity.test-framework@1.1.33/UnityEngine.TestRunner/NUnitExtensions/Attributes/TestEnumerator.cs:46
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Pathfinder] Grid built: 20x12 cells
+[Pathfinder] Grid built: 20x12 cells
+]]></output>
+            </test-case>
+            <test-case id="1031" name="StateMachine_InvalidTransitions" fullname="LastDay.Tests.GameplayTests.StateMachine_InvalidTransitions" methodname="StateMachine_InvalidTransitions" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="302617553" result="Passed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:02Z" duration="0.001447" asserts="0">
+              <properties />
+              <output><![CDATA[[Singleton] Duplicate GameStateMachine found on __TestGSM__. Destroying.
+[GameState] Loading -> Playing
+[GameState] Invalid transition: Playing -> Ending
+[GameState] Invalid transition: Playing -> Loading
+[TEST PASS] StateMachine_InvalidTransitions: all invalid paths rejected
+]]></output>
+            </test-case>
+            <test-case id="1030" name="StateMachine_ValidTransitions" fullname="LastDay.Tests.GameplayTests.StateMachine_ValidTransitions" methodname="StateMachine_ValidTransitions" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="854604826" result="Passed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:02Z" duration="0.002204" asserts="0">
+              <properties />
+              <output><![CDATA[[Singleton] Duplicate GameStateMachine found on __TestGSM__. Destroying.
+[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[GameState] InDialogue -> Playing
+[GameState] Playing -> PhoneCall
+[GameState] PhoneCall -> Playing
+[GameState] Playing -> Decision
+[GameState] Decision -> Ending
+[TEST PASS] StateMachine_ValidTransitions: all valid paths accepted
+]]></output>
+            </test-case>
+            <test-case id="1020" name="T1a_ClickInteractable_PlayerWalksToIt" fullname="LastDay.Tests.GameplayTests.T1a_ClickInteractable_PlayerWalksToIt" methodname="T1a_ClickInteractable_PlayerWalksToIt" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="2075902480" result="Passed" start-time="2026-03-04 01:47:02Z" end-time="2026-03-04 01:47:03Z" duration="0.426694" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Pathfinder] Grid built: 20x12 cells
+[Pathfinder] Grid built: 20x12 cells
+[Event] interact: obj=, memory=
+[TEST PASS] T1a: Player walked to interactable (dist=0.88, time=0.42s)
+]]></output>
+            </test-case>
+            <test-case id="1021" name="T1b_ClickInteractable_OpensDialogue" fullname="LastDay.Tests.GameplayTests.T1b_ClickInteractable_OpensDialogue" methodname="T1b_ClickInteractable_OpensDialogue" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1316129837" result="Failed" start-time="2026-03-04 01:47:03Z" end-time="2026-03-04 01:47:03Z" duration="0.002503" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <failure>
+                <message><![CDATA[  Dialogue panel should start hidden
+  Expected: False
+  But was:  True
+]]></message>
+                <stack-trace><![CDATA[at LastDay.Tests.GameplayTests+<T1b_ClickInteractable_OpensDialogue>d__16.MoveNext () [0x0008d] in /Users/stephone/Documents/LastDay/Assets/Tests/PlayMode/GameplayTests.cs:272
+at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in ./Library/PackageCache/com.unity.test-framework@1.1.33/UnityEngine.TestRunner/NUnitExtensions/Attributes/TestEnumerator.cs:46
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[[GameState] Loading -> Playing
+]]></output>
+            </test-case>
+            <test-case id="1022" name="T2a_Dialogue_UsesLLMStub_ReturnsResponse" fullname="LastDay.Tests.GameplayTests.T2a_Dialogue_UsesLLMStub_ReturnsResponse" methodname="T2a_Dialogue_UsesLLMStub_ReturnsResponse" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1988546214" result="Passed" start-time="2026-03-04 01:47:03Z" end-time="2026-03-04 01:47:05Z" duration="2.503665" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[TEST PASS] T2a: LLM stub returned response: "Your hands are doing that thing again. Are you cold, or just thinking?"
+]]></output>
+            </test-case>
+            <test-case id="1023" name="T2b_Dialogue_CanExitWithCloseButton" fullname="LastDay.Tests.GameplayTests.T2b_Dialogue_CanExitWithCloseButton" methodname="T2b_Dialogue_CanExitWithCloseButton" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="89246912" result="Passed" start-time="2026-03-04 01:47:05Z" end-time="2026-03-04 01:47:05Z" duration="0.003550" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[GameState] InDialogue -> Playing
+[TEST PASS] T2b: Close button exits dialogue and restores Playing state
+]]></output>
+            </test-case>
+            <test-case id="1024" name="T2c_Dialogue_CloseMethod_ExitsDialogue" fullname="LastDay.Tests.GameplayTests.T2c_Dialogue_CloseMethod_ExitsDialogue" methodname="T2c_Dialogue_CloseMethod_ExitsDialogue" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="793835046" result="Passed" start-time="2026-03-04 01:47:05Z" end-time="2026-03-04 01:47:05Z" duration="0.003525" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[GameState] InDialogue -> Playing
+[TEST PASS] T2c: Close() properly exits dialogue (Escape key path)
+]]></output>
+            </test-case>
+            <test-case id="1025" name="T2d_Dialogue_PhoneCall_UsesDavid" fullname="LastDay.Tests.GameplayTests.T2d_Dialogue_PhoneCall_UsesDavid" methodname="T2d_Dialogue_PhoneCall_UsesDavid" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="967404151" result="Passed" start-time="2026-03-04 01:47:05Z" end-time="2026-03-04 01:47:06Z" duration="0.503667" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[LLM] Switched to character: david
+[GameState] Playing -> PhoneCall
+[TEST PASS] T2d: Phone call uses David, opening: "Hey, old friend. Thought I'd give you a call today. How are you holding up?"
+]]></output>
+            </test-case>
+            <test-case id="1026" name="T3a_Player_MovesToDestination" fullname="LastDay.Tests.GameplayTests.T3a_Player_MovesToDestination" methodname="T3a_Player_MovesToDestination" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1760638834" result="Passed" start-time="2026-03-04 01:47:06Z" end-time="2026-03-04 01:47:06Z" duration="0.325178" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Pathfinder] Grid built: 20x12 cells
+[Pathfinder] Grid built: 20x12 cells
+[TEST PASS] T3a: Player reached destination (dist=0.29, time=0.32s)
+]]></output>
+            </test-case>
+            <test-case id="1027" name="T3b_Player_CannotMoveInDialogueState" fullname="LastDay.Tests.GameplayTests.T3b_Player_CannotMoveInDialogueState" methodname="T3b_Player_CannotMoveInDialogueState" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="522019375" result="Passed" start-time="2026-03-04 01:47:06Z" end-time="2026-03-04 01:47:06Z" duration="0.302477" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[GameState] Playing -> InDialogue
+[Pathfinder] Grid built: 20x12 cells
+[TEST PASS] T3b: Movement blocked during InDialogue state
+]]></output>
+            </test-case>
+            <test-case id="1028" name="T3c_Player_StopsOnForceStop" fullname="LastDay.Tests.GameplayTests.T3c_Player_StopsOnForceStop" methodname="T3c_Player_StopsOnForceStop" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="1513149226" result="Passed" start-time="2026-03-04 01:47:06Z" end-time="2026-03-04 01:47:06Z" duration="0.205948" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Pathfinder] Grid built: 20x12 cells
+[Pathfinder] Grid built: 20x12 cells
+[TEST PASS] T3c: ForceStop() halts movement mid-path
+]]></output>
+            </test-case>
+            <test-case id="1029" name="T3d_Player_NavigatesAroundObstacle" fullname="LastDay.Tests.GameplayTests.T3d_Player_NavigatesAroundObstacle" methodname="T3d_Player_NavigatesAroundObstacle" classname="LastDay.Tests.GameplayTests" runstate="Runnable" seed="146058402" result="Passed" start-time="2026-03-04 01:47:06Z" end-time="2026-03-04 01:47:07Z" duration="0.700237" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Pathfinder] Grid built: 20x12 cells
+[Pathfinder] Grid built: 20x12 cells
+[TEST PASS] T3d: Pathfinding routed around obstacle (dist=0.43)
+]]></output>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1058" name="NarrativeTests" fullname="LastDay.Tests.NarrativeTests" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" testcasecount="38" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:12Z" duration="5.105544" total="38" passed="38" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1070" name="AllQuestionsAnswered_SetsShutdownMode" fullname="LastDay.Tests.NarrativeTests.AllQuestionsAnswered_SetsShutdownMode" methodname="AllQuestionsAnswered_SetsShutdownMode" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="897105804" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.001896" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] All security questions answered — document unlocked, Martha shutdown.
+[TEST PASS] AllQuestionsAnswered_SetsShutdownMode
+]]></output>
+            </test-case>
+            <test-case id="1065" name="AnswersBelongToCorrectQuestions_CrossPollution" fullname="LastDay.Tests.NarrativeTests.AnswersBelongToCorrectQuestions_CrossPollution" methodname="AnswersBelongToCorrectQuestions_CrossPollution" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1507522454" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000742" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] AnswersBelongToCorrectQuestions_CrossPollution
+]]></output>
+            </test-case>
+            <test-case id="1085" name="DavidPrompt_NeverContainsAIAcknowledgment" fullname="LastDay.Tests.NarrativeTests.DavidPrompt_NeverContainsAIAcknowledgment" methodname="DavidPrompt_NeverContainsAIAcknowledgment" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1331892402" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000651" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] DavidPrompt_NeverContainsAIAcknowledgment
+]]></output>
+            </test-case>
+            <test-case id="1079" name="DavidPrompt_Q0_ContainsLoyalFriend" fullname="LastDay.Tests.NarrativeTests.DavidPrompt_Q0_ContainsLoyalFriend" methodname="DavidPrompt_Q0_ContainsLoyalFriend" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1756320189" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000506" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] DavidPrompt_Q0_ContainsLoyalFriend
+]]></output>
+            </test-case>
+            <test-case id="1081" name="DavidPrompt_Q1_PostResistance_ContainsArthur" fullname="LastDay.Tests.NarrativeTests.DavidPrompt_Q1_PostResistance_ContainsArthur" methodname="DavidPrompt_Q1_PostResistance_ContainsArthur" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="2109384969" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000505" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] DavidPrompt_Q1_PostResistance_ContainsArthur
+]]></output>
+            </test-case>
+            <test-case id="1080" name="DavidPrompt_Q1_Resistance_DoesNotRevealTruth" fullname="LastDay.Tests.NarrativeTests.DavidPrompt_Q1_Resistance_DoesNotRevealTruth" methodname="DavidPrompt_Q1_Resistance_DoesNotRevealTruth" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="2088542643" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000430" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] DavidPrompt_Q1_Resistance_DoesNotRevealTruth
+]]></output>
+            </test-case>
+            <test-case id="1083" name="DavidPrompt_Q2_PostResistance_ContainsLily" fullname="LastDay.Tests.NarrativeTests.DavidPrompt_Q2_PostResistance_ContainsLily" methodname="DavidPrompt_Q2_PostResistance_ContainsLily" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="676318927" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000484" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] DavidPrompt_Q2_PostResistance_ContainsLily
+]]></output>
+            </test-case>
+            <test-case id="1082" name="DavidPrompt_Q2_Resistance_DoesNotRevealTruth" fullname="LastDay.Tests.NarrativeTests.DavidPrompt_Q2_Resistance_DoesNotRevealTruth" methodname="DavidPrompt_Q2_Resistance_DoesNotRevealTruth" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="505353557" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000622" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] DavidPrompt_Q2_Resistance_DoesNotRevealTruth
+]]></output>
+            </test-case>
+            <test-case id="1084" name="DavidPrompt_Q3_IsBlindSpot_DoesNotRevealTruth" fullname="LastDay.Tests.NarrativeTests.DavidPrompt_Q3_IsBlindSpot_DoesNotRevealTruth" methodname="DavidPrompt_Q3_IsBlindSpot_DoesNotRevealTruth" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="451222708" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000912" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] DavidPrompt_Q3_IsBlindSpot_DoesNotRevealTruth
+]]></output>
+            </test-case>
+            <test-case id="1092" name="GuitarBreakdown_ExactNarrativeLine_Triggers" fullname="LastDay.Tests.NarrativeTests.GuitarBreakdown_ExactNarrativeLine_Triggers" methodname="GuitarBreakdown_ExactNarrativeLine_Triggers" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1887855630" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000494" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] GuitarBreakdown_ExactNarrativeLine_Triggers
+]]></output>
+            </test-case>
+            <test-case id="1091" name="GuitarBreakdown_SafeInputs_DoNotTriggerBreakdown" fullname="LastDay.Tests.NarrativeTests.GuitarBreakdown_SafeInputs_DoNotTriggerBreakdown" methodname="GuitarBreakdown_SafeInputs_DoNotTriggerBreakdown" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1421550500" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000435" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] GuitarBreakdown_SafeInputs_DoNotTriggerBreakdown
+]]></output>
+            </test-case>
+            <test-case id="1090" name="GuitarBreakdown_TriggerWords_DoTriggerBreakdown" fullname="LastDay.Tests.NarrativeTests.GuitarBreakdown_TriggerWords_DoTriggerBreakdown" methodname="GuitarBreakdown_TriggerWords_DoTriggerBreakdown" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1574524972" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000420" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] GuitarBreakdown_TriggerWords_DoTriggerBreakdown
+]]></output>
+            </test-case>
+            <test-case id="1077" name="MarthaPrompt_NeverContainsAIAcknowledgment" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_NeverContainsAIAcknowledgment" methodname="MarthaPrompt_NeverContainsAIAcknowledgment" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="693452046" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000644" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_NeverContainsAIAcknowledgment
+]]></output>
+            </test-case>
+            <test-case id="1071" name="MarthaPrompt_Q0_ContainsCorePersonality" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_Q0_ContainsCorePersonality" methodname="MarthaPrompt_Q0_ContainsCorePersonality" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="820809441" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000445" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_Q0_ContainsCorePersonality
+]]></output>
+            </test-case>
+            <test-case id="1072" name="MarthaPrompt_Q1_ContainsHeroNarrative_NotCutWord" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_Q1_ContainsHeroNarrative_NotCutWord" methodname="MarthaPrompt_Q1_ContainsHeroNarrative_NotCutWord" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1947357448" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000451" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_Q1_ContainsHeroNarrative_NotCutWord
+]]></output>
+            </test-case>
+            <test-case id="1073" name="MarthaPrompt_Q2_ContainsDefensiveWife_NotLily" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_Q2_ContainsDefensiveWife_NotLily" methodname="MarthaPrompt_Q2_ContainsDefensiveWife_NotLily" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1859783980" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000415" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_Q2_ContainsDefensiveWife_NotLily
+]]></output>
+            </test-case>
+            <test-case id="1075" name="MarthaPrompt_Q3_PostBreakdown_ContainsBreakdownText" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_Q3_PostBreakdown_ContainsBreakdownText" methodname="MarthaPrompt_Q3_PostBreakdown_ContainsBreakdownText" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1077715339" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000622" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_Q3_PostBreakdown_ContainsBreakdownText
+]]></output>
+            </test-case>
+            <test-case id="1074" name="MarthaPrompt_Q3_PreBreakdown_ContainsRomanticLie" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_Q3_PreBreakdown_ContainsRomanticLie" methodname="MarthaPrompt_Q3_PreBreakdown_ContainsRomanticLie" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1804128404" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000512" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_Q3_PreBreakdown_ContainsRomanticLie
+]]></output>
+            </test-case>
+            <test-case id="1076" name="MarthaPrompt_ShutdownMode_OverridesAllOtherState" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_ShutdownMode_OverridesAllOtherState" methodname="MarthaPrompt_ShutdownMode_OverridesAllOtherState" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1536522494" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000493" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_ShutdownMode_OverridesAllOtherState
+]]></output>
+            </test-case>
+            <test-case id="1078" name="MarthaPrompt_WithTriggeredMemories_InjectsMemorySection" fullname="LastDay.Tests.NarrativeTests.MarthaPrompt_WithTriggeredMemories_InjectsMemorySection" methodname="MarthaPrompt_WithTriggeredMemories_InjectsMemorySection" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1018524840" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000522" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] MarthaPrompt_WithTriggeredMemories_InjectsMemorySection
+]]></output>
+            </test-case>
+            <test-case id="1088" name="OpeningLine_David_Guitar_Q3_IsBlindSpot" fullname="LastDay.Tests.NarrativeTests.OpeningLine_David_Guitar_Q3_IsBlindSpot" methodname="OpeningLine_David_Guitar_Q3_IsBlindSpot" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1123570756" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000485" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] OpeningLine_David_Guitar_Q3: 'The guitar? Honestly, I have no idea. You just stopped playing one day and I never knew why.'
+]]></output>
+            </test-case>
+            <test-case id="1087" name="OpeningLine_David_IcePicks_Q1_ShowsWeight" fullname="LastDay.Tests.NarrativeTests.OpeningLine_David_IcePicks_Q1_ShowsWeight" methodname="OpeningLine_David_IcePicks_Q1_ShowsWeight" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="846883218" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000563" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] OpeningLine_David_IcePicks_Q1: 'K2. Yeah. I've been waiting for this call for 27 years.'
+]]></output>
+            </test-case>
+            <test-case id="1089" name="OpeningLine_Martha_Guitar_Q3_IsRomanticLie" fullname="LastDay.Tests.NarrativeTests.OpeningLine_Martha_Guitar_Q3_IsRomanticLie" methodname="OpeningLine_Martha_Guitar_Q3_IsRomanticLie" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1492610096" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000415" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] OpeningLine_Martha_Guitar_Q3: 'Our tenth anniversary. I think about that night all the time. The way you played in the kitchen before the sun came up.'
+]]></output>
+            </test-case>
+            <test-case id="1086" name="OpeningLine_Martha_IcePicks_Q1_MentionsHeroNarrative" fullname="LastDay.Tests.NarrativeTests.OpeningLine_Martha_IcePicks_Q1_MentionsHeroNarrative" methodname="OpeningLine_Martha_IcePicks_Q1_MentionsHeroNarrative" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="241315165" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000490" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] OpeningLine_Martha_IcePicks_Q1: 'You were so brave up there. The storm, the cold — you tried to hold on. You couldn't save them. But you tried.'
+]]></output>
+            </test-case>
+            <test-case id="1059" name="Q1_CorrectAnswer_Arthur_Accepted" fullname="LastDay.Tests.NarrativeTests.Q1_CorrectAnswer_Arthur_Accepted" methodname="Q1_CorrectAnswer_Arthur_Accepted" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1561167052" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000520" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] Q1_CorrectAnswer_Arthur_Accepted
+]]></output>
+            </test-case>
+            <test-case id="1060" name="Q1_WrongAnswers_Rejected" fullname="LastDay.Tests.NarrativeTests.Q1_WrongAnswers_Rejected" methodname="Q1_WrongAnswers_Rejected" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="683628860" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000532" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] Q1_WrongAnswers_Rejected
+]]></output>
+            </test-case>
+            <test-case id="1061" name="Q2_CorrectAnswer_Lily_Accepted" fullname="LastDay.Tests.NarrativeTests.Q2_CorrectAnswer_Lily_Accepted" methodname="Q2_CorrectAnswer_Lily_Accepted" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="944648031" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000431" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] Q2_CorrectAnswer_Lily_Accepted
+]]></output>
+            </test-case>
+            <test-case id="1062" name="Q2_WrongAnswers_Rejected" fullname="LastDay.Tests.NarrativeTests.Q2_WrongAnswers_Rejected" methodname="Q2_WrongAnswers_Rejected" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1360391568" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000447" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] Q2_WrongAnswers_Rejected
+]]></output>
+            </test-case>
+            <test-case id="1063" name="Q3_CorrectAnswers_AllForms_Accepted" fullname="LastDay.Tests.NarrativeTests.Q3_CorrectAnswers_AllForms_Accepted" methodname="Q3_CorrectAnswers_AllForms_Accepted" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="817403280" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000454" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] Q3_CorrectAnswers_AllForms_Accepted
+]]></output>
+            </test-case>
+            <test-case id="1064" name="Q3_WrongAnswers_Rejected" fullname="LastDay.Tests.NarrativeTests.Q3_WrongAnswers_Rejected" methodname="Q3_WrongAnswers_Rejected" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1568658689" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.000429" asserts="0">
+              <properties />
+              <output><![CDATA[[TEST PASS] Q3_WrongAnswers_Rejected
+]]></output>
+            </test-case>
+            <test-case id="1069" name="SecurityQuestion_PhoneDoesNotRingTwice" fullname="LastDay.Tests.NarrativeTests.SecurityQuestion_PhoneDoesNotRingTwice" methodname="SecurityQuestion_PhoneDoesNotRingTwice" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1245206150" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.002374" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] Security question 0 started. Active question now: 1
+[Event] Phone triggered — player needs David.
+[Event] Security question 1 started. Active question now: 2
+[Event] Security question 2 started. Active question now: 3
+[TEST PASS] SecurityQuestion_PhoneDoesNotRingTwice
+]]></output>
+            </test-case>
+            <test-case id="1068" name="SecurityQuestion_PhoneRings_WhenQ1Starts" fullname="LastDay.Tests.NarrativeTests.SecurityQuestion_PhoneRings_WhenQ1Starts" methodname="SecurityQuestion_PhoneRings_WhenQ1Starts" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="934048718" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.001437" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] Security question 0 started. Active question now: 1
+[Event] Phone triggered — player needs David.
+[TEST PASS] SecurityQuestion_PhoneRings_WhenQ1Starts
+]]></output>
+            </test-case>
+            <test-case id="1066" name="SecurityQuestion_Started_AdvancesActiveQuestion" fullname="LastDay.Tests.NarrativeTests.SecurityQuestion_Started_AdvancesActiveQuestion" methodname="SecurityQuestion_Started_AdvancesActiveQuestion" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1708601288" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.001731" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] Security question 0 started. Active question now: 1
+[Event] Phone triggered — player needs David.
+[Event] Security question 1 started. Active question now: 2
+[Event] Security question 2 started. Active question now: 3
+[TEST PASS] SecurityQuestion_Started_AdvancesActiveQuestion
+]]></output>
+            </test-case>
+            <test-case id="1067" name="SecurityQuestion_Started_IsIdempotent_WhenRepeated" fullname="LastDay.Tests.NarrativeTests.SecurityQuestion_Started_IsIdempotent_WhenRepeated" methodname="SecurityQuestion_Started_IsIdempotent_WhenRepeated" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1415986007" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:07Z" duration="0.001507" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] Security question 0 started. Active question now: 1
+[Event] Phone triggered — player needs David.
+[TEST PASS] SecurityQuestion_Started_IsIdempotent_WhenRepeated
+]]></output>
+            </test-case>
+            <test-case id="1094" name="StubResponse_David_Q1_ResistsThenReveals" fullname="LastDay.Tests.NarrativeTests.StubResponse_David_Q1_ResistsThenReveals" methodname="StubResponse_David_Q1_ResistsThenReveals" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="1801824884" result="Passed" start-time="2026-03-04 01:47:07Z" end-time="2026-03-04 01:47:09Z" duration="1.832024" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] Security question 0 started. Active question now: 1
+[Event] Phone triggered — player needs David.
+[TEST PASS] StubResponse_David_Q1_ResistsThenReveals
+]]></output>
+            </test-case>
+            <test-case id="1095" name="StubResponse_David_Q2_ResistsThenReveals" fullname="LastDay.Tests.NarrativeTests.StubResponse_David_Q2_ResistsThenReveals" methodname="StubResponse_David_Q2_ResistsThenReveals" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="927116923" result="Passed" start-time="2026-03-04 01:47:09Z" end-time="2026-03-04 01:47:11Z" duration="2.130422" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] Security question 0 started. Active question now: 1
+[Event] Phone triggered — player needs David.
+[Event] Security question 1 started. Active question now: 2
+[TEST PASS] StubResponse_David_Q2_ResistsThenReveals
+]]></output>
+            </test-case>
+            <test-case id="1093" name="StubResponse_Martha_Q1_MentionsHeroNarrative" fullname="LastDay.Tests.NarrativeTests.StubResponse_Martha_Q1_MentionsHeroNarrative" methodname="StubResponse_Martha_Q1_MentionsHeroNarrative" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="2131957328" result="Passed" start-time="2026-03-04 01:47:11Z" end-time="2026-03-04 01:47:12Z" duration="0.550808" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] Security question 0 started. Active question now: 1
+[Event] Phone triggered — player needs David.
+[TEST PASS] StubResponse_Martha_Q1: 'The storm was terrible. He fought to hold it. That is all that matters. You know, I worry about David sometimes. Alone in that house.'
+]]></output>
+            </test-case>
+            <test-case id="1096" name="StubResponse_Martha_ShutdownMode_IsRaw" fullname="LastDay.Tests.NarrativeTests.StubResponse_Martha_ShutdownMode_IsRaw" methodname="StubResponse_Martha_ShutdownMode_IsRaw" classname="LastDay.Tests.NarrativeTests" runstate="Runnable" seed="397926112" result="Passed" start-time="2026-03-04 01:47:12Z" end-time="2026-03-04 01:47:12Z" duration="0.565625" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+              </properties>
+              <output><![CDATA[[GameState] Loading -> Playing
+[Event] All security questions answered — document unlocked, Martha shutdown.
+[TEST PASS] StubResponse_Martha_ShutdownMode: 'I kept the pieces, Robert. In a box in the closet. Thirty-seven years.'
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

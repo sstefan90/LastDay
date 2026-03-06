@@ -69,7 +69,10 @@ namespace LastDay.Core
             GameStateMachine.Instance.ChangeState(GameState.Playing);
 
             if (AudioManager.Instance != null)
+            {
                 AudioManager.Instance.PlayMusic("ambient_loop");
+                AudioManager.Instance.StartClockTick();
+            }
 
             Debug.Log("[GameManager] Game started.");
         }
@@ -87,7 +90,12 @@ namespace LastDay.Core
 
             if (AudioManager.Instance != null)
             {
+                AudioManager.Instance.StopClockTick(0.5f);
                 AudioManager.Instance.StopMusic(0.5f);
+
+                if (!signed)
+                    AudioManager.Instance.PlaySFX("paper_tear");
+
                 string track = signed ? "ending_signed" : "ending_torn";
                 AudioManager.Instance.PlayMusic(track);
             }
