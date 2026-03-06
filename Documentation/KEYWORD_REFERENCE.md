@@ -96,23 +96,27 @@ The stub responses (used when LLMUnity is not available) are narrative-aware. Th
 
 | Question Active | Input Keywords Checked | Response Content |
 |---|---|---|
-| Q1 | `rope`, `expedition`, `mountain`, `k2` | Hero narrative: Robert tried to hold on, couldn't save them |
-| Q2 | `money`, `account`, `investment` | Defensive: bad investments, just the two of us |
+| Q1 | `rope`, `expedition`, `mountain`, `k2` | Hero narrative + organic David hint ("I worry about David...") |
+| Q2 | `money`, `account`, `investment` | Defensive: specific shared memories + David isolation hint |
 | Q3 (pre-breakdown) | `guitar`, `anniversary`, `song` | Romantic lie: 10th anniversary, sunrise, dress shirt |
 | Any | `photo`, `wedding` | Wedding nostalgia: father's tie, nervous hands |
 | Shutdown mode | (any input) | Raw grief: "I kept the pieces, Robert. In a box in the closet." |
-| Guitar breakdown | (any input) | Truth: came home drunk, smashed guitar, "you ruined my life" |
+| Guitar breakdown | (any input) | Truth: came home drunk, smashed guitar |
 
-**Fallbacks (no keyword matched):** "I'm here, love. Whatever you need to say."
+**Fallbacks (no keyword matched):** "Your hands are doing that thing again. Are you cold, or just thinking?"
 
-### David — Stub Keywords by Question State
+### David — Stub Keywords by Question State (Two-Phase Resistance)
 
-| Question Active | Input Keywords Checked | Response Content |
-|---|---|---|
-| Q1 | `rope`, `arthur`, `expedition`, `k2` | Names Arthur, confirms radio, states Robert cut the rope |
-| Q2 | `money`, `account`, `investment` | Names Lily and Sarah, states 25 years of child support |
-| Q3 | `guitar`, `anniversary` | Blind spot: "I don't know, buddy. That's between you and Martha." |
-| Any | `help`, `advice` | Redirects: "I know you — you've never run from a hard thing. Not until now." |
+David now has a **resistance phase**. On the first exchange about a mystery topic, he pushes back. On the second exchange (after `EventManager.HasDavidResisted(q)` returns true), he reveals the truth. Resistance is tracked per-question via `EventManager.davidResistanceUsed`.
+
+| Question Active | Phase | Input Keywords Checked | Response Content |
+|---|---|---|---|
+| Q1 | **Resist** (1st call) | `rope`, `arthur`, `expedition`, `k2`, `mountain` | Hesitation: "You really want to open that box?" |
+| Q1 | **Truth** (2nd call) | same | Names Arthur, confirms radio, states rope was cut |
+| Q2 | **Resist** (1st call) | `money`, `account`, `investment` | Deflection: "This is what you want to talk about?" |
+| Q2 | **Truth** (2nd call) | same | Names Lily and Sarah, states child support |
+| Q3 | (no resistance) | `guitar`, `anniversary` | Blind spot: "I don't know, buddy." |
+| Any | — | `help`, `advice` | Redirects: "you've never run from a hard thing" |
 
 **Fallbacks (no keyword matched):** "I'm here, pal. Whatever you need to say."
 
@@ -156,12 +160,16 @@ The phone will NOT ring again after this. If the player dismisses the ring and l
 
 **Source:** `Assets/Scripts/Dialogue/CharacterPrompts.cs` — `GetDavidPrompt()`
 
-| `activeQuestion` | David's Active Persona |
-|---|---|
-| 0 | **Loyal Friend** — supportive, non-committal |
-| 1 | **Cold / Arthur** — names Arthur, states Robert cut the rope |
-| 2 | **Disappointed** — names Lily and Sarah, 25 years of silence |
-| 3 | **Blind Spot** — genuinely doesn't know about the guitar |
+David now takes a `hasResisted` parameter. For Q1 and Q2, there are two prompt variants: a resistance prompt (warns the player, does NOT reveal truth) and a truth prompt (reveals after player persists). Resistance is tracked via `EventManager.HasDavidResisted(q)` and auto-triggers after 2+ turns with David on that question.
+
+| `activeQuestion` | `hasResisted` | David's Active Persona |
+|---|---|---|
+| 0 | — | **Loyal Friend** — supportive, non-committal |
+| 1 | `false` | **Resistance** — warns player, tests if they really want to know |
+| 1 | `true` | **Cold / Arthur** — names Arthur, states Robert cut the rope |
+| 2 | `false` | **Resistance** — deflects with weariness, signals heavy knowledge |
+| 2 | `true` | **Disappointed** — names Lily and Sarah, 25 years of silence |
+| 3 | — | **Blind Spot** — genuinely doesn't know about the guitar |
 
 ---
 
@@ -193,5 +201,14 @@ This prompt is **un-bypassable** — the `DecisionUI` can no longer be dismissed
 | `marthaGuitarBreakdown` | `bool` | True after player confronts Martha with the broken guitar evidence |
 | `documentUnlocked` | `bool` | True after all questions answered (same event as shutdown mode) |
 | `phoneHasRung` | `bool` | True after Q1 is first displayed; prevents double-ring |
+| `davidResistanceUsed` | `HashSet<int>` | Tracks which questions (1-3) David has already resisted on |
 
-All fields are public and visible in the Unity Inspector for debugging. You can set them manually in Play Mode to skip to any narrative state.
+All public fields are visible in the Unity Inspector for debugging. You can set them manually in Play Mode to skip to any narrative state. `davidResistanceUsed` is private but accessible via `HasDavidResisted(int)` and `MarkDavidResisted(int)`.
+
+---
+
+## 11. Turn Tracking
+
+**Source:** `Assets/Scripts/Dialogue/LocalLLMManager.cs` — `turnCounts` dictionary
+
+Each character's conversation turns are counted per session. After 2+ turns with David on a mystery topic, `EventManager.MarkDavidResisted(q)` is called automatically, causing his prompt to shift from resistance to truth. The turn count is also appended to the LLM system prompt as a `<turn_count>` tag to encourage response variety.

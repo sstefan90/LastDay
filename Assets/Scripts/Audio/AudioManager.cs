@@ -25,6 +25,11 @@ namespace LastDay.Audio
         [SerializeField] private AudioClip hoverSfx;
         [SerializeField] private AudioClip paperRustle;
         [SerializeField] private AudioClip paperTear;
+        [SerializeField] private AudioClip phoneRinging;
+        [SerializeField] private AudioClip typing;
+        [SerializeField] private AudioClip clockTicking;
+
+        private AudioSource clockSource;
 
         [Header("Dialogue Blips")]
         [SerializeField] private AudioClip[] textBlips;
@@ -102,6 +107,9 @@ namespace LastDay.Audio
                 "hover" => hoverSfx,
                 "paper_rustle" => paperRustle,
                 "paper_tear" => paperTear,
+                "phone_ringing" => phoneRinging,
+                "typing" => typing,
+                "clock_ticking" => clockTicking,
                 _ => null
             };
 
@@ -113,6 +121,41 @@ namespace LastDay.Audio
         {
             if (sfxSource != null && clip != null)
                 sfxSource.PlayOneShot(clip, sfxVolume);
+        }
+
+        public void StartClockTick()
+        {
+            if (clockTicking == null) return;
+            if (clockSource == null)
+            {
+                clockSource = gameObject.AddComponent<AudioSource>();
+                clockSource.spatialBlend = 0f;
+                clockSource.playOnAwake = false;
+            }
+            clockSource.clip = clockTicking;
+            clockSource.loop = true;
+            clockSource.volume = sfxVolume * 0.3f;
+            clockSource.Play();
+        }
+
+        public void StopClockTick(float fadeOut = 0.5f)
+        {
+            if (clockSource != null && clockSource.isPlaying)
+                StartCoroutine(FadeOutSource(clockSource, fadeOut));
+        }
+
+        private IEnumerator FadeOutSource(AudioSource source, float duration)
+        {
+            float startVol = source.volume;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                source.volume = Mathf.Lerp(startVol, 0f, elapsed / duration);
+                yield return null;
+            }
+            source.Stop();
+            source.volume = startVol;
         }
 
         /// <summary>

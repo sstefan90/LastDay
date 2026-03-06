@@ -35,12 +35,25 @@ namespace LastDay.Dialogue
 #endif
 
         private List<ConversationEntry> conversationHistory = new List<ConversationEntry>();
+        private Dictionary<string, int> turnCounts = new Dictionary<string, int>();
 
         [System.Serializable]
         private struct ConversationEntry
         {
             public string role;
             public string content;
+        }
+
+        private int GetTurnCount(string character)
+        {
+            turnCounts.TryGetValue(character, out int count);
+            return count;
+        }
+
+        private void IncrementTurnCount(string character)
+        {
+            turnCounts.TryGetValue(character, out int count);
+            turnCounts[character] = count + 1;
         }
 
         void Awake()
@@ -103,7 +116,17 @@ namespace LastDay.Dialogue
             if (character != null)
                 currentCharacter = character;
 
+            IncrementTurnCount(currentCharacter);
             conversationHistory.Add(new ConversationEntry { role = "user", content = playerInput });
+
+            // After 2+ turns with David on a mystery topic, mark resistance as used
+            if (currentCharacter == "david" && GetTurnCount("david") >= 2
+                && EventManager.Instance != null)
+            {
+                int aq = EventManager.Instance.activeSecurityQuestion;
+                if (aq > 0 && !EventManager.Instance.HasDavidResisted(aq))
+                    EventManager.Instance.MarkDavidResisted(aq);
+            }
 
 #if LLMUNITY_AVAILABLE
             if (useLLM && ActiveCharacter != null && isInitialized)
@@ -155,6 +178,11 @@ namespace LastDay.Dialogue
             }
         }
 
+        public void ResetTurnCounts()
+        {
+            turnCounts.Clear();
+        }
+
         public void ClearHistory()
         {
             conversationHistory.Clear();
@@ -171,10 +199,15 @@ namespace LastDay.Dialogue
             int activeQuestion   = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion  : 0;
             bool shutdownMode    = EventManager.Instance != null && EventManager.Instance.marthaShutdownMode;
             bool guitarBreakdown = EventManager.Instance != null && EventManager.Instance.marthaGuitarBreakdown;
+            bool davidResisted   = EventManager.Instance != null && EventManager.Instance.HasDavidResisted(activeQuestion);
 
             string prompt = currentCharacter == "david"
-                ? CharacterPrompts.GetDavidPrompt(memories ?? new List<string>(), activeQuestion)
+                ? CharacterPrompts.GetDavidPrompt(memories ?? new List<string>(), activeQuestion, davidResisted)
                 : CharacterPrompts.GetMarthaPrompt(memories ?? new List<string>(), activeQuestion, shutdownMode, guitarBreakdown);
+
+            int turns = GetTurnCount(currentCharacter);
+            if (turns > 0)
+                prompt += $"\n\n<turn_count>This is exchange #{turns} in this conversation. Vary your tone and phrasing. Do not repeat earlier responses.</turn_count>";
 
             ActiveCharacter.systemPrompt = prompt;
         }
@@ -207,36 +240,78 @@ namespace LastDay.Dialogue
             return response.Trim();
         }
 
-        /// <summary>
-        /// Strips artifacts that appear when the LLM writes dialogue like a script.
-        /// Removes: [Martha]: prefix, [Robert]: lines, [MEMORY CONTEXT] blocks, stage directions.
-        /// </summary>
+        private static readonly string[] TruncationMarkers = {
+            "CONSTRAINT", "ALTERED OUTCOME", "HOW TO PLAY", "HOW TO SPEAK",
+            "WHAT NOT TO DO", "OUTPUT FORMAT", "CURRENT STATE", "CORE PERSONALITY",
+            "SPEECH PATTERN", "MEMORY CONTEXT", "NEW CONSTRAINT", "HIDDEN INNER",
+            "<role>", "<voice>", "<rules>", "<context>", "<secret>", "<aware>"
+        };
+
         private string StripScriptArtifacts(string response)
         {
-            // Remove any leading "Martha:" or "[Martha]:" label
+            var ignoreCase = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+
             response = System.Text.RegularExpressions.Regex.Replace(
-                response, @"^\s*\[?Martha\]?\s*:", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            // Remove any leading "David:" or "[David]:" label
+                response, @"^\s*\[?Martha\]?\s*:", "", ignoreCase);
             response = System.Text.RegularExpressions.Regex.Replace(
-                response, @"^\s*\[?David\]?\s*:", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                response, @"^\s*\[?David\]?\s*:", "", ignoreCase);
 
-            // Cut everything from the first [Robert]: or Robert: line onward
-            int robertIdx = System.Text.RegularExpressions.Regex.Match(
-                response, @"\[?Robert\]?\s*:", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Index;
-            if (robertIdx > 0)
-                response = response.Substring(0, robertIdx);
+            var robertMatch = System.Text.RegularExpressions.Regex.Match(
+                response, @"\[?Robert\]?\s*:", ignoreCase);
+            if (robertMatch.Success && robertMatch.Index > 0)
+                response = response.Substring(0, robertMatch.Index);
 
-            // Remove [MEMORY CONTEXT] blocks and everything after
-            int memCtxIdx = response.IndexOf("[MEMORY CONTEXT", System.StringComparison.OrdinalIgnoreCase);
-            if (memCtxIdx >= 0)
-                response = response.Substring(0, memCtxIdx);
+            foreach (string marker in TruncationMarkers)
+            {
+                int idx = response.IndexOf(marker, System.StringComparison.OrdinalIgnoreCase);
+                if (idx > 0) response = response.Substring(0, idx);
+            }
 
-            // Remove standalone stage directions like [sighs] or *sighs* that leaked out
+            var sepMatch = System.Text.RegularExpressions.Regex.Match(
+                response, @"[\u2501━\-=─═—]{3,}");
+            if (sepMatch.Success && sepMatch.Index > 0)
+                response = response.Substring(0, sepMatch.Index);
+
+            var numberedRule = System.Text.RegularExpressions.Regex.Match(
+                response, @"\n\s*\d+\.\s+(Martha|David|Robert|The character|Do not|Never|Always)", ignoreCase);
+            if (numberedRule.Success && numberedRule.Index > 0)
+                response = response.Substring(0, numberedRule.Index);
+
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"\((?:Note|Martha|Robert|David|The character|The response)[^)]{0,200}\)", "", ignoreCase);
+
+            // Remove any XML-style tag pairs the LLM echoed back: <tag>content</tag> or bare <tag>
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"<[a-z_]+>[^<]{0,300}</[a-z_]+>", "", ignoreCase);
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"</?[a-z_]+>", "", ignoreCase);
+
             response = System.Text.RegularExpressions.Regex.Replace(
                 response, @"\[[^\]]{0,40}\]", "");
 
-            return response.Trim();
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"\*[^*]{1,40}\*", "");
+
+            response = response.Trim();
+            response = CapSentences(response, 5);
+
+            return response;
+        }
+
+        private static string CapSentences(string text, int maxSentences)
+        {
+            int count = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if ((c == '.' || c == '!' || c == '?') && i + 1 < text.Length && text[i + 1] == ' ')
+                {
+                    count++;
+                    if (count >= maxSentences)
+                        return text.Substring(0, i + 1);
+                }
+            }
+            return text;
         }
 
         private string GetFallbackResponse()
@@ -267,21 +342,29 @@ namespace LastDay.Dialogue
             int activeQuestion   = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion  : 0;
             bool shutdownMode    = EventManager.Instance != null && EventManager.Instance.marthaShutdownMode;
             bool guitarBreakdown = EventManager.Instance != null && EventManager.Instance.marthaGuitarBreakdown;
+            bool davidResisted   = EventManager.Instance != null && EventManager.Instance.HasDavidResisted(activeQuestion);
 
             if (character == "david")
             {
-                if (activeQuestion == 1 && (lowerInput.Contains("rope") || lowerInput.Contains("arthur") || lowerInput.Contains("expedition") || lowerInput.Contains("k2") || lowerInput.Contains("mountain")))
+                if (activeQuestion == 1 && ContainsAny(lowerInput, "rope", "arthur", "expedition", "k2", "mountain"))
+                {
+                    if (!davidResisted)
+                        return "You really want to open that box, Robert? Right now? Today of all days?";
                     return "His name was Arthur. And you know what you did, Robert. I was on the radio. I heard him.";
-                if (activeQuestion == 2 && (lowerInput.Contains("money") || lowerInput.Contains("account") || lowerInput.Contains("investment")))
-                    return "Stop playing dumb. Sarah. The child support. Twenty-five years. Lily's name is Lily.";
-                if (activeQuestion == 3 && (lowerInput.Contains("guitar") || lowerInput.Contains("anniversary")))
-                    return "The guitar? I don't know, buddy. You just stopped playing one day. Whatever happened, that's between you and Martha.";
-                if (lowerInput.Contains("help") || lowerInput.Contains("advice"))
+                }
+                if (activeQuestion == 2 && ContainsAny(lowerInput, "money", "account", "investment"))
+                {
+                    if (!davidResisted)
+                        return "This is what you want to talk about? Money? I was hoping you wouldn't ask me about this.";
+                    return "Sarah. The child support. Twenty-five years. Her name is Lily. You know that already.";
+                }
+                if (activeQuestion == 3 && ContainsAny(lowerInput, "guitar", "anniversary"))
+                    return "The guitar? Honestly, I have no idea. You just stopped playing one day. I asked you about it once and you changed the subject.";
+                if (ContainsAny(lowerInput, "help", "advice"))
                     return "I can't tell you what to do. But I know you — you've never been one to run from a hard thing. Not until now.";
                 return "I'm here, pal. Whatever you need to say.";
             }
 
-            // Martha stubs — narrative-aware
             if (shutdownMode)
                 return "I kept the pieces, Robert. In a box in the closet. Thirty-seven years.";
 
@@ -289,18 +372,18 @@ namespace LastDay.Dialogue
                 return "You came home drunk. You had that look. I sat on the floor until morning, picking up pieces of the neck.";
 
             if (activeQuestion == 1 && ContainsAny(lowerInput, "rope", "expedition", "mountain", "k2"))
-                return "He tried so hard, Robert. The storm was impossible. He fought to hold on. He couldn't save them. That's the truth of it.";
+                return "The storm was terrible. He fought to hold it. That is all that matters. You know, I worry about David sometimes. Alone in that house.";
 
             if (activeQuestion == 2 && ContainsAny(lowerInput, "money", "account", "investment"))
-                return "Bad investments, that's all. It was always just the two of us. You know that. We never needed anything more.";
+                return "Bad investments, that's all. The kitchen we painted together, that awful wallpaper argument — that was our life. Maybe you should call David. He's been so alone since Margaret.";
 
             if (activeQuestion == 3 && ContainsAny(lowerInput, "guitar", "anniversary", "song"))
-                return "It was our tenth anniversary. You stayed up all night writing it. The kitchen at sunrise, still in your dress shirt. I've never forgotten a single note.";
+                return "Our tenth anniversary. You stayed up all night writing me a song. The kitchen at sunrise, still in your dress shirt. I've never forgotten a single note.";
 
             if (ContainsAny(lowerInput, "photo", "wedding"))
-                return "Your father's tie was too short. You were so nervous you didn't even notice. I loved you so much in that moment.";
+                return "Your father's tie was too short. You were so nervous you didn't even notice.";
 
-            return "I'm here, love. Whatever you need to say.";
+            return "Your hands are doing that thing again. Are you cold, or just thinking?";
         }
 
         private static bool ContainsAny(string input, params string[] keywords)

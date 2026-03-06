@@ -162,6 +162,9 @@ namespace LastDay.Interaction
             string raw = answerInputField.text.Trim().ToLowerInvariant();
             if (string.IsNullOrEmpty(raw)) return;
 
+            if (Audio.AudioManager.Instance != null)
+                Audio.AudioManager.Instance.PlaySFX("typing");
+
             if (IsCorrectAnswer(raw, currentQuestionIndex))
             {
                 OnCorrectAnswer();
