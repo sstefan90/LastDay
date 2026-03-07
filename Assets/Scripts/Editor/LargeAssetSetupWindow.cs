@@ -11,7 +11,7 @@ using System.Collections.Generic;
 public class LargeAssetSetupWindow : EditorWindow
 {
     // ── PASTE YOUR GOOGLE DRIVE LINK HERE ────────────────────────────────
-    private const string DRIVE_LINK = "https://drive.google.com/drive/folders/PASTE_YOUR_FOLDER_ID_HERE";
+    private const string DRIVE_LINK = "https://drive.google.com/drive/u/0/folders/1AQ4o4LyWSCgLTvHLN4tqrCaYBAZT-DqE";
     // ─────────────────────────────────────────────────────────────────────
 
     // ── Asset manifest ────────────────────────────────────────────────────
