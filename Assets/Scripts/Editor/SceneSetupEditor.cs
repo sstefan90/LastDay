@@ -2129,6 +2129,218 @@ public class SceneSetupEditor : EditorWindow
         rect.sizeDelta = size;
     }
 
+    // ── Cinematic Dialogue Patch ───────────────────────────────────────────
+
+    [MenuItem("LastDay/Patch: Apply Cinematic Dialogue to current scene", priority = 2)]
+    public static void PatchApplyCinematicDialogue()
+    {
+        var canvas = GameObject.Find("Canvas");
+        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
+
+        // ── Remove legacy dialogue components ──────────────────────────────
+        var oldDialogueUI = canvas.GetComponent<DialogueUI>();
+        if (oldDialogueUI != null) { Object.DestroyImmediate(oldDialogueUI); Debug.Log("[Patch] Removed DialogueUI."); }
+
+        var oldInterview = canvas.GetComponent<InterviewDialogueUI>();
+        if (oldInterview != null) { Object.DestroyImmediate(oldInterview); Debug.Log("[Patch] Removed InterviewDialogueUI."); }
+
+        // Hide (don't destroy) legacy panels so wired references keep working
+        foreach (string name in new[] { "DialoguePanel", "InputBarPanel", "FloatingDialogueBubble", "MonologuePanel" })
+        {
+            var t = canvas.transform.Find(name);
+            if (t != null) t.gameObject.SetActive(false);
+        }
+
+        // ── Create or reuse top bar ────────────────────────────────────────
+        Transform topBarT = canvas.transform.Find("CinematicTopBar");
+        if (topBarT == null)
+        {
+            var go = new GameObject("CinematicTopBar", typeof(RectTransform));
+            go.transform.SetParent(canvas.transform, false);
+            topBarT = go.transform;
+        }
+        SetupCinematicBar(topBarT.gameObject, anchorMin: new Vector2(0f, 0.88f), anchorMax: Vector2.one);
+
+        // ── Speaker name label ─────────────────────────────────────────────
+        var speakerGo = GetOrCreateChild(topBarT.gameObject, "SpeakerName");
+        var speakerRect = speakerGo.GetComponent<RectTransform>();
+        speakerRect.anchorMin = new Vector2(0f, 0f);
+        speakerRect.anchorMax = new Vector2(0.22f, 1f);
+        speakerRect.offsetMin = new Vector2(16f, 6f);
+        speakerRect.offsetMax = new Vector2(-4f, -6f);
+        var speakerTmp = GetOrAdd<TextMeshProUGUI>(speakerGo);
+        speakerTmp.text = "";
+        speakerTmp.fontSize = 16;
+        speakerTmp.fontStyle = FontStyles.Bold;
+        speakerTmp.color = new Color(1f, 0.85f, 0.6f, 1f);
+        speakerTmp.alignment = TextAlignmentOptions.MidlineLeft;
+
+        // ── Subtitle text ──────────────────────────────────────────────────
+        var subtitleGo = GetOrCreateChild(topBarT.gameObject, "SubtitleText");
+        var subtitleRect = subtitleGo.GetComponent<RectTransform>();
+        subtitleRect.anchorMin = new Vector2(0.22f, 0f);
+        subtitleRect.anchorMax = new Vector2(0.92f, 1f);
+        subtitleRect.offsetMin = new Vector2(8f, 6f);
+        subtitleRect.offsetMax = new Vector2(-8f, -6f);
+        var subtitleTmp = GetOrAdd<TextMeshProUGUI>(subtitleGo);
+        subtitleTmp.text = "";
+        subtitleTmp.fontSize = 15;
+        subtitleTmp.color = Color.white;
+        subtitleTmp.alignment = TextAlignmentOptions.MidlineLeft;
+        subtitleTmp.enableWordWrapping = true;
+        subtitleTmp.overflowMode = TextOverflowModes.Overflow;
+
+        // ── Skip ">" button (top bar, far right) ───────────────────────────
+        var skipGo = GetOrCreateChild(topBarT.gameObject, "SkipButton");
+        var skipRect = skipGo.GetComponent<RectTransform>();
+        skipRect.anchorMin = new Vector2(0.92f, 0f);
+        skipRect.anchorMax = Vector2.one;
+        skipRect.offsetMin = new Vector2(2f, 6f);
+        skipRect.offsetMax = new Vector2(-8f, -6f);
+        var skipBtn = GetOrAdd<Button>(skipGo);
+        var skipLabelGo = GetOrCreateChild(skipGo, "Label");
+        StretchFill(skipLabelGo);
+        var skipTmp = GetOrAdd<TextMeshProUGUI>(skipLabelGo);
+        skipTmp.text = ">";
+        skipTmp.fontSize = 18;
+        skipTmp.color = new Color(1f, 1f, 1f, 0.6f);
+        skipTmp.alignment = TextAlignmentOptions.Center;
+        skipGo.SetActive(false);
+
+        // ── Create or reuse bottom bar ─────────────────────────────────────
+        Transform bottomBarT = canvas.transform.Find("CinematicBottomBar");
+        if (bottomBarT == null)
+        {
+            var go = new GameObject("CinematicBottomBar", typeof(RectTransform));
+            go.transform.SetParent(canvas.transform, false);
+            bottomBarT = go.transform;
+        }
+        SetupCinematicBar(bottomBarT.gameObject, anchorMin: Vector2.zero, anchorMax: new Vector2(1f, 0.18f));
+
+        // ── Monologue text ─────────────────────────────────────────────────
+        var monoGo = GetOrCreateChild(bottomBarT.gameObject, "MonologueText");
+        var monoRect = monoGo.GetComponent<RectTransform>();
+        monoRect.anchorMin = Vector2.zero;
+        monoRect.anchorMax = Vector2.one;
+        monoRect.offsetMin = new Vector2(24f, 8f);
+        monoRect.offsetMax = new Vector2(-24f, -8f);
+        var monoTmp = GetOrAdd<TextMeshProUGUI>(monoGo);
+        monoTmp.text = "";
+        monoTmp.fontSize = 14;
+        monoTmp.fontStyle = FontStyles.Italic;
+        monoTmp.color = new Color(0.78f, 0.78f, 0.78f, 1f);
+        monoTmp.alignment = TextAlignmentOptions.MidlineLeft;
+        monoTmp.enableWordWrapping = true;
+
+        // ── Input field ────────────────────────────────────────────────────
+        var inputGo = GetOrCreateChild(bottomBarT.gameObject, "InputField");
+        var inputRect = inputGo.GetComponent<RectTransform>();
+        inputRect.anchorMin = new Vector2(0f, 0.1f);
+        inputRect.anchorMax = new Vector2(0.82f, 0.9f);
+        inputRect.offsetMin = new Vector2(20f, 0f);
+        inputRect.offsetMax = new Vector2(-6f, 0f);
+        var inputBg = GetOrAdd<Image>(inputGo);
+        inputBg.color = new Color(0f, 0f, 0f, 0.5f);
+        // Ensure TMP_InputField subcomponents
+        var textAreaGo = GetOrCreateChild(inputGo, "Text Area");
+        StretchFill(textAreaGo, 4f);
+        var taRect = textAreaGo.GetComponent<RectTransform>();
+        var textAreaMask = GetOrAdd<RectMask2D>(textAreaGo);
+        var inputTextField = GetOrCreateChild(textAreaGo, "Text");
+        StretchFill(inputTextField);
+        var inputTmp = GetOrAdd<TextMeshProUGUI>(inputTextField);
+        inputTmp.fontSize = 14;
+        inputTmp.color = Color.white;
+        var placeholderGo = GetOrCreateChild(textAreaGo, "Placeholder");
+        StretchFill(placeholderGo);
+        var placeholderTmp = GetOrAdd<TextMeshProUGUI>(placeholderGo);
+        placeholderTmp.text = "Robert says...";
+        placeholderTmp.fontSize = 14;
+        placeholderTmp.color = new Color(0.55f, 0.55f, 0.6f, 1f);
+        placeholderTmp.fontStyle = FontStyles.Italic;
+        var tmpInput = GetOrAdd<TMP_InputField>(inputGo);
+        tmpInput.textViewport = taRect;
+        tmpInput.textComponent = inputTmp;
+        tmpInput.placeholder = placeholderTmp;
+        inputGo.SetActive(false);
+
+        // ── Send button ────────────────────────────────────────────────────
+        var sendGo = GetOrCreateChild(bottomBarT.gameObject, "SendButton");
+        var sendRect = sendGo.GetComponent<RectTransform>();
+        sendRect.anchorMin = new Vector2(0.83f, 0.1f);
+        sendRect.anchorMax = new Vector2(0.97f, 0.9f);
+        sendRect.offsetMin = new Vector2(4f, 0f);
+        sendRect.offsetMax = new Vector2(-8f, 0f);
+        var sendImg = GetOrAdd<Image>(sendGo);
+        sendImg.color = new Color(0.25f, 0.25f, 0.28f, 0.9f);
+        var sendBtn = GetOrAdd<Button>(sendGo);
+        var sendLabelGo = GetOrCreateChild(sendGo, "Label");
+        StretchFill(sendLabelGo);
+        var sendTmp = GetOrAdd<TextMeshProUGUI>(sendLabelGo);
+        sendTmp.text = "Send";
+        sendTmp.fontSize = 13;
+        sendTmp.color = Color.white;
+        sendTmp.alignment = TextAlignmentOptions.Center;
+        sendGo.SetActive(false);
+
+        // ── Wire CinematicDialogueUI on Canvas ─────────────────────────────
+        var cinUi = canvas.GetComponent<CinematicDialogueUI>();
+        if (cinUi == null) cinUi = canvas.AddComponent<CinematicDialogueUI>();
+
+        var topBarCg   = topBarT.GetComponent<CanvasGroup>();
+        var bottomBarCg = bottomBarT.GetComponent<CanvasGroup>();
+
+        SetPrivateField(cinUi, "topBar",          topBarCg);
+        SetPrivateField(cinUi, "speakerNameText",  speakerTmp);
+        SetPrivateField(cinUi, "subtitleText",     subtitleTmp);
+        SetPrivateField(cinUi, "skipButton",       skipBtn);
+        SetPrivateField(cinUi, "bottomBar",        bottomBarCg);
+        SetPrivateField(cinUi, "monologueText",    monoTmp);
+        SetPrivateField(cinUi, "inputField",       tmpInput);
+        SetPrivateField(cinUi, "sendButton",       sendBtn);
+
+        // Both bars start hidden
+        topBarT.gameObject.SetActive(false);
+        bottomBarT.gameObject.SetActive(false);
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+
+        Debug.Log("[Patch] CinematicDialogueUI applied. Assign EB Garamond TMP Font Assets in the Inspector, then test with LastDay/Test: Cinematic Dialogue.");
+    }
+
+    static void SetupCinematicBar(GameObject go, Vector2 anchorMin, Vector2 anchorMax)
+    {
+        var rect = go.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        var img = GetOrAdd<Image>(go);
+        img.color = new Color(0f, 0f, 0f, 0.82f);
+
+        var cg = GetOrAdd<CanvasGroup>(go);
+        cg.alpha = 1f;
+        cg.blocksRaycasts = true;
+        cg.interactable = true;
+    }
+
+    static GameObject GetOrCreateChild(GameObject parent, string childName)
+    {
+        var t = parent.transform.Find(childName);
+        if (t != null) return t.gameObject;
+        var go = new GameObject(childName, typeof(RectTransform));
+        go.transform.SetParent(parent.transform, false);
+        return go;
+    }
+
+    static T GetOrAdd<T>(GameObject go) where T : Component
+    {
+        var c = go.GetComponent<T>();
+        return c != null ? c : go.AddComponent<T>();
+    }
+
     static void SetStretchBottom(GameObject go, float height, float margin)
     {
         var rect = go.GetComponent<RectTransform>();
@@ -2153,5 +2365,54 @@ public class SceneSetupEditor : EditorWindow
     {
         ColorUtility.TryParseHtmlString(hex, out Color c);
         return c;
+    }
+
+    // ── Cinematic Dialogue Tests ──────────────────────────────────────────
+
+    [MenuItem("LastDay/Test: Cinematic Dialogue", priority = 10)]
+    public static void TestCinematicDialogue()
+    {
+        if (!Application.isPlaying)
+        {
+            bool enter = UnityEditor.EditorUtility.DisplayDialog(
+                "Cinematic Dialogue Tests",
+                "Tests run in Play Mode.\n\nEnter Play Mode now?",
+                "Enter Play Mode", "Cancel");
+            if (enter)
+            {
+                // Attach component before entering play — it will run on Start()
+                AttachTestComponent();
+                UnityEditor.EditorApplication.isPlaying = true;
+            }
+            return;
+        }
+
+        AttachTestComponent();
+    }
+
+    private static void AttachTestComponent()
+    {
+        var canvas = GameObject.Find("Canvas");
+        if (canvas == null)
+        {
+            Debug.LogError("[Test] Canvas not found. Run 'LastDay/Patch: Apply Cinematic Dialogue' first.");
+            return;
+        }
+
+        // Avoid duplicates
+        var existing = canvas.GetComponent<LastDay.Tests.CinematicDialogueTest>();
+        if (existing != null)
+        {
+            Debug.Log("[Test] CinematicDialogueTest already attached — triggering run.");
+            existing.RunTestsNow();
+            return;
+        }
+
+        var test = canvas.AddComponent<LastDay.Tests.CinematicDialogueTest>();
+        Debug.Log("[Test] CinematicDialogueTest attached to Canvas. " +
+            (Application.isPlaying ? "Running now." : "Will auto-run on Play Mode start."));
+
+        if (Application.isPlaying)
+            test.RunTestsNow();
     }
 }

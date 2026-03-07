@@ -146,6 +146,7 @@ namespace LastDay.Interaction
             computerPanel.SetActive(true);
             DisplayCurrentQuestion();
             outsideClickEnabledAtTime = Time.unscaledTime + 0.12f;
+            GameEvents.ComputerOpen();
 
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
@@ -261,6 +262,8 @@ namespace LastDay.Interaction
             if (computerOverlay != null)
                 computerOverlay.SetActive(false);
 
+            GameEvents.ComputerClose();
+
             if (GameStateMachine.Instance != null)
             {
                 if (GameStateMachine.Instance.CurrentState == GameState.InDialogue)
@@ -282,6 +285,7 @@ namespace LastDay.Interaction
                 computerPanel.SetActive(false);
             if (computerOverlay != null)
                 computerOverlay.SetActive(true);
+            GameEvents.ComputerOpen();
 
             if (finalPromptPanel != null)
             {
@@ -346,6 +350,7 @@ namespace LastDay.Interaction
                 finalPromptPanel.SetActive(false);
             if (computerOverlay != null)
                 computerOverlay.SetActive(false);
+            GameEvents.ComputerClose();
         }
 
         private bool IsComputerOpen()

@@ -123,6 +123,11 @@ namespace LastDay.UI
             ShowResponse(greeting);
         }
 
+        public void ShowAction(string text)
+        {
+            ShowMonologue($"[ {text} ]");
+        }
+
         public void ShowMonologue(string text)
         {
             if (monologuePanel != null && monologueText != null)

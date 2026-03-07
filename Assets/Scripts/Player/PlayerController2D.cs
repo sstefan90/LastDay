@@ -27,8 +27,6 @@ namespace LastDay.Player
         public void MoveToAndInteract(InteractableObject2D target)
         {
             if (target == null) return;
-            if (characterAnimator != null)
-                characterAnimator.FacePosition(target.transform.position);
             target.OnInteract();
         }
 

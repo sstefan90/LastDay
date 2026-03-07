@@ -163,6 +163,14 @@ namespace LastDay.UI
         }
 
         /// <summary>
+        /// Show a cinematic action description. Falls back to monologue panel on legacy UI.
+        /// </summary>
+        public void ShowAction(string text)
+        {
+            ShowMonologue($"[ {text} ]");
+        }
+
+        /// <summary>
         /// Show an internal monologue (no input field).
         /// </summary>
         public void ShowMonologue(string text)
