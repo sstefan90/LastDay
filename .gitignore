@@ -94,3 +94,16 @@ Tools/generated_assets/
 # Local LLM / Large Binaries
 # =====================
 Assets/StreamingAssets/LlamaLib*/
+
+# =====================
+# Large Binary Assets (shared via Google Drive — see LastDay/Setup: Large Assets)
+# NOTE: .meta files are intentionally kept in git — do NOT add .meta exclusions here
+# =====================
+*.mp4
+Assets/Audio/SFX/clock_ticking.wav
+Assets/Audio/Music/ambient.mp3
+Assets/Art/Environment/Gemini_Generated_Image_r43rqr43rqr43rqr.png
+Assets/Art/Characters/Robert/Gemini_Generated_Image_ge6l8fge6l8fge6l.png
+Assets/Art/Characters/Robert/Gemini_Generated_Image_63r91b63r91b63r9.png
+TestResults/
+unity_test.log
