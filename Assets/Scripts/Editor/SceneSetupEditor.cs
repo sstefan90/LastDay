@@ -2415,4 +2415,173 @@ public class SceneSetupEditor : EditorWindow
         if (Application.isPlaying)
             test.RunTestsNow();
     }
+
+    // ── Computer HUD Layout Fix ──────────────────────────────────────────
+
+    [MenuItem("LastDay/Patch: Fix Computer HUD layout", priority = 2)]
+    public static void PatchFixComputerHUD()
+    {
+        var canvas = GameObject.Find("Canvas");
+        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
+
+        // ── Locate ComputerPanel ─────────────────────────────────────────
+        var compPanelTf = canvas.transform.Find("ComputerOverlay/ComputerPanel")
+                       ?? canvas.transform.Find("ComputerPanel");
+        if (compPanelTf == null)
+        {
+            Debug.LogError("[Patch] ComputerPanel not found. Run 'LastDay/Patch: Add Computer + Security UI' first.");
+            return;
+        }
+        var compPanel = compPanelTf.gameObject;
+
+        // Widen the panel to give the layout more room
+        var cpRect = compPanel.GetComponent<RectTransform>();
+        cpRect.anchorMin = new Vector2(0.18f, 0.15f);
+        cpRect.anchorMax = new Vector2(0.82f, 0.85f);
+        cpRect.offsetMin = Vector2.zero;
+        cpRect.offsetMax = Vector2.zero;
+
+        // ── HeaderBar — taller, contains title + question number ─────────
+        var headerTf = compPanelTf.Find("HeaderBar");
+        if (headerTf != null)
+        {
+            var hbRect = headerTf.GetComponent<RectTransform>();
+            hbRect.anchorMin = new Vector2(0f, 0.88f);
+            hbRect.anchorMax = new Vector2(1f, 1f);
+            hbRect.offsetMin = Vector2.zero;
+            hbRect.offsetMax = Vector2.zero;
+
+            // Left title text
+            var titleTf = headerTf.Find("TitleText");
+            if (titleTf != null)
+            {
+                var titleRect = titleTf.GetComponent<RectTransform>();
+                titleRect.anchorMin = new Vector2(0f, 0f);
+                titleRect.anchorMax = new Vector2(0.6f, 1f);
+                titleRect.offsetMin = new Vector2(10f, 0f);
+                titleRect.offsetMax = Vector2.zero;
+                var titleTmp = titleTf.GetComponent<TMP_Text>();
+                if (titleTmp != null)
+                {
+                    titleTmp.alignment = TextAlignmentOptions.MidlineLeft;
+                    titleTmp.fontSize = 14;
+                }
+            }
+
+            // Question number label (right side of header) — create if missing
+            var labelTf = headerTf.Find("QuestionLabel");
+            GameObject labelGo;
+            if (labelTf == null)
+            {
+                labelGo = CreateUIText(headerTf.gameObject, "QuestionLabel",
+                    "SECURITY CHECK  1 / 3", 13, new Color(0.6f, 0.85f, 1f));
+            }
+            else
+            {
+                labelGo = labelTf.gameObject;
+            }
+
+            var labelRect = labelGo.GetComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0.55f, 0f);
+            labelRect.anchorMax = new Vector2(1f, 1f);
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = new Vector2(-10f, 0f);
+            var labelTmp = labelGo.GetComponent<TMP_Text>();
+            if (labelTmp != null)
+            {
+                labelTmp.alignment = TextAlignmentOptions.MidlineRight;
+                labelTmp.fontSize = 13;
+                labelTmp.color = new Color(0.6f, 0.85f, 1f);
+            }
+
+            // Wire to ComputerInteraction
+            var computerInteraction = Object.FindObjectOfType<LastDay.Interaction.ComputerInteraction>();
+            if (computerInteraction != null)
+                SetPrivateField(computerInteraction, "questionLabelText", labelTmp);
+        }
+
+        // ── QuestionText — body only, no longer bleeds into header ───────
+        var qTextTf = compPanelTf.Find("QuestionText");
+        if (qTextTf != null)
+        {
+            var qRect = qTextTf.GetComponent<RectTransform>();
+            qRect.anchorMin = new Vector2(0.06f, 0.46f);
+            qRect.anchorMax = new Vector2(0.94f, 0.86f);
+            qRect.offsetMin = Vector2.zero;
+            qRect.offsetMax = Vector2.zero;
+            var qTmp = qTextTf.GetComponent<TMP_Text>();
+            if (qTmp != null)
+            {
+                qTmp.fontSize = 20;
+                qTmp.alignment = TextAlignmentOptions.Center;
+                qTmp.enableWordWrapping = true;
+            }
+        }
+
+        // ── AnswerInput ───────────────────────────────────────────────────
+        var inputTf = compPanelTf.Find("AnswerInput");
+        if (inputTf != null)
+        {
+            var iRect = inputTf.GetComponent<RectTransform>();
+            iRect.anchorMin = new Vector2(0.06f, 0.28f);
+            iRect.anchorMax = new Vector2(0.65f, 0.42f);
+            iRect.offsetMin = Vector2.zero;
+            iRect.offsetMax = Vector2.zero;
+        }
+
+        // ── SubmitButton ──────────────────────────────────────────────────
+        var submitTf = compPanelTf.Find("SubmitButton");
+        if (submitTf != null)
+        {
+            var sRect = submitTf.GetComponent<RectTransform>();
+            sRect.anchorMin = new Vector2(0.67f, 0.28f);
+            sRect.anchorMax = new Vector2(0.94f, 0.42f);
+            sRect.offsetMin = Vector2.zero;
+            sRect.offsetMax = Vector2.zero;
+            var sTmp = submitTf.GetComponentInChildren<TMP_Text>();
+            if (sTmp != null) sTmp.fontSize = 15;
+        }
+
+        // ── FeedbackText ──────────────────────────────────────────────────
+        var feedTf = compPanelTf.Find("FeedbackText");
+        if (feedTf != null)
+        {
+            var fRect = feedTf.GetComponent<RectTransform>();
+            fRect.anchorMin = new Vector2(0.06f, 0.12f);
+            fRect.anchorMax = new Vector2(0.94f, 0.25f);
+            fRect.offsetMin = Vector2.zero;
+            fRect.offsetMax = Vector2.zero;
+            var fTmp = feedTf.GetComponent<TMP_Text>();
+            if (fTmp != null)
+            {
+                fTmp.fontSize = 14;
+                fTmp.alignment = TextAlignmentOptions.Center;
+            }
+        }
+
+        // ── CloseButton — fix unicode rendering, move to corner ──────────
+        var closeTf = compPanelTf.Find("CloseButton");
+        if (closeTf != null)
+        {
+            var cRect = closeTf.GetComponent<RectTransform>();
+            cRect.anchorMin = new Vector2(1f, 1f);
+            cRect.anchorMax = new Vector2(1f, 1f);
+            cRect.pivot = new Vector2(1f, 1f);
+            cRect.anchoredPosition = new Vector2(-6f, -6f);
+            cRect.sizeDelta = new Vector2(36f, 28f);
+            var cImg = closeTf.GetComponent<UnityEngine.UI.Image>();
+            if (cImg != null) cImg.color = new Color32(100, 30, 30, 220);
+            var cTmp = closeTf.GetComponentInChildren<TMP_Text>();
+            if (cTmp != null)
+            {
+                cTmp.text = "\u00D7";   // × multiplication sign — broader OS support than ✕
+                cTmp.fontSize = 16;
+                cTmp.alignment = TextAlignmentOptions.Center;
+            }
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        Debug.Log("[Patch] Computer HUD layout fixed — anchors updated, QuestionLabel added, close button fixed.");
+    }
 }
