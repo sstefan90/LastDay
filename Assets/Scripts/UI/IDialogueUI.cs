@@ -10,6 +10,11 @@ namespace LastDay.UI
         void OpenForObject(string objectId, string memoryId, string displayName);
         void OpenForPhone();
         void ShowMonologue(string text);
+        /// <summary>
+        /// Display a cinematic action description — italic [ text ] in the top bar.
+        /// Falls back to Debug.Log on legacy dialogue UIs.
+        /// </summary>
+        void ShowAction(string text);
         void Close();
     }
 }

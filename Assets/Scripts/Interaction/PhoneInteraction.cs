@@ -78,7 +78,7 @@ namespace LastDay.Interaction
         {
             if (!isRinging && !hasBeenAnswered)
             {
-                Debug.Log("[Phone] The phone is silent.");
+                LastDay.UI.DialogueSession.Current?.ShowAction("The phone is silent.");
                 return;
             }
 
