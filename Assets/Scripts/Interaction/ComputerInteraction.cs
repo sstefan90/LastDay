@@ -14,7 +14,9 @@ namespace LastDay.Interaction
     public class ComputerInteraction : InteractableObject2D
     {
         [Header("Computer UI Panel")]
+        [SerializeField] private GameObject computerOverlay;
         [SerializeField] private GameObject computerPanel;
+        [SerializeField] private RectTransform computerWindowRect;
         [SerializeField] private TMP_Text questionText;
         [SerializeField] private TMP_Text feedbackText;
         [SerializeField] private TMP_InputField answerInputField;
@@ -53,10 +55,14 @@ namespace LastDay.Interaction
 
         private int currentQuestionIndex = 0;
         private bool allAnswered = false;
+        private float outsideClickEnabledAtTime = 0f;
 
         protected override void Start()
         {
             base.Start();
+
+            if (computerOverlay != null)
+                computerOverlay.SetActive(false);
 
             if (computerPanel != null)
                 computerPanel.SetActive(false);
@@ -96,6 +102,27 @@ namespace LastDay.Interaction
             GameEvents.OnAllQuestionsAnswered -= HandleAllQuestionsAnswered;
         }
 
+        void Update()
+        {
+            // Old computer-screen behavior: click outside the window to exit.
+            if (!IsComputerOpen()) return;
+            if (!Input.GetMouseButtonDown(0)) return;
+            if (Time.unscaledTime < outsideClickEnabledAtTime) return;
+
+            // If no window rect is wired yet (older scene), don't auto-close immediately.
+            if (computerWindowRect == null) return;
+
+            // Ignore clicks on any UI element inside the window.
+            if (RectTransformUtility.RectangleContainsScreenPoint(computerWindowRect, Input.mousePosition, null))
+                return;
+
+            // If there is a final prompt open, don't close from outside click.
+            if (finalPromptPanel != null && finalPromptPanel.activeSelf)
+                return;
+
+            ClosePanel();
+        }
+
         /// <summary>
         /// Called by InteractableObject2D when the player clicks the computer.
         /// </summary>
@@ -114,8 +141,11 @@ namespace LastDay.Interaction
         {
             if (computerPanel == null) return;
 
+            if (computerOverlay != null)
+                computerOverlay.SetActive(true);
             computerPanel.SetActive(true);
             DisplayCurrentQuestion();
+            outsideClickEnabledAtTime = Time.unscaledTime + 0.12f;
 
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
@@ -228,6 +258,8 @@ namespace LastDay.Interaction
         {
             if (computerPanel != null)
                 computerPanel.SetActive(false);
+            if (computerOverlay != null)
+                computerOverlay.SetActive(false);
 
             if (GameStateMachine.Instance != null)
             {
@@ -248,6 +280,8 @@ namespace LastDay.Interaction
         {
             if (computerPanel != null)
                 computerPanel.SetActive(false);
+            if (computerOverlay != null)
+                computerOverlay.SetActive(true);
 
             if (finalPromptPanel != null)
             {
@@ -256,6 +290,7 @@ namespace LastDay.Interaction
                 if (finalPromptText != null)
                     finalPromptText.text = "FINAL SECURITY CHECK\n\nCan you forgive yourself?";
             }
+            outsideClickEnabledAtTime = Time.unscaledTime + 0.12f;
 
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.Decision);
@@ -309,6 +344,15 @@ namespace LastDay.Interaction
         {
             if (finalPromptPanel != null)
                 finalPromptPanel.SetActive(false);
+            if (computerOverlay != null)
+                computerOverlay.SetActive(false);
+        }
+
+        private bool IsComputerOpen()
+        {
+            bool panelOpen = computerPanel != null && computerPanel.activeSelf;
+            bool finalOpen = finalPromptPanel != null && finalPromptPanel.activeSelf;
+            return panelOpen || finalOpen;
         }
     }
 }
