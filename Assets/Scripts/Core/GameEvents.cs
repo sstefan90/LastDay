@@ -15,6 +15,8 @@ namespace LastDay.Core
         public static event Action<string> OnObjectInteracted;
         public static event Action<string> OnGazeComplete;
         public static event Action<bool> OnGameEnded;
+        public static event Action OnComputerOpen;
+        public static event Action OnComputerClose;
 
         // Security question progression events
         /// <summary>Fired when a single security question is correctly answered. Passes the 0-based question index.</summary>
@@ -47,6 +49,9 @@ namespace LastDay.Core
 
         public static void EndGame(bool signed) =>
             OnGameEnded?.Invoke(signed);
+
+        public static void ComputerOpen() => OnComputerOpen?.Invoke();
+        public static void ComputerClose() => OnComputerClose?.Invoke();
 
         public static void SecurityQuestionAnswered(int questionIndex) =>
             OnSecurityQuestionAnswered?.Invoke(questionIndex);

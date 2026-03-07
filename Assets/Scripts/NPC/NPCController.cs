@@ -1,6 +1,8 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using LastDay.Player;
 using LastDay.UI;
+using LastDay.Utilities;
 
 namespace LastDay.NPC
 {
@@ -10,7 +12,7 @@ namespace LastDay.NPC
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(Collider2D))]
-    public class NPCController : MonoBehaviour
+    public class NPCController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Header("NPC Identity")]
         [SerializeField] private string npcId = "martha";
@@ -19,6 +21,10 @@ namespace LastDay.NPC
         [Header("Facing")]
         [SerializeField] private bool facePlayer = true;
         [SerializeField] private float facePlayerDistance = 3f;
+
+        [Header("Cursor")]
+        [SerializeField] private Texture2D hoverCursor;
+        [SerializeField] private Vector2 cursorHotspot = new Vector2(8f, 4f);
 
         [Header("Components")]
         [SerializeField] private SpriteRenderer spriteRenderer;
@@ -48,23 +54,26 @@ namespace LastDay.NPC
             }
         }
 
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            CursorHelper.SetHoverCursor(hoverCursor, cursorHotspot);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            CursorHelper.ResetCursor();
+        }
+
         /// <summary>
         /// Called when the player walks up to this NPC and interacts.
         /// Opens the dialogue UI for conversation.
         /// </summary>
         public void OnPlayerInteract()
         {
-            if (characterAnimator != null)
-            {
-                var player = PlayerController2D.Instance;
-                if (player != null)
-                    characterAnimator.FacePosition(player.transform.position);
-            }
-
-            if (DialogueUI.Instance != null)
-                DialogueUI.Instance.OpenForNPC(npcId, displayName);
+            if (DialogueSession.Current != null)
+                DialogueSession.Current.OpenForNPC(npcId, displayName);
             else
-                Debug.LogWarning($"[NPC] DialogueUI.Instance is null, cannot open dialogue for {displayName}");
+                Debug.LogWarning($"[NPC] No dialogue UI found, cannot open dialogue for {displayName}");
         }
     }
 }

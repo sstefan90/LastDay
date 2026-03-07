@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using LastDay.Core;
+using LastDay.Utilities;
 
 namespace LastDay.Interaction
 {
@@ -26,6 +27,10 @@ namespace LastDay.Interaction
         private float currentHoverTime;
         private bool isHovering;
         private bool hasTriggeredGaze;
+
+        [Header("Cursor")]
+        [SerializeField] private Texture2D hoverCursor;
+        [SerializeField] private Vector2 cursorHotspot = new Vector2(8f, 4f);
 
         [Header("Audio")]
         [SerializeField] private AudioClip hoverSound;
@@ -68,6 +73,8 @@ namespace LastDay.Interaction
 
             isHovering = true;
 
+            CursorHelper.SetHoverCursor(hoverCursor, cursorHotspot);
+
             if (highlightRenderer != null)
                 highlightRenderer.enabled = true;
 
@@ -83,6 +90,8 @@ namespace LastDay.Interaction
         {
             isHovering = false;
             currentHoverTime = 0f;
+
+            CursorHelper.ResetCursor();
 
             if (highlightRenderer != null)
                 highlightRenderer.enabled = false;
@@ -124,10 +133,9 @@ namespace LastDay.Interaction
                 ));
             }
 
-            var dialogueUI = FindObjectOfType<LastDay.UI.DialogueUI>();
-            if (dialogueUI != null)
+            if (LastDay.UI.DialogueSession.Current != null)
             {
-                dialogueUI.OpenForObject(objectId, memoryId, displayName);
+                LastDay.UI.DialogueSession.Current.OpenForObject(objectId, memoryId, displayName);
             }
         }
     }
