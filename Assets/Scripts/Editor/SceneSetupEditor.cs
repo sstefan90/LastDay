@@ -127,6 +127,36 @@ public class SceneSetupEditor : EditorWindow
         Debug.Log("[SceneSetup] Scene view aligned to Game camera (same scale and framing).");
     }
 
+    [MenuItem("LastDay/Patch: Apply Robert Gemini sprite animation", priority = 2)]
+    public static void PatchApplyRobertGeminiSpriteAnimation()
+    {
+        var robert = GameObject.Find("Robert");
+        if (robert == null) { Debug.LogWarning("[Patch] Robert not found."); return; }
+
+        var spriteTf = robert.transform.Find("Sprite");
+        if (spriteTf == null) { Debug.LogWarning("[Patch] Robert/Sprite not found."); return; }
+
+        var sr = spriteTf.GetComponent<SpriteRenderer>();
+        if (sr == null) { Debug.LogWarning("[Patch] SpriteRenderer missing on Robert/Sprite."); return; }
+
+        var frames = LoadSprites("Characters/Robert/Gemini_Generated_Image_ge6l8fge6l8fge6l.png");
+        if (frames.Length == 0)
+        {
+            Debug.LogWarning("[Patch] No sliced sprite frames found for Robert Gemini sprite sheet.");
+            return;
+        }
+
+        sr.sprite = frames[0];
+        var frameAnimator = spriteTf.GetComponent<SpriteFrameAnimator>();
+        if (frameAnimator == null)
+            frameAnimator = spriteTf.gameObject.AddComponent<SpriteFrameAnimator>();
+        frameAnimator.Configure(sr, frames, 8f);
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        Debug.Log($"[Patch] Robert sprite animation applied with {frames.Length} frames.");
+    }
+
     [MenuItem("LastDay/Create iteration: Interview-style scene", priority = 2)]
     public static void CreateInterviewStyleScene()
     {
@@ -213,6 +243,150 @@ public class SceneSetupEditor : EditorWindow
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+    }
+
+    [MenuItem("LastDay/Patch: Resize dialogue + computer UI for aspect", priority = 2)]
+    public static void PatchResizeDialogueAndComputerUIForAspect()
+    {
+        var canvas = GameObject.Find("Canvas");
+        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
+
+        // DialoguePanel (Martha chat)
+        var dialoguePanel = canvas.transform.Find("DialoguePanel");
+        if (dialoguePanel != null)
+        {
+            SetStretchBottom(dialoguePanel.gameObject, 160f, 24f);
+            dialoguePanel.SetAsLastSibling();
+
+            var portrait = dialoguePanel.Find("CharacterPortrait") as RectTransform;
+            if (portrait != null)
+            {
+                portrait.anchorMin = new Vector2(0f, 0f);
+                portrait.anchorMax = new Vector2(0f, 0f);
+                portrait.anchoredPosition = new Vector2(44f, 78f);
+                portrait.sizeDelta = new Vector2(64f, 64f);
+            }
+
+            var characterName = dialoguePanel.Find("CharacterName") as RectTransform;
+            if (characterName != null)
+            {
+                characterName.anchorMin = new Vector2(0f, 1f);
+                characterName.anchorMax = new Vector2(0f, 1f);
+                characterName.anchoredPosition = new Vector2(146f, -12f);
+                characterName.sizeDelta = new Vector2(220f, 28f);
+            }
+
+            var dialogueText = dialoguePanel.Find("DialogueText") as RectTransform;
+            if (dialogueText != null)
+            {
+                dialogueText.anchorMin = new Vector2(0.11f, 0.26f);
+                dialogueText.anchorMax = new Vector2(0.98f, 0.84f);
+                dialogueText.offsetMin = Vector2.zero;
+                dialogueText.offsetMax = Vector2.zero;
+            }
+
+            var inputField = dialoguePanel.Find("InputField") as RectTransform;
+            if (inputField != null)
+            {
+                inputField.anchorMin = new Vector2(0.12f, 0f);
+                inputField.anchorMax = new Vector2(0.82f, 0.24f);
+                inputField.offsetMin = new Vector2(4f, 6f);
+                inputField.offsetMax = new Vector2(-4f, -4f);
+            }
+
+            var sendButton = dialoguePanel.Find("SendButton") as RectTransform;
+            if (sendButton != null)
+            {
+                sendButton.anchorMin = new Vector2(0.84f, 0f);
+                sendButton.anchorMax = new Vector2(1f, 0.24f);
+                sendButton.offsetMin = new Vector2(4f, 6f);
+                sendButton.offsetMax = new Vector2(-8f, -4f);
+            }
+
+            var closeButton = dialoguePanel.Find("CloseButton") as RectTransform;
+            if (closeButton != null)
+            {
+                closeButton.anchorMin = new Vector2(1f, 1f);
+                closeButton.anchorMax = new Vector2(1f, 1f);
+                closeButton.pivot = new Vector2(1f, 1f);
+                closeButton.anchoredPosition = new Vector2(-6f, -6f);
+                closeButton.sizeDelta = new Vector2(60f, 24f);
+            }
+        }
+
+        // MonologuePanel (Martha thought captions)
+        var monoPanel = canvas.transform.Find("MonologuePanel") as RectTransform;
+        if (monoPanel != null)
+        {
+            monoPanel.anchorMin = new Vector2(0.24f, 0.88f);
+            monoPanel.anchorMax = new Vector2(0.76f, 0.96f);
+            monoPanel.offsetMin = Vector2.zero;
+            monoPanel.offsetMax = Vector2.zero;
+        }
+
+        // ComputerPanel (security questions)
+        var compPanel = canvas.transform.Find("ComputerOverlay/ComputerPanel") as RectTransform;
+        if (compPanel == null)
+            compPanel = canvas.transform.Find("ComputerPanel") as RectTransform;
+        if (compPanel != null)
+        {
+            compPanel.anchorMin = new Vector2(0.24f, 0.2f);
+            compPanel.anchorMax = new Vector2(0.76f, 0.8f);
+            compPanel.offsetMin = Vector2.zero;
+            compPanel.offsetMax = Vector2.zero;
+
+            var qText = compPanel.Find("QuestionText") as RectTransform;
+            if (qText != null)
+            {
+                qText.anchorMin = new Vector2(0.06f, 0.56f);
+                qText.anchorMax = new Vector2(0.94f, 0.9f);
+                qText.offsetMin = Vector2.zero;
+                qText.offsetMax = Vector2.zero;
+            }
+
+            var answerInput = compPanel.Find("AnswerInput") as RectTransform;
+            if (answerInput != null)
+            {
+                answerInput.anchorMin = new Vector2(0.1f, 0.29f);
+                answerInput.anchorMax = new Vector2(0.69f, 0.43f);
+                answerInput.offsetMin = Vector2.zero;
+                answerInput.offsetMax = Vector2.zero;
+            }
+
+            var submit = compPanel.Find("SubmitButton") as RectTransform;
+            if (submit != null)
+            {
+                submit.anchorMin = new Vector2(0.71f, 0.29f);
+                submit.anchorMax = new Vector2(0.9f, 0.43f);
+                submit.offsetMin = Vector2.zero;
+                submit.offsetMax = Vector2.zero;
+            }
+
+            var feedback = compPanel.Find("FeedbackText") as RectTransform;
+            if (feedback != null)
+            {
+                feedback.anchorMin = new Vector2(0.1f, 0.16f);
+                feedback.anchorMax = new Vector2(0.9f, 0.26f);
+                feedback.offsetMin = Vector2.zero;
+                feedback.offsetMax = Vector2.zero;
+            }
+        }
+
+        // Final prompt panel (same aspect pass)
+        var finalPanel = canvas.transform.Find("ComputerOverlay/FinalPromptPanel") as RectTransform;
+        if (finalPanel == null)
+            finalPanel = canvas.transform.Find("FinalPromptPanel") as RectTransform;
+        if (finalPanel != null)
+        {
+            finalPanel.anchorMin = new Vector2(0.28f, 0.24f);
+            finalPanel.anchorMax = new Vector2(0.72f, 0.76f);
+            finalPanel.offsetMin = Vector2.zero;
+            finalPanel.offsetMax = Vector2.zero;
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        Debug.Log("[Patch] Dialogue, monologue, computer, and final prompt panels resized for aspect.");
     }
 
     static Transform CreateInterviewInputBar(GameObject canvas)
@@ -468,16 +642,37 @@ public class SceneSetupEditor : EditorWindow
             return;
         }
 
-        // ComputerPanel
-        if (canvas.transform.Find("ComputerPanel") == null)
+        // ComputerOverlay + ComputerPanel
+        var overlayTf = canvas.transform.Find("ComputerOverlay");
+        GameObject computerOverlay = overlayTf != null ? overlayTf.gameObject : null;
+        if (computerOverlay == null)
         {
-            var compPanel = CreateUIPanel(canvas, "ComputerPanel",
-                new Color32(10, 12, 18, 240), AnchorPreset.Center, 400f);
+            computerOverlay = CreateUIPanel(canvas, "ComputerOverlay",
+                new Color32(0, 0, 0, 150), AnchorPreset.Stretch, 0f);
+            StretchFill(computerOverlay);
+            computerOverlay.SetActive(false);
+        }
+
+        if (computerOverlay.transform.Find("ComputerPanel") == null)
+        {
+            var compPanel = CreateUIPanel(computerOverlay, "ComputerPanel",
+                new Color32(22, 28, 44, 248), AnchorPreset.Center, 400f);
             var cpRect = compPanel.GetComponent<RectTransform>();
-            cpRect.anchorMin = new Vector2(0.2f, 0.15f);
-            cpRect.anchorMax = new Vector2(0.8f, 0.85f);
+            cpRect.anchorMin = new Vector2(0.25f, 0.2f);
+            cpRect.anchorMax = new Vector2(0.75f, 0.8f);
             cpRect.offsetMin = Vector2.zero;
             cpRect.offsetMax = Vector2.zero;
+
+            var headerBar = CreateUIPanel(compPanel, "HeaderBar",
+                new Color32(49, 82, 170, 255), AnchorPreset.TopCenter, 40f);
+            var hbRect = headerBar.GetComponent<RectTransform>();
+            hbRect.anchorMin = new Vector2(0f, 0.9f);
+            hbRect.anchorMax = new Vector2(1f, 1f);
+            hbRect.offsetMin = Vector2.zero;
+            hbRect.offsetMax = Vector2.zero;
+            var hbText = CreateUIText(headerBar, "TitleText", "SECURE ACCESS TERMINAL", 16, Color.white);
+            StretchFill(hbText, 8f);
+            hbText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
 
             var questionText = CreateUIText(compPanel, "QuestionText", "", 22, new Color(0.0f, 0.85f, 0.35f));
             var qtRect = questionText.GetComponent<RectTransform>();
@@ -524,7 +719,9 @@ public class SceneSetupEditor : EditorWindow
             compPanel.SetActive(false);
 
             // Wire to ComputerInteraction
+            SetPrivateField(computerInteraction, "computerOverlay", computerOverlay);
             SetPrivateField(computerInteraction, "computerPanel", compPanel);
+            SetPrivateField(computerInteraction, "computerWindowRect", cpRect);
             SetPrivateField(computerInteraction, "questionText", qtTmp);
             SetPrivateField(computerInteraction, "feedbackText", feedbackText.GetComponent<TMP_Text>());
             SetPrivateField(computerInteraction, "answerInputField", answerInput.GetComponent<TMP_InputField>());
@@ -539,9 +736,9 @@ public class SceneSetupEditor : EditorWindow
         }
 
         // FinalPromptPanel
-        if (canvas.transform.Find("FinalPromptPanel") == null)
+        if (computerOverlay.transform.Find("FinalPromptPanel") == null)
         {
-            var finalPanel = CreateUIPanel(canvas, "FinalPromptPanel",
+            var finalPanel = CreateUIPanel(computerOverlay, "FinalPromptPanel",
                 new Color32(10, 10, 20, 250), AnchorPreset.Center, 300f);
             var fpRect = finalPanel.GetComponent<RectTransform>();
             fpRect.anchorMin = new Vector2(0.25f, 0.25f);
@@ -576,6 +773,7 @@ public class SceneSetupEditor : EditorWindow
 
             finalPanel.SetActive(false);
 
+            SetPrivateField(computerInteraction, "computerOverlay", computerOverlay);
             SetPrivateField(computerInteraction, "finalPromptPanel", finalPanel);
             SetPrivateField(computerInteraction, "finalPromptText", finalText.GetComponent<TMP_Text>());
             SetPrivateField(computerInteraction, "signButton", signBtn.GetComponent<Button>());
@@ -918,6 +1116,41 @@ public class SceneSetupEditor : EditorWindow
         return s;
     }
 
+    static Sprite[] LoadSprites(string relativePath)
+    {
+        string path = "Assets/Art/" + relativePath;
+        Object[] loaded = AssetDatabase.LoadAllAssetsAtPath(path);
+        var sprites = new System.Collections.Generic.List<Sprite>();
+
+        foreach (var obj in loaded)
+        {
+            if (obj is Sprite sprite)
+                sprites.Add(sprite);
+        }
+
+        if (sprites.Count == 0)
+        {
+            var single = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (single != null)
+                sprites.Add(single);
+        }
+
+        sprites.Sort((a, b) => ExtractFrameIndex(a.name).CompareTo(ExtractFrameIndex(b.name)));
+        return sprites.ToArray();
+    }
+
+    static int ExtractFrameIndex(string spriteName)
+    {
+        int underscore = spriteName.LastIndexOf('_');
+        if (underscore >= 0)
+        {
+            string suffix = spriteName.Substring(underscore + 1);
+            if (int.TryParse(suffix, out int index))
+                return index;
+        }
+        return int.MaxValue;
+    }
+
     static void SetPrivateField(Component comp, string fieldName, object value)
     {
         var so = new SerializedObject(comp);
@@ -1137,8 +1370,17 @@ public class SceneSetupEditor : EditorWindow
 
         var spriteChild = CreateChild(robert, "Sprite");
         var sr = spriteChild.AddComponent<SpriteRenderer>();
-        sr.sprite = LoadSprite("Characters/Robert/robert_placeholder.png");
+        var robertFrames = LoadSprites("Characters/Robert/Gemini_Generated_Image_ge6l8fge6l8fge6l.png");
+        sr.sprite = robertFrames.Length > 0
+            ? robertFrames[0]
+            : LoadSprite("Characters/Robert/robert_placeholder.png");
         SetSortingLayer(sr, "Characters", 0);
+
+        if (robertFrames.Length > 0)
+        {
+            var frameAnimator = spriteChild.AddComponent<SpriteFrameAnimator>();
+            frameAnimator.Configure(sr, robertFrames, 8f);
+        }
 
         var col = robert.AddComponent<BoxCollider2D>();
         col.size = new Vector2(0.5f, 0.75f);
@@ -1295,21 +1537,21 @@ public class SceneSetupEditor : EditorWindow
         canvasGo.AddComponent<GraphicRaycaster>();
 
         // ── Dialogue Panel (bottom, full width) ──────────────────────
-        const float dialoguePanelHeight = 180f;
+        const float dialoguePanelHeight = 160f;
         var dialoguePanel = CreateUIPanel(canvasGo, "DialoguePanel",
             new Color32(30, 30, 50, 220), AnchorPreset.BottomStretch, dialoguePanelHeight);
         SetStretchBottom(dialoguePanel, dialoguePanelHeight, 24f);
         dialoguePanel.transform.SetAsLastSibling();
 
-        var portrait = CreateUIImage(dialoguePanel, "CharacterPortrait", 72, 72);
-        SetAnchored(portrait, new Vector2(0, 0), new Vector2(0, 0), new Vector2(50, 90), new Vector2(72, 72));
+        var portrait = CreateUIImage(dialoguePanel, "CharacterPortrait", 64, 64);
+        SetAnchored(portrait, new Vector2(0, 0), new Vector2(0, 0), new Vector2(44, 78), new Vector2(64, 64));
         var portraitImg = portrait.GetComponent<Image>();
         portraitImg.sprite = LoadSprite("Characters/Martha/martha_portrait.png");
 
-        var charName = CreateUIText(dialoguePanel, "CharacterName", "Martha", 18, Color.white);
-        SetAnchored(charName, new Vector2(0, 1), new Vector2(0, 1), new Vector2(160, -14), new Vector2(240, 32));
+        var charName = CreateUIText(dialoguePanel, "CharacterName", "Martha", 17, Color.white);
+        SetAnchored(charName, new Vector2(0, 1), new Vector2(0, 1), new Vector2(146, -12), new Vector2(220, 28));
 
-        var dialogueText = CreateUIText(dialoguePanel, "DialogueText", "", 14, new Color(0.87f, 0.87f, 0.87f));
+        var dialogueText = CreateUIText(dialoguePanel, "DialogueText", "", 13, new Color(0.87f, 0.87f, 0.87f));
         var dialogueRect = dialogueText.GetComponent<RectTransform>();
         dialogueRect.anchorMin = new Vector2(0.12f, 0.25f);
         dialogueRect.anchorMax = new Vector2(0.98f, 0.85f);
@@ -1321,15 +1563,15 @@ public class SceneSetupEditor : EditorWindow
 
         var inputFieldGo = CreateUIInputField(dialoguePanel, "InputField", "What do you want to say...");
         var inputRect = inputFieldGo.GetComponent<RectTransform>();
-        inputRect.anchorMin = new Vector2(0.14f, 0f);
-        inputRect.anchorMax = new Vector2(0.82f, 0.22f);
+        inputRect.anchorMin = new Vector2(0.12f, 0f);
+        inputRect.anchorMax = new Vector2(0.82f, 0.24f);
         inputRect.offsetMin = new Vector2(4, 6);
         inputRect.offsetMax = new Vector2(-4, -4);
 
         var sendBtn = CreateUIButton(dialoguePanel, "SendButton", "Send");
         var sendRect = sendBtn.GetComponent<RectTransform>();
         sendRect.anchorMin = new Vector2(0.84f, 0f);
-        sendRect.anchorMax = new Vector2(1f, 0.22f);
+        sendRect.anchorMax = new Vector2(1f, 0.24f);
         sendRect.offsetMin = new Vector2(4, 6);
         sendRect.offsetMax = new Vector2(-8, -4);
 
@@ -1339,7 +1581,7 @@ public class SceneSetupEditor : EditorWindow
         closeRect.anchorMax = new Vector2(1, 1);
         closeRect.pivot = new Vector2(1, 1);
         closeRect.anchoredPosition = new Vector2(-6, -6);
-        closeRect.sizeDelta = new Vector2(64, 26);
+        closeRect.sizeDelta = new Vector2(60, 24);
         closeBtn.GetComponent<Image>().color = new Color32(80, 40, 40, 200);
         var closeTmp = closeBtn.GetComponentInChildren<TMP_Text>();
         if (closeTmp != null) closeTmp.fontSize = 12;
@@ -1360,8 +1602,8 @@ public class SceneSetupEditor : EditorWindow
         var monoPanel = CreateUIPanel(canvasGo, "MonologuePanel",
             new Color32(0, 0, 0, 180), AnchorPreset.TopCenter, 80f);
         var monoRect = monoPanel.GetComponent<RectTransform>();
-        monoRect.anchorMin = new Vector2(0.2f, 0.9f);
-        monoRect.anchorMax = new Vector2(0.8f, 0.97f);
+        monoRect.anchorMin = new Vector2(0.24f, 0.88f);
+        monoRect.anchorMax = new Vector2(0.76f, 0.96f);
         monoRect.offsetMin = Vector2.zero;
         monoRect.offsetMax = Vector2.zero;
 
@@ -1436,42 +1678,58 @@ public class SceneSetupEditor : EditorWindow
 
         endPanel.SetActive(false);
 
+        // ── Computer screen overlay (darken scene + centered old-window UI) ─
+        var computerOverlay = CreateUIPanel(canvasGo, "ComputerOverlay",
+            new Color32(0, 0, 0, 150), AnchorPreset.Stretch, 0f);
+        StretchFill(computerOverlay);
+
         // ── Computer Panel ────────────────────────────
-        var compPanel = CreateUIPanel(canvasGo, "ComputerPanel",
-            new Color32(10, 12, 18, 240), AnchorPreset.Center, 400f);
+        var compPanel = CreateUIPanel(computerOverlay, "ComputerPanel",
+            new Color32(22, 28, 44, 248), AnchorPreset.Center, 400f);
         var cpRect = compPanel.GetComponent<RectTransform>();
-        cpRect.anchorMin = new Vector2(0.2f, 0.15f);
-        cpRect.anchorMax = new Vector2(0.8f, 0.85f);
+        cpRect.anchorMin = new Vector2(0.25f, 0.2f);
+        cpRect.anchorMax = new Vector2(0.75f, 0.8f);
         cpRect.offsetMin = Vector2.zero;
         cpRect.offsetMax = Vector2.zero;
 
+        var headerBar = CreateUIPanel(compPanel, "HeaderBar",
+            new Color32(49, 82, 170, 255), AnchorPreset.TopCenter, 40f);
+        var hbRect = headerBar.GetComponent<RectTransform>();
+        hbRect.anchorMin = new Vector2(0f, 0.9f);
+        hbRect.anchorMax = new Vector2(1f, 1f);
+        hbRect.offsetMin = Vector2.zero;
+        hbRect.offsetMax = Vector2.zero;
+        var hbText = CreateUIText(headerBar, "TitleText", "SECURE ACCESS TERMINAL", 16, Color.white);
+        StretchFill(hbText, 8f);
+        hbText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
+
         var questionText = CreateUIText(compPanel, "QuestionText", "", 22, new Color(0.0f, 0.85f, 0.35f));
         var qtRect = questionText.GetComponent<RectTransform>();
-        qtRect.anchorMin = new Vector2(0.05f, 0.55f);
-        qtRect.anchorMax = new Vector2(0.95f, 0.92f);
+        qtRect.anchorMin = new Vector2(0.06f, 0.56f);
+        qtRect.anchorMax = new Vector2(0.94f, 0.9f);
         qtRect.offsetMin = Vector2.zero;
         qtRect.offsetMax = Vector2.zero;
         questionText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
 
         var answerInput = CreateUIInputField(compPanel, "AnswerInput", "Type your answer...");
         var answerRect = answerInput.GetComponent<RectTransform>();
-        answerRect.anchorMin = new Vector2(0.1f, 0.3f);
-        answerRect.anchorMax = new Vector2(0.7f, 0.45f);
+        answerRect.anchorMin = new Vector2(0.1f, 0.29f);
+        answerRect.anchorMax = new Vector2(0.69f, 0.43f);
         answerRect.offsetMin = Vector2.zero;
         answerRect.offsetMax = Vector2.zero;
 
         var compSubmitBtn = CreateUIButton(compPanel, "SubmitButton", "SUBMIT");
         var csbRect = compSubmitBtn.GetComponent<RectTransform>();
-        csbRect.anchorMin = new Vector2(0.72f, 0.3f);
-        csbRect.anchorMax = new Vector2(0.9f, 0.45f);
+        csbRect.anchorMin = new Vector2(0.71f, 0.29f);
+        csbRect.anchorMax = new Vector2(0.9f, 0.43f);
         csbRect.offsetMin = Vector2.zero;
         csbRect.offsetMax = Vector2.zero;
         compSubmitBtn.GetComponent<Image>().color = new Color32(0, 100, 40, 255);
 
         var feedbackText = CreateUIText(compPanel, "FeedbackText", "", 16, new Color(1f, 0.3f, 0.3f));
         var fbRect = feedbackText.GetComponent<RectTransform>();
-        fbRect.anchorMin = new Vector2(0.1f, 0.18f);
-        fbRect.anchorMax = new Vector2(0.9f, 0.28f);
+        fbRect.anchorMin = new Vector2(0.1f, 0.16f);
+        fbRect.anchorMax = new Vector2(0.9f, 0.26f);
         fbRect.offsetMin = Vector2.zero;
         fbRect.offsetMax = Vector2.zero;
         feedbackText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
@@ -1486,13 +1744,14 @@ public class SceneSetupEditor : EditorWindow
         compCloseBtn.GetComponent<Image>().color = new Color32(80, 40, 40, 200);
 
         compPanel.SetActive(false);
+        computerOverlay.SetActive(false);
 
         // ── Final Prompt Panel ───────────────────────────
-        var finalPanel = CreateUIPanel(canvasGo, "FinalPromptPanel",
+        var finalPanel = CreateUIPanel(computerOverlay, "FinalPromptPanel",
             new Color32(10, 10, 20, 250), AnchorPreset.Center, 300f);
         var fpRect = finalPanel.GetComponent<RectTransform>();
-        fpRect.anchorMin = new Vector2(0.25f, 0.25f);
-        fpRect.anchorMax = new Vector2(0.75f, 0.75f);
+        fpRect.anchorMin = new Vector2(0.28f, 0.24f);
+        fpRect.anchorMax = new Vector2(0.72f, 0.76f);
         fpRect.offsetMin = Vector2.zero;
         fpRect.offsetMax = Vector2.zero;
 
@@ -1584,6 +1843,24 @@ public class SceneSetupEditor : EditorWindow
         SetPrivateField(interactionPrompt, "promptPanel", promptPanel);
         SetPrivateField(interactionPrompt, "promptText", promptText.GetComponent<TMP_Text>());
 
+        // Wire computer interaction overlay references
+        var compInteract = GameObject.Find("interactables/Computer")?.GetComponent<ComputerInteraction>();
+        if (compInteract != null)
+        {
+            SetPrivateField(compInteract, "computerOverlay", computerOverlay);
+            SetPrivateField(compInteract, "computerPanel", compPanel);
+            SetPrivateField(compInteract, "computerWindowRect", cpRect);
+            SetPrivateField(compInteract, "questionText", questionText.GetComponent<TMP_Text>());
+            SetPrivateField(compInteract, "feedbackText", feedbackText.GetComponent<TMP_Text>());
+            SetPrivateField(compInteract, "answerInputField", answerInput.GetComponent<TMP_InputField>());
+            SetPrivateField(compInteract, "submitButton", compSubmitBtn.GetComponent<Button>());
+            SetPrivateField(compInteract, "closeButton", compCloseBtn.GetComponent<Button>());
+            SetPrivateField(compInteract, "finalPromptPanel", finalPanel);
+            SetPrivateField(compInteract, "finalPromptText", finalText.GetComponent<TMP_Text>());
+            SetPrivateField(compInteract, "signButton", finalSignBtn.GetComponent<Button>());
+            SetPrivateField(compInteract, "tearButton", finalTearBtn.GetComponent<Button>());
+        }
+
         Debug.Log("[SceneSetup] Canvas and all UI created.");
         return canvasGo;
     }
@@ -1640,10 +1917,17 @@ public class SceneSetupEditor : EditorWindow
             var compInteract = computerGo.GetComponent<ComputerInteraction>();
             if (compInteract != null)
             {
-                var compPanel = canvas.transform.Find("ComputerPanel");
+                var overlay = canvas.transform.Find("ComputerOverlay");
+                if (overlay != null)
+                    SetPrivateField(compInteract, "computerOverlay", overlay.gameObject);
+
+                var compPanel = canvas.transform.Find("ComputerOverlay/ComputerPanel");
+                if (compPanel == null)
+                    compPanel = canvas.transform.Find("ComputerPanel");
                 if (compPanel != null)
                 {
                     SetPrivateField(compInteract, "computerPanel", compPanel.gameObject);
+                    SetPrivateField(compInteract, "computerWindowRect", compPanel.GetComponent<RectTransform>());
                     var qt = compPanel.Find("QuestionText");
                     if (qt != null) SetPrivateField(compInteract, "questionText", qt.GetComponent<TMP_Text>());
                     var fb = compPanel.Find("FeedbackText");
@@ -1656,7 +1940,9 @@ public class SceneSetupEditor : EditorWindow
                     if (cb != null) SetPrivateField(compInteract, "closeButton", cb.GetComponent<Button>());
                 }
 
-                var finalPanel = canvas.transform.Find("FinalPromptPanel");
+                var finalPanel = canvas.transform.Find("ComputerOverlay/FinalPromptPanel");
+                if (finalPanel == null)
+                    finalPanel = canvas.transform.Find("FinalPromptPanel");
                 if (finalPanel != null)
                 {
                     SetPrivateField(compInteract, "finalPromptPanel", finalPanel.gameObject);
