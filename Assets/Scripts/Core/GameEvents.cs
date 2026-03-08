@@ -23,8 +23,6 @@ namespace LastDay.Core
         public static event Action<int> OnSecurityQuestionAnswered;
         /// <summary>Fired when all three security questions are answered. Triggers Martha shutdown and document unlock.</summary>
         public static event Action OnAllQuestionsAnswered;
-        /// <summary>Fired when Q3 (guitar) becomes active — signals that Martha's breakdown is possible.</summary>
-        public static event Action OnMarthaBreakdownReady;
 
         public static void TriggerMemory(string memoryId) =>
             OnMemoryTriggered?.Invoke(memoryId);
@@ -59,7 +57,5 @@ namespace LastDay.Core
         public static void AllQuestionsAnswered() =>
             OnAllQuestionsAnswered?.Invoke();
 
-        public static void MarthaBreakdownReady() =>
-            OnMarthaBreakdownReady?.Invoke();
     }
 }

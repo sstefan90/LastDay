@@ -789,6 +789,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 96257480}
   m_CullTransparentMesh: 1
+--- !u!1 &104322008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 104322009}
+  - component: {fileID: 104322010}
+  m_Layer: 0
+  m_Name: DavidModel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &104322009
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104322008}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 877742526}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &104322010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104322008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a50e3140c3ecaaf1c848dbf141cc2074, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  advancedOptions: 0
+  _remote: 0
+  _port: 13334
+  _APIKey: 
+  _SSLCert: 
+  _SSLKey: 
+  _numThreads: -1
+  _numGPULayers: 0
+  _parallelPrompts: 1
+  _contextSize: 4096
+  _batchSize: 512
+  _model: 
+  _flashAttention: 0
+  _reasoning: 0
+  _lora: 
+  _loraWeights: 
+  dontDestroyOnLoad: 1
+  _embeddingsOnly: 0
+  _embeddingLength: 0
+  minContextLength: 0
+  maxContextLength: 0
 --- !u!1 &127416467
 GameObject:
   m_ObjectHideFlags: 0
@@ -5060,8 +5125,6 @@ MonoBehaviour:
   documentUnlocked: 0
   phoneHasRung: 0
   activeSecurityQuestion: 0
-  marthaShutdownMode: 0
-  marthaGuitarBreakdown: 0
 --- !u!1 &877742525
 GameObject:
   m_ObjectHideFlags: 0
@@ -5098,6 +5161,7 @@ Transform:
   - {fileID: 437915157}
   - {fileID: 2070767803}
   - {fileID: 1145728354}
+  - {fileID: 104322009}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &900356871
@@ -8771,12 +8835,18 @@ MonoBehaviour:
   bottomBarHeightRatio: 0.18
   topBarAlpha: 0.82
   bottomBarAlpha: 0.88
-  waitingCues:
+  marthaWaitingCues:
   - Martha sighs.
   - 'Martha: ...'
   - Martha ponders.
   - Martha stares out in thought.
   - Martha looks wonderingly into Robert's eyes.
+  davidWaitingCues:
+  - David goes quiet.
+  - 'David: ...'
+  - Line noise. He's still there.
+  - David clears his throat.
+  - You can hear him breathing on the other end.
 --- !u!114 &1580680011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13139,11 +13209,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxTokens: 80
   temperature: 0.7
+  contextSize: 4096
   isInitialized: 0
   currentCharacter: martha
   useLLM: 1
   marthaCharacter: {fileID: 1891496292}
   davidCharacter: {fileID: 976066815}
+  marthaLLM: {fileID: 2070767805}
+  davidLLM: {fileID: 104322010}
 --- !u!114 &2070767805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13164,7 +13237,7 @@ MonoBehaviour:
   _SSLKey: 
   _numThreads: -1
   _numGPULayers: 0
-  _parallelPrompts: -1
+  _parallelPrompts: 1
   _contextSize: 4096
   _batchSize: 512
   _model: /Users/abeygailpanganiban/Github/LastDay/Models/phi3-mini.gguf

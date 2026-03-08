@@ -67,6 +67,11 @@ namespace LastDay.UI
                 Close();
         }
 
+        public void OpenForIntro()
+        {
+            ShowMonologue(CharacterPrompts.GetMarthaOpeningMonologue());
+        }
+
         public void OpenForNPC(string npcId, string npcName)
         {
             currentObjectId = null;
@@ -95,16 +100,7 @@ namespace LastDay.UI
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
 
-            int activeQuestion = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion : 0;
-
-            if (memoryId == "guitar" && activeQuestion == 3
-                && EventManager.Instance != null
-                && !EventManager.Instance.marthaGuitarBreakdown)
-            {
-                ShowMonologue("There's a massive crack down the back of the neck. It's broken.");
-            }
-
-            string greeting = CharacterPrompts.GetObjectOpeningLine(memoryId, "martha", activeQuestion);
+            string greeting = CharacterPrompts.GetObjectOpeningLine(memoryId, "martha");
             ShowResponse(greeting);
         }
 
@@ -183,21 +179,6 @@ namespace LastDay.UI
             inputField.interactable = false;
             if (sendButton != null) sendButton.interactable = false;
             if (thinkingIndicator != null) thinkingIndicator.SetActive(true);
-
-            if (EventManager.Instance != null
-                && EventManager.Instance.activeSecurityQuestion == 3
-                && !EventManager.Instance.marthaGuitarBreakdown
-                && currentCharacter == "martha")
-            {
-                string lower = playerText.ToLower();
-                if (lower.Contains("crack") || lower.Contains("smash") || lower.Contains("broken")
-                    || lower.Contains("broke") || lower.Contains("shatter") || lower.Contains("damaged")
-                    || lower.Contains("neck") || lower.Contains("why is it"))
-                {
-                    EventManager.Instance.marthaGuitarBreakdown = true;
-                    GameEvents.MarthaBreakdownReady();
-                }
-            }
 
             string response;
             if (LocalLLMManager.Instance != null)
