@@ -26,6 +26,7 @@ namespace LastDay.Interaction
 
         [Header("Final Prompt UI")]
         [SerializeField] private GameObject finalPromptPanel;
+        [SerializeField] private TMP_Text finalPromptLabelText;
         [SerializeField] private TMP_Text finalPromptText;
         [SerializeField] private Button signButton;
         [SerializeField] private Button tearButton;
@@ -269,6 +270,8 @@ namespace LastDay.Interaction
 
         private void ClosePanel()
         {
+            Audio.AudioManager.Instance?.StopSFX();
+
             if (computerPanel != null)
                 computerPanel.SetActive(false);
             if (computerOverlay != null)
@@ -303,8 +306,11 @@ namespace LastDay.Interaction
             {
                 finalPromptPanel.SetActive(true);
 
+                if (finalPromptLabelText != null)
+                    finalPromptLabelText.text = "FINAL SECURITY CHECK";
+
                 if (finalPromptText != null)
-                    finalPromptText.text = "FINAL SECURITY CHECK\n\nCan you forgive yourself?";
+                    finalPromptText.text = "Can you forgive yourself?";
             }
             outsideClickEnabledAtTime = Time.unscaledTime + 0.12f;
 
@@ -354,6 +360,7 @@ namespace LastDay.Interaction
         {
             if (signButton != null) signButton.interactable = false;
             if (tearButton != null) tearButton.interactable = false;
+            Audio.AudioManager.Instance?.StopSFX();
         }
 
         private void HideFinalPrompt()

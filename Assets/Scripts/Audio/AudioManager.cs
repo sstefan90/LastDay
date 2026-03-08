@@ -123,6 +123,15 @@ namespace LastDay.Audio
                 sfxSource.PlayOneShot(clip, sfxVolume);
         }
 
+        /// <summary>
+        /// Immediately stops any SFX currently playing (e.g. typing sound on final decision).
+        /// </summary>
+        public void StopSFX()
+        {
+            if (sfxSource != null && sfxSource.isPlaying)
+                sfxSource.Stop();
+        }
+
         public void StartClockTick()
         {
             if (clockTicking == null) return;
