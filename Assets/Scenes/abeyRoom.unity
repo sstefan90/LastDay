@@ -161,9 +161,6 @@ MonoBehaviour:
   interactableLayer:
     serializedVersion: 2
     m_Bits: 256
-  walkableLayer:
-    serializedVersion: 2
-    m_Bits: 64
   characterLayer:
     serializedVersion: 2
     m_Bits: 512
@@ -180,11 +177,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 256934ee2270649e998936e87769d7da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2
-  pathNodeReachDistance: 0.1
   characterAnimator: {fileID: 52779471}
   idleMovement: {fileID: 52779470}
-  pathfinder: {fileID: 52779473}
 --- !u!114 &52779470
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -425,6 +419,71 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1695950294}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &104322008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 104322009}
+  - component: {fileID: 104322010}
+  m_Layer: 0
+  m_Name: DavidModel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &104322009
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104322008}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 877742526}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &104322010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 104322008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a50e3140c3ecaaf1c848dbf141cc2074, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  advancedOptions: 0
+  _remote: 0
+  _port: 13334
+  _APIKey: 
+  _SSLCert: 
+  _SSLKey: 
+  _numThreads: -1
+  _numGPULayers: 0
+  _parallelPrompts: 1
+  _contextSize: 4096
+  _batchSize: 512
+  _model: 
+  _flashAttention: 0
+  _reasoning: 0
+  _lora: 
+  _loraWeights: 
+  dontDestroyOnLoad: 1
+  _embeddingsOnly: 0
+  _embeddingLength: 0
+  minContextLength: 0
+  maxContextLength: 0
 --- !u!1 &127416467
 GameObject:
   m_ObjectHideFlags: 0
@@ -1640,6 +1699,8 @@ MonoBehaviour:
   highlightRenderer: {fileID: 860590577}
   highlightColor: {r: 1, g: 1, b: 0.8, a: 0.3}
   hoverTimeToTrigger: 2
+  hoverCursor: {fileID: 0}
+  cursorHotspot: {x: 8, y: 4}
   hoverSound: {fileID: 0}
   clickSound: {fileID: 0}
 --- !u!61 &421080696
@@ -2085,6 +2146,9 @@ MonoBehaviour:
   hoverSfx: {fileID: 0}
   paperRustle: {fileID: 0}
   paperTear: {fileID: 0}
+  phoneRinging: {fileID: 0}
+  typing: {fileID: 0}
+  clockTicking: {fileID: 0}
   textBlips: []
   musicVolume: 0.5
   sfxVolume: 0.7
@@ -2382,6 +2446,8 @@ MonoBehaviour:
   highlightRenderer: {fileID: 1948072485}
   highlightColor: {r: 1, g: 1, b: 0.8, a: 0.3}
   hoverTimeToTrigger: 2
+  hoverCursor: {fileID: 0}
+  cursorHotspot: {x: 8, y: 4}
   hoverSound: {fileID: 0}
   clickSound: {fileID: 0}
   lockedMessage: Not yet... I'm not ready to look at that.
@@ -3484,6 +3550,8 @@ MonoBehaviour:
   highlightRenderer: {fileID: 1896739409}
   highlightColor: {r: 1, g: 1, b: 0.8, a: 0.3}
   hoverTimeToTrigger: 2
+  hoverCursor: {fileID: 0}
+  cursorHotspot: {x: 8, y: 4}
   hoverSound: {fileID: 0}
   clickSound: {fileID: 0}
   ringSound: {fileID: 0}
@@ -3773,8 +3841,6 @@ MonoBehaviour:
   documentUnlocked: 0
   phoneHasRung: 0
   activeSecurityQuestion: 0
-  marthaShutdownMode: 0
-  marthaGuitarBreakdown: 0
 --- !u!1 &877742525
 GameObject:
   m_ObjectHideFlags: 0
@@ -3811,6 +3877,7 @@ Transform:
   - {fileID: 437915157}
   - {fileID: 2070767803}
   - {fileID: 1145728354}
+  - {fileID: 104322009}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &900356871
@@ -4576,6 +4643,8 @@ MonoBehaviour:
   highlightRenderer: {fileID: 352670494}
   highlightColor: {r: 1, g: 1, b: 0.8, a: 0.3}
   hoverTimeToTrigger: 2
+  hoverCursor: {fileID: 0}
+  cursorHotspot: {x: 8, y: 4}
   hoverSound: {fileID: 0}
   clickSound: {fileID: 0}
 --- !u!61 &1170193746
@@ -5151,9 +5220,13 @@ MonoBehaviour:
   highlightRenderer: {fileID: 1706794079}
   highlightColor: {r: 1, g: 1, b: 0.8, a: 0.3}
   hoverTimeToTrigger: 2
+  hoverCursor: {fileID: 0}
+  cursorHotspot: {x: 8, y: 4}
   hoverSound: {fileID: 0}
   clickSound: {fileID: 0}
+  computerOverlay: {fileID: 0}
   computerPanel: {fileID: 1603139688}
+  computerWindowRect: {fileID: 0}
   questionText: {fileID: 275590446}
   feedbackText: {fileID: 165207311}
   answerInputField: {fileID: 1813764529}
@@ -6741,6 +6814,8 @@ MonoBehaviour:
   displayName: Martha
   facePlayer: 1
   facePlayerDistance: 3
+  hoverCursor: {fileID: 0}
+  cursorHotspot: {x: 8, y: 4}
   spriteRenderer: {fileID: 62542586}
   characterAnimator: {fileID: 1695950291}
   idleMovement: {fileID: 1695950290}
@@ -9205,6 +9280,8 @@ MonoBehaviour:
   highlightRenderer: {fileID: 127416469}
   highlightColor: {r: 1, g: 1, b: 0.8, a: 0.3}
   hoverTimeToTrigger: 2
+  hoverCursor: {fileID: 0}
+  cursorHotspot: {x: 8, y: 4}
   hoverSound: {fileID: 0}
   clickSound: {fileID: 0}
 --- !u!61 &2058252626
@@ -9353,11 +9430,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxTokens: 80
   temperature: 0.7
+  contextSize: 4096
   isInitialized: 0
   currentCharacter: martha
   useLLM: 1
   marthaCharacter: {fileID: 1891496292}
   davidCharacter: {fileID: 976066815}
+  marthaLLM: {fileID: 2070767805}
+  davidLLM: {fileID: 104322010}
 --- !u!114 &2070767805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9378,7 +9458,7 @@ MonoBehaviour:
   _SSLKey: 
   _numThreads: -1
   _numGPULayers: 0
-  _parallelPrompts: -1
+  _parallelPrompts: 1
   _contextSize: 4096
   _batchSize: 512
   _model: /Users/stephone/Documents/LastDay/Models/phi3-mini.gguf

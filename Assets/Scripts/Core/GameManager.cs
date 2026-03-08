@@ -1,7 +1,9 @@
 using UnityEngine;
+using System.Collections;
 using LastDay.Utilities;
 using LastDay.Dialogue;
 using LastDay.Audio;
+using LastDay.UI;
 
 namespace LastDay.Core
 {
@@ -74,7 +76,14 @@ namespace LastDay.Core
                 AudioManager.Instance.StartClockTick();
             }
 
+            StartCoroutine(PlayIntroAfterDelay(0.5f));
             Debug.Log("[GameManager] Game started.");
+        }
+
+        private IEnumerator PlayIntroAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            DialogueSession.Current?.OpenForIntro();
         }
 
         public void EndGame(bool signed)
