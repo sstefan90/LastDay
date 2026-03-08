@@ -12,13 +12,16 @@ namespace LastDay.Dialogue
     /// Manages the local LLM for generating NPC dialogue.
     /// Uses LLMUnity's LLMCharacter when available, falls back to stub responses.
     /// </summary>
+    [DefaultExecutionOrder(-50)] // run before LLM [-1] so contextSize can be set before server starts
     public class LocalLLMManager : MonoBehaviour
     {
         public static LocalLLMManager Instance { get; private set; }
 
         [Header("LLM Settings")]
-        [SerializeField] private int maxTokens = 80;
-        [SerializeField] private float temperature = 0.7f;
+        [SerializeField] private int maxTokens = 100;
+        [SerializeField] private float temperature = 0.5f;
+        // Each model instance gets its own independent 4096-token context window.
+        [SerializeField] private int contextSize = 4096;
 
         [Header("State")]
         public bool isInitialized;
@@ -26,9 +29,15 @@ namespace LastDay.Dialogue
         public bool useLLM = true;
 
 #if LLMUNITY_AVAILABLE
-        [Header("LLMUnity References")]
+        [Header("LLMUnity — Characters")]
         [SerializeField] private LLMAgent marthaCharacter;
         [SerializeField] private LLMAgent davidCharacter;
+
+        [Header("LLMUnity — Models")]
+        [Tooltip("Martha's LLM server (Llama 3 8B). Lives on the LocalLLMManager GameObject.")]
+        [SerializeField] private LLM marthaLLM;
+        [Tooltip("David's LLM server (Phi-3 Mini). Assigned by DavidModelSetup — run LastDay > Setup: David Model.")]
+        [SerializeField] private LLM davidLLM;
 
         private LLMAgent ActiveCharacter =>
             currentCharacter == "david" ? davidCharacter : marthaCharacter;
@@ -64,6 +73,27 @@ namespace LastDay.Dialogue
                 return;
             }
             Instance = this;
+
+#if LLMUNITY_AVAILABLE
+            // Set context size on both model instances before LLM.Awake() (order 0) starts the servers.
+            // marthaLLM lives on this GameObject; davidLLM is on the separate DavidModel GameObject.
+            if (marthaLLM == null) marthaLLM = GetComponent<LLM>();  // fallback: same GO
+            if (marthaLLM != null)
+            {
+                marthaLLM.contextSize = contextSize;
+                Debug.Log($"[LLM] Martha context size set to {contextSize}.");
+            }
+            if (davidLLM != null)
+            {
+                davidLLM.contextSize = contextSize;
+                Debug.Log($"[LLM] David context size set to {contextSize}.");
+            }
+            else
+            {
+                Debug.LogWarning("[LLM] davidLLM not assigned — David shares Martha's LLM server. " +
+                                 "Run LastDay > Setup: David Model to separate them.");
+            }
+#endif
         }
 
         /// <summary>
@@ -75,11 +105,25 @@ namespace LastDay.Dialogue
 #if LLMUNITY_AVAILABLE
             if (useLLM && marthaCharacter != null)
             {
-                // Apply runtime model path if provided (from ModelDownloader)
-                if (!string.IsNullOrEmpty(modelPath) && marthaCharacter.llm != null)
+                // Martha → Llama 3 8B (path from ModelDownloader or caller)
+                string marthaPath = !string.IsNullOrEmpty(modelPath)
+                    ? modelPath
+                    : ModelDownloader.GetPathForFilename("llama3-8b-instruct.gguf");
+                if (marthaCharacter.llm != null && !string.IsNullOrEmpty(marthaPath))
                 {
-                    marthaCharacter.llm.model = modelPath;
-                    Debug.Log($"[LLM] Model path set to: {modelPath}");
+                    marthaCharacter.llm.model = marthaPath;
+                    Debug.Log($"[LLM] Martha model: {marthaPath}");
+                }
+
+                // David → Phi-3 Mini (separate server if davidLLM is assigned)
+                if (davidCharacter != null && davidLLM != null)
+                {
+                    string davidPath = ModelDownloader.GetPathForFilename("llama3-8b-instruct.gguf");
+                    if (!string.IsNullOrEmpty(davidPath))
+                    {
+                        davidLLM.model = davidPath;
+                        Debug.Log($"[LLM] David model (Llama 3 8B): {davidPath}");
+                    }
                 }
 
                 marthaCharacter.systemPrompt = CharacterPrompts.GetMarthaPrompt(new List<string>());
@@ -96,8 +140,16 @@ namespace LastDay.Dialogue
                 try
                 {
                     await marthaCharacter.Warmup();
+                    Debug.Log("[LLM] Martha warmed up.");
+
+                    if (davidCharacter != null)
+                    {
+                        await davidCharacter.Warmup();
+                        Debug.Log("[LLM] David warmed up.");
+                    }
+
                     isInitialized = true;
-                    Debug.Log("[LLM] Initialized with LLMUnity. Model warmed up.");
+                    Debug.Log("[LLM] Initialized with LLMUnity. Both characters warmed up.");
                     return;
                 }
                 catch (System.Exception e)
@@ -119,12 +171,29 @@ namespace LastDay.Dialogue
             IncrementTurnCount(currentCharacter);
             conversationHistory.Add(new ConversationEntry { role = "user", content = playerInput });
 
-            // After 2+ turns with David on a mystery topic, mark resistance as used
+            // Route David to the correct single-secret prompt state based on what the player just asked.
+            // This must happen before the resistance check so the right activeSecurityQuestion is used.
+            if (currentCharacter == "david" && EventManager.Instance != null)
+            {
+                string lower = playerInput.ToLower();
+                int detected = 0;
+                if (ContainsAny(lower, "rope", "arthur", "expedition", "k2", "mountain", "leader", "emergency", "contact"))
+                    detected = 1;
+                else if (ContainsAny(lower, "money", "account", "offshore", "sarah", "lily", "payment", "fund"))
+                    detected = 2;
+                else if (ContainsAny(lower, "guitar", "music", "playing", "song", "instrument"))
+                    detected = 3;
+
+                if (detected > 0)
+                    EventManager.Instance.activeSecurityQuestion = detected;
+            }
+
+            // After the first exchange with David, mark resistance as used so he delivers the full truth on the second push
             if (currentCharacter == "david" && GetTurnCount("david") >= 2
                 && EventManager.Instance != null)
             {
                 int aq = EventManager.Instance.activeSecurityQuestion;
-                if (aq > 0 && !EventManager.Instance.HasDavidResisted(aq))
+                if (!EventManager.Instance.HasDavidResisted(aq))
                     EventManager.Instance.MarkDavidResisted(aq);
             }
 
@@ -196,20 +265,17 @@ namespace LastDay.Dialogue
 #if LLMUNITY_AVAILABLE
         private void UpdatePromptWithMemories(List<string> memories)
         {
-            int activeQuestion   = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion  : 0;
-            bool shutdownMode    = EventManager.Instance != null && EventManager.Instance.marthaShutdownMode;
-            bool guitarBreakdown = EventManager.Instance != null && EventManager.Instance.marthaGuitarBreakdown;
-            bool davidResisted   = EventManager.Instance != null && EventManager.Instance.HasDavidResisted(activeQuestion);
+            int activeQuestion = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion : 0;
+            bool davidResisted = EventManager.Instance != null && EventManager.Instance.HasDavidResisted(activeQuestion);
 
             string prompt = currentCharacter == "david"
                 ? CharacterPrompts.GetDavidPrompt(memories ?? new List<string>(), activeQuestion, davidResisted)
-                : CharacterPrompts.GetMarthaPrompt(memories ?? new List<string>(), activeQuestion, shutdownMode, guitarBreakdown);
+                : CharacterPrompts.GetMarthaPrompt(memories ?? new List<string>());
 
-            int turns = GetTurnCount(currentCharacter);
-            if (turns > 0)
-                prompt += $"\n\n<turn_count>This is exchange #{turns} in this conversation. Vary your tone and phrasing. Do not repeat earlier responses.</turn_count>";
-
-            ActiveCharacter.systemPrompt = prompt;
+            // Only reassign if the prompt has actually changed — avoids invalidating the KV cache
+            // on exchanges where the memory state is identical (speeds up subsequent turns).
+            if (ActiveCharacter.systemPrompt != prompt)
+                ActiveCharacter.systemPrompt = prompt;
         }
 #endif
 
@@ -244,7 +310,9 @@ namespace LastDay.Dialogue
             "CONSTRAINT", "ALTERED OUTCOME", "HOW TO PLAY", "HOW TO SPEAK",
             "WHAT NOT TO DO", "OUTPUT FORMAT", "CURRENT STATE", "CORE PERSONALITY",
             "SPEECH PATTERN", "MEMORY CONTEXT", "NEW CONSTRAINT", "HIDDEN INNER",
-            "<role>", "<voice>", "<rules>", "<context>", "<secret>", "<aware>"
+            "This is exchange #", "Vary your tone", "Do not repeat",
+            "<role>", "<voice>", "<rules>", "<context>", "<secret>", "<aware>", "<turn_count>",
+            "(As Martha)", "(As David)", "(Note:", "(Martha", "(David"
         };
 
         private string StripScriptArtifacts(string response)
@@ -255,6 +323,12 @@ namespace LastDay.Dialogue
                 response, @"^\s*\[?Martha\]?\s*:", "", ignoreCase);
             response = System.Text.RegularExpressions.Regex.Replace(
                 response, @"^\s*\[?David\]?\s*:", "", ignoreCase);
+
+            // Strip third-person NPC self-narration: "Martha leans...", "David pauses..." etc.
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"\bMartha\s+\w+s\b[^.!?]*[.!?]?", "", ignoreCase);
+            response = System.Text.RegularExpressions.Regex.Replace(
+                response, @"\bDavid\s+\w+s\b[^.!?]*[.!?]?", "", ignoreCase);
 
             var robertMatch = System.Text.RegularExpressions.Regex.Match(
                 response, @"\[?Robert\]?\s*:", ignoreCase);
@@ -338,50 +412,46 @@ namespace LastDay.Dialogue
 
         private string GetStubResponse(string input, string character)
         {
-            string lowerInput    = input.ToLower();
-            int activeQuestion   = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion  : 0;
-            bool shutdownMode    = EventManager.Instance != null && EventManager.Instance.marthaShutdownMode;
-            bool guitarBreakdown = EventManager.Instance != null && EventManager.Instance.marthaGuitarBreakdown;
-            bool davidResisted   = EventManager.Instance != null && EventManager.Instance.HasDavidResisted(activeQuestion);
+            string lowerInput  = input.ToLower();
+            int activeQuestion = EventManager.Instance != null ? EventManager.Instance.activeSecurityQuestion : 0;
+            bool davidResisted = EventManager.Instance != null && EventManager.Instance.HasDavidResisted(activeQuestion);
 
             if (character == "david")
             {
-                if (activeQuestion == 1 && ContainsAny(lowerInput, "rope", "arthur", "expedition", "k2", "mountain"))
+                if (ContainsAny(lowerInput, "rope", "arthur", "expedition", "k2", "mountain", "leader", "who was"))
                 {
                     if (!davidResisted)
-                        return "You really want to open that box, Robert? Right now? Today of all days?";
-                    return "His name was Arthur. And you know what you did, Robert. I was on the radio. I heard him.";
+                        return "You really want to open that box? Right now? Today of all days?";
+                    return "His name was Arthur. And you know what you did. I was on the radio. I heard him screaming.";
                 }
-                if (activeQuestion == 2 && ContainsAny(lowerInput, "money", "account", "investment"))
+                if (ContainsAny(lowerInput, "money", "account", "investment", "offshore", "fund"))
                 {
                     if (!davidResisted)
-                        return "This is what you want to talk about? Money? I was hoping you wouldn't ask me about this.";
-                    return "Sarah. The child support. Twenty-five years. Her name is Lily. You know that already.";
+                        return "I was hoping you wouldn't ask me about this. Are you sure? This one is going to change things.";
+                    return "Sarah. The child support. Twenty-five years. Her name is Lily.";
                 }
-                if (activeQuestion == 3 && ContainsAny(lowerInput, "guitar", "anniversary"))
-                    return "The guitar? Honestly, I have no idea. You just stopped playing one day. I asked you about it once and you changed the subject.";
-                if (ContainsAny(lowerInput, "help", "advice"))
+                if (ContainsAny(lowerInput, "guitar", "anniversary", "song", "music", "playing"))
+                    return "The guitar? Honestly, I have no idea. You just stopped one day. I asked about it once and you changed the subject.";
+                if (ContainsAny(lowerInput, "help", "advice", "decision", "document", "sign"))
                     return "I can't tell you what to do. But I know you — you've never been one to run from a hard thing. Not until now.";
                 return "I'm here, pal. Whatever you need to say.";
             }
 
-            if (shutdownMode)
-                return "I kept the pieces, Robert. In a box in the closet. Thirty-seven years.";
-
-            if (guitarBreakdown)
+            // Martha stubs
+            if (ContainsAny(lowerInput, "crack", "broken", "smash", "why is it", "neck", "why did you"))
                 return "You came home drunk. You had that look. I sat on the floor until morning, picking up pieces of the neck.";
 
-            if (activeQuestion == 1 && ContainsAny(lowerInput, "rope", "expedition", "mountain", "k2"))
-                return "The storm was terrible. He fought to hold it. That is all that matters. You know, I worry about David sometimes. Alone in that house.";
-
-            if (activeQuestion == 2 && ContainsAny(lowerInput, "money", "account", "investment"))
-                return "Bad investments, that's all. The kitchen we painted together, that awful wallpaper argument — that was our life. Maybe you should call David. He's been so alone since Margaret.";
-
-            if (activeQuestion == 3 && ContainsAny(lowerInput, "guitar", "anniversary", "song"))
+            if (ContainsAny(lowerInput, "guitar", "anniversary", "song", "playing", "music"))
                 return "Our tenth anniversary. You stayed up all night writing me a song. The kitchen at sunrise, still in your dress shirt. I've never forgotten a single note.";
 
-            if (ContainsAny(lowerInput, "photo", "wedding"))
-                return "Your father's tie was too short. You were so nervous you didn't even notice.";
+            if (ContainsAny(lowerInput, "mountain", "rope", "expedition", "k2", "arthur", "leader"))
+                return "The storm was terrible. The rope gave way. That is all I know. David was on the radio that day — he might remember more than I do.";
+
+            if (ContainsAny(lowerInput, "money", "account", "investment", "offshore"))
+                return "I've had my suspicions for years. Never had the heart to push. David always understood your business better than I did.";
+
+            if (ContainsAny(lowerInput, "photo", "wedding", "children", "child", "family", "baby"))
+                return "Just the two of us. After everything we went through trying to change that... I told myself it was enough. Some days I even believed it.";
 
             return "Your hands are doing that thing again. Are you cold, or just thinking?";
         }

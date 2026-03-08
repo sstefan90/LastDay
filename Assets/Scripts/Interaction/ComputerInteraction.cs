@@ -91,7 +91,7 @@ namespace LastDay.Interaction
             {
                 int active = EventManager.Instance.activeSecurityQuestion;
                 currentQuestionIndex = Mathf.Clamp(active > 0 ? active - 1 : 0, 0, Questions.Length);
-                allAnswered = EventManager.Instance.marthaShutdownMode;
+                allAnswered = EventManager.Instance.documentUnlocked;
             }
 
             GameEvents.OnAllQuestionsAnswered += HandleAllQuestionsAnswered;
@@ -151,9 +151,7 @@ namespace LastDay.Interaction
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
 
-            // Trigger the matching monologue hint so the player knows where to investigate
-            if (DialogueSession.Current != null && currentQuestionIndex < monologueHints.Length)
-                DialogueSession.Current.ShowMonologue(monologueHints[currentQuestionIndex]);
+            // Monologue hints intentionally disabled — Robert's inner voice is no longer shown.
         }
 
         private void DisplayCurrentQuestion()
