@@ -18532,7 +18532,7 @@ MonoBehaviour:
   _parallelPrompts: 1
   _contextSize: 4096
   _batchSize: 512
-  _model: /Users/stephone/Documents/LastDay/Models/phi3-mini.gguf
+  _model: 
   _flashAttention: 0
   _reasoning: 0
   _lora: 

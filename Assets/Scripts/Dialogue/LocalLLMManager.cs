@@ -75,18 +75,34 @@ namespace LastDay.Dialogue
             Instance = this;
 
 #if LLMUNITY_AVAILABLE
-            // Set context size on both model instances before LLM.Awake() (order 0) starts the servers.
-            // marthaLLM lives on this GameObject; davidLLM is on the separate DavidModel GameObject.
-            if (marthaLLM == null) marthaLLM = GetComponent<LLM>();  // fallback: same GO
+            // Resolve model path BEFORE LLM.Awake() (execution order -1) starts the llama.cpp server.
+            // The scene-baked _model path is a developer-machine absolute path that won't exist on
+            // other machines. We override it here at execution order -50 so the server starts with
+            // the correct path (either local Models/ or persistentDataPath/Models/ after download).
+            if (marthaLLM == null) marthaLLM = GetComponent<LLM>();
+
+            string resolvedModel = ModelDownloader.GetPathForFilename("llama3-8b-instruct.gguf");
+            bool   modelOnDisk   = !string.IsNullOrEmpty(resolvedModel)
+                                   && System.IO.File.Exists(resolvedModel);
+
             if (marthaLLM != null)
             {
                 marthaLLM.contextSize = contextSize;
-                Debug.Log($"[LLM] Martha context size set to {contextSize}.");
+                if (modelOnDisk)
+                {
+                    marthaLLM.model = resolvedModel;
+                    Debug.Log($"[LLM] Martha model path set in Awake: {resolvedModel}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[LLM] Model not found at resolve time ({resolvedModel}). " +
+                                     "Ensure LoadingScene has run and the model has been downloaded.");
+                }
             }
             if (davidLLM != null)
             {
                 davidLLM.contextSize = contextSize;
-                Debug.Log($"[LLM] David context size set to {contextSize}.");
+                if (modelOnDisk) davidLLM.model = resolvedModel;
             }
             else
             {
