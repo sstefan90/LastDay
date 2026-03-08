@@ -66,13 +66,22 @@ namespace LastDay.UI
 
         // ── Waiting Cues ───────────────────────────────────────────────────
         [Header("Waiting Cues")]
-        [SerializeField] private string[] waitingCues = new string[]
+        [SerializeField] private string[] marthaWaitingCues = new string[]
         {
             "Martha sighs.",
             "Martha: ...",
             "Martha ponders.",
             "Martha stares out in thought.",
             "Martha looks wonderingly into Robert's eyes."
+        };
+
+        [SerializeField] private string[] davidWaitingCues = new string[]
+        {
+            "David goes quiet.",
+            "David: ...",
+            "Line noise. He's still there.",
+            "David clears his throat.",
+            "You can hear him breathing on the other end."
         };
 
         // ── Private state ──────────────────────────────────────────────────
@@ -160,6 +169,42 @@ namespace LastDay.UI
 
         // ── IDialogueUI ────────────────────────────────────────────────────
 
+        public void OpenForIntro()
+        {
+            currentObjectId = null;
+            currentMemoryId = null;
+            currentCharacter = "martha";
+            // Prevent accidental click-to-close while Martha is speaking
+            closeClickEnabledAtTime = float.MaxValue;
+
+            if (GameStateMachine.Instance != null)
+                GameStateMachine.Instance.ChangeState(GameState.InDialogue);
+
+            if (speakerNameText != null)
+            {
+                speakerNameText.text = "Martha";
+                speakerNameText.fontStyle = TMPro.FontStyles.Normal;
+                speakerNameText.color = speakerNameColor;
+                if (speakerNameFont != null) speakerNameText.font = speakerNameFont;
+            }
+            if (subtitleText != null)
+            {
+                subtitleText.fontStyle = TMPro.FontStyles.Normal;
+                subtitleText.color = subtitleColor;
+                if (subtitleFont != null) subtitleText.font = subtitleFont;
+            }
+
+            SetBarActive(topBar, true);
+            if (topBar != null) topBar.alpha = topBarAlpha;
+            SetBarActive(bottomBar, false);
+            SetSkipVisible(true);
+            SetState(DialogueState.NPCResponding);
+
+            string text = CharacterPrompts.GetMarthaOpeningMonologue();
+            var chunks = SplitIntoChunks(text);
+            activeCoroutine = StartCoroutine(PlayChunks(chunks, afterDone: Close));
+        }
+
         public void OpenForNPC(string npcId, string npcName)
         {
             currentObjectId = null;
@@ -192,17 +237,7 @@ namespace LastDay.UI
             if (GameStateMachine.Instance != null)
                 GameStateMachine.Instance.ChangeState(GameState.InDialogue);
 
-            int activeQuestion = EventManager.Instance != null
-                ? EventManager.Instance.activeSecurityQuestion : 0;
-
-            if (memoryId == "guitar" && activeQuestion == 3
-                && EventManager.Instance != null
-                && !EventManager.Instance.marthaGuitarBreakdown)
-            {
-                ShowMonologue("There's a massive crack down the back of the neck. It's broken.");
-            }
-
-            string greeting = CharacterPrompts.GetObjectOpeningLine(memoryId, "martha", activeQuestion);
+            string greeting = CharacterPrompts.GetObjectOpeningLine(memoryId, "martha");
             SetState(DialogueState.NPCResponding);
             ShowNPCResponse("Martha", greeting);
         }
@@ -219,9 +254,7 @@ namespace LastDay.UI
 
             int activeQuestion = EventManager.Instance != null
                 ? EventManager.Instance.activeSecurityQuestion : 0;
-            string greeting = activeQuestion > 0
-                ? CharacterPrompts.GetObjectOpeningLine("phone", "david", activeQuestion)
-                : "Hey, old friend. Thought I'd give you a call today. How are you holding up?";
+            string greeting = CharacterPrompts.GetObjectOpeningLine("phone", "david", activeQuestion);
 
             SetState(DialogueState.PhoneCall);
             ShowNPCResponse("David", greeting);
@@ -359,22 +392,6 @@ namespace LastDay.UI
             inputField.interactable = false;
             if (sendButton != null) sendButton.interactable = false;
 
-            // Guitar breakdown detection
-            if (EventManager.Instance != null
-                && EventManager.Instance.activeSecurityQuestion == 3
-                && !EventManager.Instance.marthaGuitarBreakdown
-                && currentCharacter == "martha")
-            {
-                string lower = playerText.ToLower();
-                if (lower.Contains("crack") || lower.Contains("smash") || lower.Contains("broken")
-                    || lower.Contains("broke") || lower.Contains("shatter") || lower.Contains("damaged")
-                    || lower.Contains("neck") || lower.Contains("why is it"))
-                {
-                    EventManager.Instance.marthaGuitarBreakdown = true;
-                    GameEvents.MarthaBreakdownReady();
-                }
-            }
-
             // Show waiting cue in top bar
             ShowWaitingCue();
 
@@ -409,11 +426,10 @@ namespace LastDay.UI
             SetBarActive(bottomBar, false);
             SetSkipVisible(false);
 
-            if (subtitleText != null && waitingCues != null && waitingCues.Length > 0)
+            string[] cuePool = currentCharacter == "david" ? davidWaitingCues : marthaWaitingCues;
+            if (subtitleText != null && cuePool != null && cuePool.Length > 0)
             {
-                int idx = Random.Range(0, waitingCues.Length);
-                string speakerName = currentCharacter == "david" ? "David" : "Martha";
-                string cue = waitingCues[idx].Replace("Martha", speakerName);
+                string cue = cuePool[Random.Range(0, cuePool.Length)];
                 subtitleText.text = $"[ {cue} ]";
                 subtitleText.fontStyle = FontStyles.Italic;
                 subtitleText.color = actionTextColor;

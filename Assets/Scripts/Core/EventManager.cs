@@ -32,8 +32,6 @@ namespace LastDay.Core
         [Header("Security Questions")]
         // 0 = no question active yet, 1-3 = which mystery the player is currently on
         public int activeSecurityQuestion = 0;
-        public bool marthaShutdownMode = false;
-        public bool marthaGuitarBreakdown = false;
 
         [Header("David Resistance")]
         // Tracks whether David has already pushed back on each mystery (keyed by activeQuestion 1-3)
@@ -121,10 +119,9 @@ namespace LastDay.Core
         public void OnAllSecurityQuestionsAnswered()
         {
             documentUnlocked = true;
-            marthaShutdownMode = true;
             GameEvents.UnlockDocument();
             GameEvents.AllQuestionsAnswered();
-            Debug.Log("[Event] All security questions answered — document unlocked, Martha shutdown.");
+            Debug.Log("[Event] All security questions answered — document unlocked.");
         }
 
         // Called by ComputerInteraction when a question is first SHOWN (not when answered).
@@ -139,9 +136,6 @@ namespace LastDay.Core
             Debug.Log($"[Event] Security question {questionIndex} started. Active question now: {activeSecurityQuestion}");
 
             CheckPhoneTrigger();
-
-            if (activeSecurityQuestion == 3)
-                GameEvents.MarthaBreakdownReady();
         }
 
         // Called by ComputerInteraction each time a question is correctly answered.

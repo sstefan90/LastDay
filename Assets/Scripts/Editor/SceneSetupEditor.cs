@@ -814,8 +814,6 @@ public class SceneSetupEditor : EditorWindow
             if (em != null)
             {
                 SetPrivateField(em, "activeSecurityQuestion", 0);
-                SetPrivateField(em, "marthaShutdownMode", false);
-                SetPrivateField(em, "marthaGuitarBreakdown", false);
                 Debug.Log("[Patch] EventManager security question fields initialized.");
             }
         }
