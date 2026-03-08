@@ -59,6 +59,7 @@ namespace LastDay.Core
                 (GameState.Playing, GameState.PhoneCall) => true,
                 (GameState.Playing, GameState.Decision) => true,
                 (GameState.InDialogue, GameState.Playing) => true,
+                (GameState.InDialogue, GameState.PhoneCall) => true,
                 (GameState.PhoneCall, GameState.Playing) => true,
                 (GameState.PhoneCall, GameState.InDialogue) => true,
                 (GameState.Decision, GameState.Playing) => true,

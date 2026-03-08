@@ -6,6 +6,7 @@ namespace LastDay.UI
     /// </summary>
     public interface IDialogueUI
     {
+        void OpenForIntro();
         void OpenForNPC(string npcId, string npcName);
         void OpenForObject(string objectId, string memoryId, string displayName);
         void OpenForPhone();
