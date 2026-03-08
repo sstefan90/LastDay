@@ -20,12 +20,12 @@ namespace LastDay.UI
 
         [Header("Quotes")]
         [SerializeField, TextArea(3, 6)] private string signedQuote =
-            "Between stimulus and response there is a space.\nIn that space is our freedom and power to choose our response.\nIn our response lies our growth and our freedom.";
-        [SerializeField] private string signedAttribution = "- Viktor Frankl";
+            "For what is it to die but to stand naked in the wind\nand to melt into the sun?";
+        [SerializeField] private string signedAttribution = "- Khalil Gibran, The Prophet";
 
         [SerializeField, TextArea(3, 6)] private string tornQuote =
-            "While there's life, there's hope.";
-        [SerializeField] private string tornAttribution = "- Marcus Tullius Cicero";
+            "The wound is the place where the Light enters you.";
+        [SerializeField] private string tornAttribution = "- Rumi";
 
         [Header("Animation")]
         [SerializeField] private float fadeInDuration = 2f;

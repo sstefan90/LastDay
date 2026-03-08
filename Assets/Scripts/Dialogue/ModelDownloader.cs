@@ -158,16 +158,42 @@ namespace LastDay.Dialogue
             {
                 removeFileOnAbort = true
             };
-            request.timeout = 0;
+            request.timeout = 0; // No overall timeout — file is several GB; we enforce connection-start below.
 
             var op = request.SendWebRequest();
+
+            // Abort if no bytes arrive within 30 s (catches bad URL / no internet without hanging forever).
+            const float connectionTimeoutSeconds = 30f;
+            float noProgressTimer = 0f;
 
             while (!op.isDone)
             {
                 float  p   = request.downloadProgress;
                 ulong  dl  = request.downloadedBytes;
-                string msg = $"Downloading {ActiveModel.Name}… {FormatBytes(dl)} / {sizeHint}";
-                UpdateStatus(p, msg);
+
+                if (dl == 0)
+                {
+                    noProgressTimer += Time.unscaledDeltaTime;
+                    if (noProgressTimer >= connectionTimeoutSeconds)
+                    {
+                        request.Abort();
+                        IsDownloading = false;
+                        string timeoutErr = "Connection timed out. Check your internet connection and try again.";
+                        StatusMessage = timeoutErr;
+                        Debug.LogError($"[ModelDownloader] {timeoutErr}");
+                        OnError?.Invoke(timeoutErr);
+                        if (File.Exists(tempPath)) File.Delete(tempPath);
+                        return;
+                    }
+                    UpdateStatus(0f, $"Connecting… ({ActiveModel.Name})");
+                }
+                else
+                {
+                    noProgressTimer = 0f; // reset once bytes are flowing
+                    string msg = $"Downloading {ActiveModel.Name}… {FormatBytes(dl)} / {sizeHint}";
+                    UpdateStatus(p, msg);
+                }
+
                 await Task.Yield();
             }
 

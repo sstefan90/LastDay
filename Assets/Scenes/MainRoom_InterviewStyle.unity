@@ -6889,16 +6889,11 @@ MonoBehaviour:
   endPanel: {fileID: 1521423913}
   quoteText: {fileID: 1630395788}
   attributionText: {fileID: 2037349621}
-  signedQuote: 'Between stimulus and response there is a space.
-
-    In that space
-    is our freedom and power to choose our response.
-
-    In our response lies our
-    growth and our freedom.'
-  signedAttribution: '- Viktor Frankl'
-  tornQuote: While there's life, there's hope.
-  tornAttribution: '- Marcus Tullius Cicero'
+  signedQuote: "For what is it to die but to stand naked in the wind\nand to melt
+    into the sun?"
+  signedAttribution: '- Khalil Gibran, The Prophet'
+  tornQuote: The wound is the place where the Light enters you.
+  tornAttribution: '- Rumi'
   fadeInDuration: 2
   holdDuration: 5
   endCanvasGroup: {fileID: 1521423914}

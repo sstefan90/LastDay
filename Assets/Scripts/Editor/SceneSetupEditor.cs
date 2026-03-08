@@ -21,30 +21,10 @@ using LLMUnity;
 public class SceneSetupEditor : EditorWindow
 {
     private const string TriggerFile = "Assets/Editor/run_scene_setup.trigger";
-    private const string PatchTriggerFile = "Assets/Editor/run_patch.trigger";
 
     [InitializeOnLoadMethod]
     static void CheckForTrigger()
     {
-        if (File.Exists(PatchTriggerFile))
-        {
-            File.Delete(PatchTriggerFile);
-            if (File.Exists(PatchTriggerFile + ".meta"))
-                File.Delete(PatchTriggerFile + ".meta");
-
-            EditorApplication.delayCall += () =>
-            {
-                Debug.Log("[SceneSetup] Patch trigger detected. Applying all patches...");
-                PatchApplyAll();
-                SetupLLMComponents();
-                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
-                    UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-                AssetDatabase.Refresh();
-                Debug.Log("[SceneSetup] All patches + LLM wiring applied and scene saved.");
-            };
-            return;
-        }
-
         if (!File.Exists(TriggerFile)) return;
 
         File.Delete(TriggerFile);
@@ -127,830 +107,6 @@ public class SceneSetupEditor : EditorWindow
         Debug.Log("[SceneSetup] Scene view aligned to Game camera (same scale and framing).");
     }
 
-    [MenuItem("LastDay/Patch: Apply Robert Gemini sprite animation", priority = 2)]
-    public static void PatchApplyRobertGeminiSpriteAnimation()
-    {
-        var robert = GameObject.Find("Robert");
-        if (robert == null) { Debug.LogWarning("[Patch] Robert not found."); return; }
-
-        var spriteTf = robert.transform.Find("Sprite");
-        if (spriteTf == null) { Debug.LogWarning("[Patch] Robert/Sprite not found."); return; }
-
-        var sr = spriteTf.GetComponent<SpriteRenderer>();
-        if (sr == null) { Debug.LogWarning("[Patch] SpriteRenderer missing on Robert/Sprite."); return; }
-
-        var frames = LoadSprites("Characters/Robert/Gemini_Generated_Image_ge6l8fge6l8fge6l.png");
-        if (frames.Length == 0)
-        {
-            Debug.LogWarning("[Patch] No sliced sprite frames found for Robert Gemini sprite sheet.");
-            return;
-        }
-
-        sr.sprite = frames[0];
-        var frameAnimator = spriteTf.GetComponent<SpriteFrameAnimator>();
-        if (frameAnimator == null)
-            frameAnimator = spriteTf.gameObject.AddComponent<SpriteFrameAnimator>();
-        frameAnimator.Configure(sr, frames, 8f);
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-        Debug.Log($"[Patch] Robert sprite animation applied with {frames.Length} frames.");
-    }
-
-    [MenuItem("LastDay/Create iteration: Interview-style scene", priority = 2)]
-    public static void CreateInterviewStyleScene()
-    {
-        string sourcePath = "Assets/Scenes/MainRoom.unity";
-        string destPath = "Assets/Scenes/MainRoom_InterviewStyle.unity";
-
-        if (!System.IO.File.Exists(sourcePath))
-        {
-            Debug.LogError($"[SceneSetup] Template not found: {sourcePath}");
-            return;
-        }
-        if (System.IO.File.Exists(destPath))
-        {
-            if (!EditorUtility.DisplayDialog("Interview-style scene exists",
-                $"'{destPath}' already exists. Overwrite?", "Overwrite", "Cancel"))
-                return;
-        }
-
-        System.IO.File.Copy(sourcePath, destPath, true);
-        AssetDatabase.Refresh();
-
-        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(destPath);
-        PatchApplyInterviewStyle();
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
-        Debug.Log($"[SceneSetup] Created {destPath} from MainRoom template. Apply Interview-style UI and save (Ctrl+S).");
-    }
-
-    [MenuItem("LastDay/Patch: Apply Interview-style UI to current scene", priority = 2)]
-    public static void PatchApplyInterviewStyle()
-    {
-        var canvas = GameObject.Find("Canvas");
-        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
-
-        var martha = GameObject.Find("Martha");
-        if (martha == null) { Debug.LogError("[Patch] Martha not found."); return; }
-
-        var dialogueUI = canvas.GetComponent<DialogueUI>();
-        if (dialogueUI != null)
-        {
-            UnityEngine.Object.DestroyImmediate(dialogueUI);
-            Debug.Log("[Patch] Removed DialogueUI (replacing with Interview-style).");
-        }
-
-        var dialoguePanel = canvas.transform.Find("DialoguePanel");
-        if (dialoguePanel != null)
-            dialoguePanel.gameObject.SetActive(false);
-
-        var inputBar = canvas.transform.Find("InputBarPanel");
-        if (inputBar == null)
-        {
-            inputBar = CreateInterviewInputBar(canvas);
-            Debug.Log("[Patch] Created permanent InputBarPanel.");
-        }
-
-        var floatingBubble = canvas.transform.Find("FloatingDialogueBubble");
-        if (floatingBubble == null)
-        {
-            floatingBubble = CreateFloatingDialogueBubble(canvas, martha.transform);
-            Debug.Log("[Patch] Created FloatingDialogueBubble above Martha.");
-        }
-
-        var interviewUI = canvas.GetComponent<InterviewDialogueUI>();
-        if (interviewUI == null)
-        {
-            interviewUI = canvas.AddComponent<InterviewDialogueUI>();
-            var inputField = inputBar.Find("InputField")?.GetComponent<TMP_InputField>();
-            var sendBtn = inputBar.Find("SendButton")?.GetComponent<Button>();
-            var label = inputBar.Find("PlayerLabel")?.GetComponent<TMP_Text>();
-            var floating = floatingBubble.GetComponent<FloatingDialogueDisplay>();
-            var monoPanel = canvas.transform.Find("MonologuePanel")?.gameObject;
-            var monoText = monoPanel?.transform.Find("MonologueText")?.GetComponent<TMP_Text>();
-            var thinking = canvas.transform.Find("DialoguePanel")?.Find("ThinkingIndicator")?.gameObject;
-
-            SetPrivateField(interviewUI, "inputBarPanel", inputBar.gameObject);
-            SetPrivateField(interviewUI, "playerLabelText", label);
-            SetPrivateField(interviewUI, "inputField", inputField);
-            SetPrivateField(interviewUI, "sendButton", sendBtn);
-            SetPrivateField(interviewUI, "floatingDisplay", floating);
-            SetPrivateField(interviewUI, "monologuePanel", monoPanel);
-            SetPrivateField(interviewUI, "monologueText", monoText);
-            SetPrivateField(interviewUI, "thinkingIndicator", thinking);
-            Debug.Log("[Patch] InterviewDialogueUI added and wired.");
-        }
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-    }
-
-    [MenuItem("LastDay/Patch: Resize dialogue + computer UI for aspect", priority = 2)]
-    public static void PatchResizeDialogueAndComputerUIForAspect()
-    {
-        var canvas = GameObject.Find("Canvas");
-        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
-
-        // DialoguePanel (Martha chat)
-        var dialoguePanel = canvas.transform.Find("DialoguePanel");
-        if (dialoguePanel != null)
-        {
-            SetStretchBottom(dialoguePanel.gameObject, 160f, 24f);
-            dialoguePanel.SetAsLastSibling();
-
-            var portrait = dialoguePanel.Find("CharacterPortrait") as RectTransform;
-            if (portrait != null)
-            {
-                portrait.anchorMin = new Vector2(0f, 0f);
-                portrait.anchorMax = new Vector2(0f, 0f);
-                portrait.anchoredPosition = new Vector2(44f, 78f);
-                portrait.sizeDelta = new Vector2(64f, 64f);
-            }
-
-            var characterName = dialoguePanel.Find("CharacterName") as RectTransform;
-            if (characterName != null)
-            {
-                characterName.anchorMin = new Vector2(0f, 1f);
-                characterName.anchorMax = new Vector2(0f, 1f);
-                characterName.anchoredPosition = new Vector2(146f, -12f);
-                characterName.sizeDelta = new Vector2(220f, 28f);
-            }
-
-            var dialogueText = dialoguePanel.Find("DialogueText") as RectTransform;
-            if (dialogueText != null)
-            {
-                dialogueText.anchorMin = new Vector2(0.11f, 0.26f);
-                dialogueText.anchorMax = new Vector2(0.98f, 0.84f);
-                dialogueText.offsetMin = Vector2.zero;
-                dialogueText.offsetMax = Vector2.zero;
-            }
-
-            var inputField = dialoguePanel.Find("InputField") as RectTransform;
-            if (inputField != null)
-            {
-                inputField.anchorMin = new Vector2(0.12f, 0f);
-                inputField.anchorMax = new Vector2(0.82f, 0.24f);
-                inputField.offsetMin = new Vector2(4f, 6f);
-                inputField.offsetMax = new Vector2(-4f, -4f);
-            }
-
-            var sendButton = dialoguePanel.Find("SendButton") as RectTransform;
-            if (sendButton != null)
-            {
-                sendButton.anchorMin = new Vector2(0.84f, 0f);
-                sendButton.anchorMax = new Vector2(1f, 0.24f);
-                sendButton.offsetMin = new Vector2(4f, 6f);
-                sendButton.offsetMax = new Vector2(-8f, -4f);
-            }
-
-            var closeButton = dialoguePanel.Find("CloseButton") as RectTransform;
-            if (closeButton != null)
-            {
-                closeButton.anchorMin = new Vector2(1f, 1f);
-                closeButton.anchorMax = new Vector2(1f, 1f);
-                closeButton.pivot = new Vector2(1f, 1f);
-                closeButton.anchoredPosition = new Vector2(-6f, -6f);
-                closeButton.sizeDelta = new Vector2(60f, 24f);
-            }
-        }
-
-        // MonologuePanel (Martha thought captions)
-        var monoPanel = canvas.transform.Find("MonologuePanel") as RectTransform;
-        if (monoPanel != null)
-        {
-            monoPanel.anchorMin = new Vector2(0.24f, 0.88f);
-            monoPanel.anchorMax = new Vector2(0.76f, 0.96f);
-            monoPanel.offsetMin = Vector2.zero;
-            monoPanel.offsetMax = Vector2.zero;
-        }
-
-        // ComputerPanel (security questions)
-        var compPanel = canvas.transform.Find("ComputerOverlay/ComputerPanel") as RectTransform;
-        if (compPanel == null)
-            compPanel = canvas.transform.Find("ComputerPanel") as RectTransform;
-        if (compPanel != null)
-        {
-            compPanel.anchorMin = new Vector2(0.24f, 0.2f);
-            compPanel.anchorMax = new Vector2(0.76f, 0.8f);
-            compPanel.offsetMin = Vector2.zero;
-            compPanel.offsetMax = Vector2.zero;
-
-            var qText = compPanel.Find("QuestionText") as RectTransform;
-            if (qText != null)
-            {
-                qText.anchorMin = new Vector2(0.06f, 0.56f);
-                qText.anchorMax = new Vector2(0.94f, 0.9f);
-                qText.offsetMin = Vector2.zero;
-                qText.offsetMax = Vector2.zero;
-            }
-
-            var answerInput = compPanel.Find("AnswerInput") as RectTransform;
-            if (answerInput != null)
-            {
-                answerInput.anchorMin = new Vector2(0.1f, 0.29f);
-                answerInput.anchorMax = new Vector2(0.69f, 0.43f);
-                answerInput.offsetMin = Vector2.zero;
-                answerInput.offsetMax = Vector2.zero;
-            }
-
-            var submit = compPanel.Find("SubmitButton") as RectTransform;
-            if (submit != null)
-            {
-                submit.anchorMin = new Vector2(0.71f, 0.29f);
-                submit.anchorMax = new Vector2(0.9f, 0.43f);
-                submit.offsetMin = Vector2.zero;
-                submit.offsetMax = Vector2.zero;
-            }
-
-            var feedback = compPanel.Find("FeedbackText") as RectTransform;
-            if (feedback != null)
-            {
-                feedback.anchorMin = new Vector2(0.1f, 0.16f);
-                feedback.anchorMax = new Vector2(0.9f, 0.26f);
-                feedback.offsetMin = Vector2.zero;
-                feedback.offsetMax = Vector2.zero;
-            }
-        }
-
-        // Final prompt panel (same aspect pass)
-        var finalPanel = canvas.transform.Find("ComputerOverlay/FinalPromptPanel") as RectTransform;
-        if (finalPanel == null)
-            finalPanel = canvas.transform.Find("FinalPromptPanel") as RectTransform;
-        if (finalPanel != null)
-        {
-            finalPanel.anchorMin = new Vector2(0.28f, 0.24f);
-            finalPanel.anchorMax = new Vector2(0.72f, 0.76f);
-            finalPanel.offsetMin = Vector2.zero;
-            finalPanel.offsetMax = Vector2.zero;
-        }
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-        Debug.Log("[Patch] Dialogue, monologue, computer, and final prompt panels resized for aspect.");
-    }
-
-    static Transform CreateInterviewInputBar(GameObject canvas)
-    {
-        var panel = CreateUIPanel(canvas, "InputBarPanel",
-            new Color32(30, 30, 50, 220), AnchorPreset.BottomStretch, 80f);
-        SetStretchBottom(panel, 80f, 24f);
-
-        var label = CreateUIText(panel, "PlayerLabel", "Robert says:", 16, Color.white);
-        var labelRect = label.GetComponent<RectTransform>();
-        labelRect.anchorMin = new Vector2(0f, 0.5f);
-        labelRect.anchorMax = new Vector2(0.12f, 0.9f);
-        labelRect.offsetMin = new Vector2(12f, 4f);
-        labelRect.offsetMax = new Vector2(-4f, -4f);
-
-        var inputGo = CreateUIInputField(panel, "InputField", "What do you want to say...");
-        var inputRect = inputGo.GetComponent<RectTransform>();
-        inputRect.anchorMin = new Vector2(0.13f, 0.15f);
-        inputRect.anchorMax = new Vector2(0.85f, 0.85f);
-        inputRect.offsetMin = new Vector2(4f, 4f);
-        inputRect.offsetMax = new Vector2(-4f, -4f);
-
-        var sendBtn = CreateUIButton(panel, "SendButton", "Send");
-        var sendRect = sendBtn.GetComponent<RectTransform>();
-        sendRect.anchorMin = new Vector2(0.86f, 0.15f);
-        sendRect.anchorMax = new Vector2(1f, 0.85f);
-        sendRect.offsetMin = new Vector2(4f, 4f);
-        sendRect.offsetMax = new Vector2(-12f, -4f);
-
-        return panel.transform;
-    }
-
-    static Transform CreateFloatingDialogueBubble(GameObject canvas, Transform martha)
-    {
-        var go = new GameObject("FloatingDialogueBubble", typeof(RectTransform));
-        go.transform.SetParent(canvas.transform, false);
-
-        var rect = go.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0f);
-        rect.sizeDelta = new Vector2(400f, 120f);
-        rect.anchoredPosition = Vector2.zero;
-
-        var img = go.AddComponent<UnityEngine.UI.Image>();
-        img.color = new Color32(0, 0, 0, 180);
-
-        var textGo = new GameObject("Text", typeof(RectTransform));
-        textGo.transform.SetParent(go.transform, false);
-        var textRect = textGo.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(12f, 8f);
-        textRect.offsetMax = new Vector2(-12f, -8f);
-        var tmp = textGo.AddComponent<TextMeshProUGUI>();
-        tmp.text = "";
-        tmp.fontSize = 16;
-        tmp.color = Color.white;
-        tmp.enableWordWrapping = true;
-        tmp.alignment = TextAlignmentOptions.TopLeft;
-
-        var floating = go.AddComponent<FloatingDialogueDisplay>();
-        SetPrivateField(floating, "targetCharacter", martha);
-        SetPrivateField(floating, "textComponent", tmp);
-        SetPrivateField(floating, "screenOffsetY", 60f);
-
-        go.SetActive(false);
-        return go.transform;
-    }
-
-    [MenuItem("LastDay/Patch: Add Close Button to Dialogue", priority = 2)]
-    public static void PatchAddCloseButton()
-    {
-        var canvas = GameObject.Find("Canvas");
-        if (canvas == null) { Debug.LogError("[Patch] Canvas not found"); return; }
-
-        var dialogueUI = canvas.GetComponent<DialogueUI>();
-        if (dialogueUI == null) { Debug.LogError("[Patch] DialogueUI not found on Canvas"); return; }
-
-        var dialoguePanel = canvas.transform.Find("DialoguePanel");
-        if (dialoguePanel == null) { Debug.LogError("[Patch] DialoguePanel not found"); return; }
-
-        var existing = dialoguePanel.Find("CloseButton");
-        if (existing != null)
-        {
-            Debug.Log("[Patch] CloseButton already exists.");
-            return;
-        }
-
-        var closeBtn = CreateUIButton(dialoguePanel.gameObject, "CloseButton", "\u2715  Esc");
-        var closeRect = closeBtn.GetComponent<RectTransform>();
-        closeRect.anchorMin = new Vector2(1, 1);
-        closeRect.anchorMax = new Vector2(1, 1);
-        closeRect.pivot = new Vector2(1, 1);
-        closeRect.anchoredPosition = new Vector2(-8, -8);
-        closeRect.sizeDelta = new Vector2(80, 30);
-        closeBtn.GetComponent<Image>().color = new Color32(80, 40, 40, 200);
-        var closeTmp = closeBtn.GetComponentInChildren<TMP_Text>();
-        if (closeTmp != null) closeTmp.fontSize = 14;
-
-        SetPrivateField(dialogueUI, "closeButton", closeBtn.GetComponent<Button>());
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-
-        Debug.Log("[Patch] Close button added to DialoguePanel. Save the scene.");
-    }
-
-    [MenuItem("LastDay/Patch: Apply game view layout and room background", priority = 2)]
-    public static void PatchApplyGameViewLayoutAndBackground()
-    {
-        var cam = UnityEngine.Camera.main;
-        if (cam != null)
-        {
-            cam.rect = new Rect(0f, 0f, 1f, 1f);
-            Debug.Log("[Patch] Camera viewport set to full screen.");
-        }
-        else
-            Debug.LogWarning("[Patch] Main Camera not found.");
-
-        var canvas = GameObject.Find("Canvas");
-        if (canvas != null)
-        {
-            var notesPanel = canvas.transform.Find("NotesPanel");
-            if (notesPanel != null)
-            {
-                UnityEngine.Object.DestroyImmediate(notesPanel.gameObject);
-                Debug.Log("[Patch] NotesPanel removed.");
-            }
-
-            var dialoguePanel = canvas.transform.Find("DialoguePanel");
-            if (dialoguePanel != null)
-            {
-                const float dialogueHeight = 180f;
-                SetStretchBottom(dialoguePanel.gameObject, dialogueHeight, 24f);
-                dialoguePanel.SetAsLastSibling();
-                Debug.Log("[Patch] DialoguePanel set to full-width bottom.");
-            }
-
-            if (canvas.GetComponent<GameViewLayout>() == null)
-            {
-                var layout = canvas.AddComponent<GameViewLayout>();
-                SetPrivateField(layout, "dialoguePanelHeight", 180f);
-                Debug.Log("[Patch] GameViewLayout added to Canvas.");
-            }
-        }
-        else
-            Debug.LogWarning("[Patch] Canvas not found.");
-
-        var env = GameObject.Find("Environment");
-        if (env != null)
-        {
-            var roomBg = env.transform.Find("RoomBackground");
-            if (roomBg != null)
-            {
-                var sr = roomBg.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    var sprite = LoadSprite("Environment/Gemini_Generated_Image_r43rqr43rqr43rqr.png");
-                    if (sprite != null)
-                    {
-                        sr.sprite = sprite;
-                        Debug.Log("[Patch] Room background replaced with Gemini image.");
-                    }
-                }
-                roomBg.localScale = Vector3.one;
-                if (roomBg.GetComponent<BackgroundFitCamera>() == null)
-                {
-                    roomBg.gameObject.AddComponent<BackgroundFitCamera>();
-                    Debug.Log("[Patch] BackgroundFitCamera added so full image is visible.");
-                }
-            }
-        }
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-    }
-
-    [MenuItem("LastDay/Patch: Apply All Fixes", priority = 2)]
-    public static void PatchApplyAll()
-    {
-        PatchAddCloseButton();
-        PatchWireCharacterLayer();
-        PatchWireNullSafeManagers();
-        PatchAddComputerAndSecurityUI();
-        PatchFixEventManagerAndDecisionUI();
-        PatchWireAudioClips();
-        // Always run HUD layout fix last so it overrides any earlier anchor values
-        PatchFixComputerHUD();
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-
-        Debug.Log("[Patch] All patches applied.");
-    }
-
-    [MenuItem("LastDay/Patch: Add Computer + Security UI", priority = 2)]
-    public static void PatchAddComputerAndSecurityUI()
-    {
-        int interactLayer = LayerMask.NameToLayer("Interactables");
-
-        // ── 1. Computer interactable ──────────────────────────
-        var interactables = GameObject.Find("interactables");
-        if (interactables == null)
-        {
-            Debug.LogError("[Patch] 'interactables' root not found. Run full scene setup first.");
-            return;
-        }
-
-        var existingComputer = interactables.transform.Find("Computer");
-        if (existingComputer != null)
-        {
-            Debug.Log("[Patch] Computer interactable already exists, skipping creation.");
-        }
-        else
-        {
-            var compGo = CreateChild(interactables, "Computer");
-            compGo.transform.localPosition = new Vector3(2f, 0.5f, 0);
-            SetLayer(compGo, interactLayer, false);
-
-            var sr = compGo.AddComponent<SpriteRenderer>();
-            sr.sprite = LoadSprite("Objects/computer.png");
-            SetSortingLayer(sr, "Objects", 0);
-
-            var col = compGo.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(0.6f, 0.5f);
-
-            var glowGo = CreateChild(compGo, "Glow");
-            var glowSr = glowGo.AddComponent<SpriteRenderer>();
-            glowSr.sprite = LoadSprite("Objects/computer_glow.png");
-            SetSortingLayer(glowSr, "Objects", -1);
-
-            var compInteract = compGo.AddComponent<ComputerInteraction>();
-            SetPrivateField(compInteract, "objectId", "computer");
-            SetPrivateField(compInteract, "displayName", "Computer");
-            SetPrivateField(compInteract, "memoryId", "computer");
-            SetPrivateField(compInteract, "spriteRenderer", sr);
-            SetPrivateField(compInteract, "highlightRenderer", glowSr);
-
-            Debug.Log("[Patch] Computer interactable created under 'interactables'.");
-        }
-
-        // ── 2. Computer UI panels under Canvas ────────────────
-        var canvas = GameObject.Find("Canvas");
-        if (canvas == null)
-        {
-            Debug.LogError("[Patch] Canvas not found.");
-            return;
-        }
-
-        var computerInteraction = interactables.GetComponentInChildren<ComputerInteraction>();
-        if (computerInteraction == null)
-        {
-            Debug.LogError("[Patch] ComputerInteraction component not found.");
-            return;
-        }
-
-        // ComputerOverlay + ComputerPanel
-        var overlayTf = canvas.transform.Find("ComputerOverlay");
-        GameObject computerOverlay = overlayTf != null ? overlayTf.gameObject : null;
-        if (computerOverlay == null)
-        {
-            computerOverlay = CreateUIPanel(canvas, "ComputerOverlay",
-                new Color32(0, 0, 0, 150), AnchorPreset.Stretch, 0f);
-            StretchFill(computerOverlay);
-            computerOverlay.SetActive(false);
-        }
-
-        if (computerOverlay.transform.Find("ComputerPanel") == null)
-        {
-            var compPanel = CreateUIPanel(computerOverlay, "ComputerPanel",
-                new Color32(22, 28, 44, 248), AnchorPreset.Center, 400f);
-            var cpRect = compPanel.GetComponent<RectTransform>();
-            cpRect.anchorMin = new Vector2(0.25f, 0.2f);
-            cpRect.anchorMax = new Vector2(0.75f, 0.8f);
-            cpRect.offsetMin = Vector2.zero;
-            cpRect.offsetMax = Vector2.zero;
-
-            var headerBar = CreateUIPanel(compPanel, "HeaderBar",
-                new Color32(49, 82, 170, 255), AnchorPreset.TopCenter, 40f);
-            var hbRect = headerBar.GetComponent<RectTransform>();
-            hbRect.anchorMin = new Vector2(0f, 0.9f);
-            hbRect.anchorMax = new Vector2(1f, 1f);
-            hbRect.offsetMin = Vector2.zero;
-            hbRect.offsetMax = Vector2.zero;
-            var hbText = CreateUIText(headerBar, "TitleText", "SECURE ACCESS TERMINAL", 16, Color.white);
-            StretchFill(hbText, 8f);
-            hbText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
-
-            var questionText = CreateUIText(compPanel, "QuestionText", "", 22, new Color(0.0f, 0.85f, 0.35f));
-            var qtRect = questionText.GetComponent<RectTransform>();
-            qtRect.anchorMin = new Vector2(0.05f, 0.55f);
-            qtRect.anchorMax = new Vector2(0.95f, 0.92f);
-            qtRect.offsetMin = Vector2.zero;
-            qtRect.offsetMax = Vector2.zero;
-            var qtTmp = questionText.GetComponent<TMP_Text>();
-            qtTmp.alignment = TextAlignmentOptions.Center;
-            qtTmp.enableWordWrapping = true;
-
-            var answerInput = CreateUIInputField(compPanel, "AnswerInput", "Type your answer...");
-            var aiRect = answerInput.GetComponent<RectTransform>();
-            aiRect.anchorMin = new Vector2(0.1f, 0.3f);
-            aiRect.anchorMax = new Vector2(0.7f, 0.45f);
-            aiRect.offsetMin = Vector2.zero;
-            aiRect.offsetMax = Vector2.zero;
-
-            var submitBtn = CreateUIButton(compPanel, "SubmitButton", "SUBMIT");
-            var sbRect = submitBtn.GetComponent<RectTransform>();
-            sbRect.anchorMin = new Vector2(0.72f, 0.3f);
-            sbRect.anchorMax = new Vector2(0.9f, 0.45f);
-            sbRect.offsetMin = Vector2.zero;
-            sbRect.offsetMax = Vector2.zero;
-            submitBtn.GetComponent<Image>().color = new Color32(0, 100, 40, 255);
-
-            var feedbackText = CreateUIText(compPanel, "FeedbackText", "", 16, new Color(1f, 0.3f, 0.3f));
-            var fbRect = feedbackText.GetComponent<RectTransform>();
-            fbRect.anchorMin = new Vector2(0.1f, 0.18f);
-            fbRect.anchorMax = new Vector2(0.9f, 0.28f);
-            fbRect.offsetMin = Vector2.zero;
-            fbRect.offsetMax = Vector2.zero;
-            feedbackText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
-
-            var closeBtn = CreateUIButton(compPanel, "CloseButton", "\u2715");
-            var cbRect = closeBtn.GetComponent<RectTransform>();
-            cbRect.anchorMin = new Vector2(1, 1);
-            cbRect.anchorMax = new Vector2(1, 1);
-            cbRect.pivot = new Vector2(1, 1);
-            cbRect.anchoredPosition = new Vector2(-8, -8);
-            cbRect.sizeDelta = new Vector2(40, 40);
-            closeBtn.GetComponent<Image>().color = new Color32(80, 40, 40, 200);
-
-            compPanel.SetActive(false);
-
-            // Wire to ComputerInteraction
-            SetPrivateField(computerInteraction, "computerOverlay", computerOverlay);
-            SetPrivateField(computerInteraction, "computerPanel", compPanel);
-            SetPrivateField(computerInteraction, "computerWindowRect", cpRect);
-            SetPrivateField(computerInteraction, "questionText", qtTmp);
-            SetPrivateField(computerInteraction, "feedbackText", feedbackText.GetComponent<TMP_Text>());
-            SetPrivateField(computerInteraction, "answerInputField", answerInput.GetComponent<TMP_InputField>());
-            SetPrivateField(computerInteraction, "submitButton", submitBtn.GetComponent<Button>());
-            SetPrivateField(computerInteraction, "closeButton", closeBtn.GetComponent<Button>());
-
-            Debug.Log("[Patch] ComputerPanel created and wired.");
-        }
-        else
-        {
-            Debug.Log("[Patch] ComputerPanel already exists, skipping.");
-        }
-
-        // FinalPromptPanel
-        if (computerOverlay.transform.Find("FinalPromptPanel") == null)
-        {
-            var finalPanel = CreateUIPanel(computerOverlay, "FinalPromptPanel",
-                new Color32(10, 10, 20, 250), AnchorPreset.Center, 300f);
-            var fpRect = finalPanel.GetComponent<RectTransform>();
-            fpRect.anchorMin = new Vector2(0.25f, 0.25f);
-            fpRect.anchorMax = new Vector2(0.75f, 0.75f);
-            fpRect.offsetMin = Vector2.zero;
-            fpRect.offsetMax = Vector2.zero;
-
-            var finalText = CreateUIText(finalPanel, "FinalPromptText",
-                "FINAL SECURITY CHECK\n\nCan you forgive yourself?", 24, Color.white);
-            var ftRect = finalText.GetComponent<RectTransform>();
-            ftRect.anchorMin = new Vector2(0.05f, 0.5f);
-            ftRect.anchorMax = new Vector2(0.95f, 0.95f);
-            ftRect.offsetMin = Vector2.zero;
-            ftRect.offsetMax = Vector2.zero;
-            finalText.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
-
-            var signBtn = CreateUIButton(finalPanel, "SignButton", "Sign");
-            var signRect = signBtn.GetComponent<RectTransform>();
-            signRect.anchorMin = new Vector2(0.1f, 0.08f);
-            signRect.anchorMax = new Vector2(0.45f, 0.35f);
-            signRect.offsetMin = Vector2.zero;
-            signRect.offsetMax = Vector2.zero;
-            signBtn.GetComponent<Image>().color = new Color32(100, 40, 40, 255);
-
-            var tearBtn = CreateUIButton(finalPanel, "TearButton", "Tear Up");
-            var tearRect = tearBtn.GetComponent<RectTransform>();
-            tearRect.anchorMin = new Vector2(0.55f, 0.08f);
-            tearRect.anchorMax = new Vector2(0.9f, 0.35f);
-            tearRect.offsetMin = Vector2.zero;
-            tearRect.offsetMax = Vector2.zero;
-            tearBtn.GetComponent<Image>().color = new Color32(40, 60, 100, 255);
-
-            finalPanel.SetActive(false);
-
-            SetPrivateField(computerInteraction, "computerOverlay", computerOverlay);
-            SetPrivateField(computerInteraction, "finalPromptPanel", finalPanel);
-            SetPrivateField(computerInteraction, "finalPromptText", finalText.GetComponent<TMP_Text>());
-            SetPrivateField(computerInteraction, "signButton", signBtn.GetComponent<Button>());
-            SetPrivateField(computerInteraction, "tearButton", tearBtn.GetComponent<Button>());
-
-            Debug.Log("[Patch] FinalPromptPanel created and wired.");
-        }
-        else
-        {
-            Debug.Log("[Patch] FinalPromptPanel already exists, skipping.");
-        }
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-        Debug.Log("[Patch] Computer + Security UI patch complete. Save the scene.");
-    }
-
-    [MenuItem("LastDay/Patch: Fix EventManager + DecisionUI", priority = 2)]
-    public static void PatchFixEventManagerAndDecisionUI()
-    {
-        // Fix DecisionUI prompt message
-        var canvas = GameObject.Find("Canvas");
-        if (canvas != null)
-        {
-            var decisionUI = canvas.GetComponent<DecisionUI>();
-            if (decisionUI != null)
-            {
-                SetPrivateField(decisionUI, "promptMessage", "FINAL SECURITY CHECK\n\nCan you forgive yourself?");
-                Debug.Log("[Patch] DecisionUI prompt updated.");
-            }
-        }
-
-        // EventManager: clear stale serialized fields (Unity drops missing fields on save)
-        var emGo = GameObject.Find("EventManager");
-        if (emGo != null)
-        {
-            var em = emGo.GetComponent<EventManager>();
-            if (em != null)
-            {
-                SetPrivateField(em, "activeSecurityQuestion", 0);
-                Debug.Log("[Patch] EventManager security question fields initialized.");
-            }
-        }
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-        Debug.Log("[Patch] EventManager + DecisionUI patch complete.");
-    }
-
-    [MenuItem("LastDay/Patch: Wire Audio Clips", priority = 2)]
-    public static void PatchWireAudioClips()
-    {
-        var amGo = GameObject.Find("AudioManager");
-        if (amGo == null)
-        {
-            Debug.LogError("[Patch] AudioManager not found in scene.");
-            return;
-        }
-
-        var audioMgr = amGo.GetComponent<AudioManager>();
-        if (audioMgr == null)
-        {
-            Debug.LogError("[Patch] AudioManager component not found.");
-            return;
-        }
-
-        var ambient = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Music/ambient.mp3");
-        var phoneRing = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/phone_ringing.mp3");
-        var typingClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/typing.mp3");
-        var tearingPaper = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/tearing_paper.wav");
-        var clockTick = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/SFX/clock_ticking.wav");
-
-        int wired = 0;
-        if (ambient != null) { SetPrivateField(audioMgr, "ambientLoop", ambient); wired++; }
-        else Debug.LogWarning("[Patch] ambient.mp3 not found at Assets/Audio/Music/ambient.mp3");
-
-        if (phoneRing != null) { SetPrivateField(audioMgr, "phoneRinging", phoneRing); wired++; }
-        else Debug.LogWarning("[Patch] phone_ringing.mp3 not found at Assets/Audio/SFX/phone_ringing.mp3");
-
-        if (typingClip != null) { SetPrivateField(audioMgr, "typing", typingClip); wired++; }
-        else Debug.LogWarning("[Patch] typing.mp3 not found at Assets/Audio/SFX/typing.mp3");
-
-        if (tearingPaper != null) { SetPrivateField(audioMgr, "paperTear", tearingPaper); wired++; }
-        else Debug.LogWarning("[Patch] tearing_paper.wav not found at Assets/Audio/SFX/tearing_paper.wav");
-
-        if (clockTick != null) { SetPrivateField(audioMgr, "clockTicking", clockTick); wired++; }
-        else Debug.LogWarning("[Patch] clock_ticking.wav not found at Assets/Audio/SFX/clock_ticking.wav");
-
-        // Also wire phone ring to PhoneInteraction if present
-        var phoneGo = GameObject.Find("phone");
-        if (phoneGo != null && phoneRing != null)
-        {
-            var phoneInteract = phoneGo.GetComponent<LastDay.Interaction.PhoneInteraction>();
-            if (phoneInteract != null)
-            {
-                SetPrivateField(phoneInteract, "ringSound", phoneRing);
-                Debug.Log("[Patch] PhoneInteraction.ringSound wired.");
-            }
-        }
-
-        // Ensure AudioManager has AudioSources
-        var sources = amGo.GetComponents<AudioSource>();
-        if (sources.Length < 3)
-        {
-            Debug.Log("[Patch] AudioManager missing AudioSources, adding them...");
-            while (amGo.GetComponents<AudioSource>().Length < 3)
-                amGo.AddComponent<AudioSource>();
-
-            sources = amGo.GetComponents<AudioSource>();
-            sources[0].playOnAwake = false;
-            sources[0].loop = true;
-            sources[1].playOnAwake = false;
-            sources[2].playOnAwake = false;
-
-            SetPrivateField(audioMgr, "musicSource", sources[0]);
-            SetPrivateField(audioMgr, "sfxSource", sources[1]);
-            SetPrivateField(audioMgr, "dialogueBlipSource", sources[2]);
-            Debug.Log("[Patch] AudioSources created and wired.");
-        }
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-        Debug.Log($"[Patch] Audio clips wired: {wired}/5.");
-    }
-
-    public static void PatchWireCharacterLayer()
-    {
-        var robert = GameObject.Find("Robert");
-        if (robert == null) { Debug.LogWarning("[Patch] Robert not found, skipping characterLayer patch"); return; }
-
-        var clickHandler = robert.GetComponent<ClickToMoveHandler>();
-        if (clickHandler == null) { Debug.LogWarning("[Patch] ClickToMoveHandler not found on Robert"); return; }
-
-        int characterLayerMask = 1 << LayerMask.NameToLayer("Characters");
-        int interactableLayerMask = 1 << LayerMask.NameToLayer("Interactables");
-
-        SetPrivateField(clickHandler, "characterLayer", characterLayerMask);
-        SetPrivateField(clickHandler, "interactableLayer", interactableLayerMask);
-
-        Debug.Log("[Patch] ClickToMoveHandler: characterLayer, interactableLayer wired (static scene).");
-    }
-
-    public static void PatchWireNullSafeManagers()
-    {
-        var gmGo = GameObject.Find("GameManager");
-        var llmGo = GameObject.Find("LocalLLMManager");
-        if (gmGo != null && llmGo != null)
-        {
-            var gm = gmGo.GetComponent<GameManager>();
-            var llm = llmGo.GetComponent<LocalLLMManager>();
-            if (gm != null && llm != null)
-                SetPrivateField(gm, "llmManager", llm);
-        }
-
-        // Ensure persistAcrossScenes is false for child Singleton managers only
-        string[] singletonManagerNames = { "GameManager", "GameStateMachine", "EventManager",
-                                           "FadeManager", "AudioManager" };
-        foreach (string name in singletonManagerNames)
-        {
-            var go = GameObject.Find(name);
-            if (go == null || go.transform.parent == null) continue;
-            foreach (var comp in go.GetComponents<MonoBehaviour>())
-            {
-                var field = comp.GetType().GetField("persistAcrossScenes",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (field != null)
-                {
-                    field.SetValue(comp, false);
-                    break;
-                }
-            }
-        }
-
-        Debug.Log("[Patch] Manager references and singleton settings patched.");
-    }
 
     [MenuItem("LastDay/Create Memory Assets Only", priority = 3)]
     public static void CreateMemoryDataAssets()
@@ -1808,6 +964,9 @@ public class SceneSetupEditor : EditorWindow
         fadeCg.alpha = 0f;
         fadeCg.blocksRaycasts = false;
 
+        // ── Download Progress Panel (first-run model download) ────────
+        var dlPanel = CreateDownloadProgressPanel(canvasGo);
+
         // ── Game view layout (full-screen camera, dialogue at bottom) ─
         var layout = canvasGo.AddComponent<GameViewLayout>();
         SetPrivateField(layout, "dialoguePanelHeight", dialoguePanelHeight);
@@ -1842,6 +1001,27 @@ public class SceneSetupEditor : EditorWindow
         var interactionPrompt = canvasGo.AddComponent<LastDay.UI.InteractionPrompt>();
         SetPrivateField(interactionPrompt, "promptPanel", promptPanel);
         SetPrivateField(interactionPrompt, "promptText", promptText.GetComponent<TMP_Text>());
+
+        var downloadPanel = canvasGo.AddComponent<LastDay.UI.DownloadProgressPanel>();
+        SetPrivateField(downloadPanel, "panel", dlPanel);
+        var dlTitle     = dlPanel.transform.Find("TitleText");
+        var dlModelInfo = dlPanel.transform.Find("ModelInfoText");
+        var dlStatus    = dlPanel.transform.Find("StatusText");
+        var dlPercent   = dlPanel.transform.Find("PercentText");
+        var dlBar       = dlPanel.transform.Find("ProgressBar");
+        var dlErrGroup  = dlPanel.transform.Find("ErrorGroup");
+        var dlErrText   = dlErrGroup?.Find("ErrorText");
+        var dlRetry     = dlErrGroup?.Find("RetryButton");
+        var dlQuit      = dlErrGroup?.Find("QuitButton");
+        if (dlTitle     != null) SetPrivateField(downloadPanel, "titleText",     dlTitle.GetComponent<TMP_Text>());
+        if (dlModelInfo != null) SetPrivateField(downloadPanel, "modelInfoText", dlModelInfo.GetComponent<TMP_Text>());
+        if (dlStatus    != null) SetPrivateField(downloadPanel, "statusText",    dlStatus.GetComponent<TMP_Text>());
+        if (dlPercent   != null) SetPrivateField(downloadPanel, "percentText",   dlPercent.GetComponent<TMP_Text>());
+        if (dlBar       != null) SetPrivateField(downloadPanel, "progressBar",   dlBar.GetComponent<Slider>());
+        if (dlErrGroup  != null) SetPrivateField(downloadPanel, "errorGroup",    dlErrGroup.gameObject);
+        if (dlErrText   != null) SetPrivateField(downloadPanel, "errorText",     dlErrText.GetComponent<TMP_Text>());
+        if (dlRetry     != null) SetPrivateField(downloadPanel, "retryButton",   dlRetry.GetComponent<Button>());
+        if (dlQuit      != null) SetPrivateField(downloadPanel, "quitButton",    dlQuit.GetComponent<Button>());
 
         // Wire computer interaction overlay references
         var compInteract = GameObject.Find("interactables/Computer")?.GetComponent<ComputerInteraction>();
@@ -2063,10 +1243,13 @@ public class SceneSetupEditor : EditorWindow
     }
 
     static GameObject CreateUIButton(GameObject parent, string name, string label)
+        => CreateUIButton(parent, name, label, new Color32(60, 60, 80, 255));
+
+    static GameObject CreateUIButton(GameObject parent, string name, string label, Color32 bgColor)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
         go.transform.SetParent(parent.transform, false);
-        go.GetComponent<Image>().color = new Color32(60, 60, 80, 255);
+        go.GetComponent<Image>().color = bgColor;
 
         var textGo = new GameObject("Text", typeof(RectTransform));
         textGo.transform.SetParent(go.transform, false);
@@ -2129,217 +1312,6 @@ public class SceneSetupEditor : EditorWindow
         rect.sizeDelta = size;
     }
 
-    // ── Cinematic Dialogue Patch ───────────────────────────────────────────
-
-    [MenuItem("LastDay/Patch: Apply Cinematic Dialogue to current scene", priority = 2)]
-    public static void PatchApplyCinematicDialogue()
-    {
-        var canvas = GameObject.Find("Canvas");
-        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
-
-        // ── Remove legacy dialogue components ──────────────────────────────
-        var oldDialogueUI = canvas.GetComponent<DialogueUI>();
-        if (oldDialogueUI != null) { Object.DestroyImmediate(oldDialogueUI); Debug.Log("[Patch] Removed DialogueUI."); }
-
-        var oldInterview = canvas.GetComponent<InterviewDialogueUI>();
-        if (oldInterview != null) { Object.DestroyImmediate(oldInterview); Debug.Log("[Patch] Removed InterviewDialogueUI."); }
-
-        // Hide (don't destroy) legacy panels so wired references keep working
-        foreach (string name in new[] { "DialoguePanel", "InputBarPanel", "FloatingDialogueBubble", "MonologuePanel" })
-        {
-            var t = canvas.transform.Find(name);
-            if (t != null) t.gameObject.SetActive(false);
-        }
-
-        // ── Create or reuse top bar ────────────────────────────────────────
-        Transform topBarT = canvas.transform.Find("CinematicTopBar");
-        if (topBarT == null)
-        {
-            var go = new GameObject("CinematicTopBar", typeof(RectTransform));
-            go.transform.SetParent(canvas.transform, false);
-            topBarT = go.transform;
-        }
-        SetupCinematicBar(topBarT.gameObject, anchorMin: new Vector2(0f, 0.88f), anchorMax: Vector2.one);
-
-        // ── Speaker name label ─────────────────────────────────────────────
-        var speakerGo = GetOrCreateChild(topBarT.gameObject, "SpeakerName");
-        var speakerRect = speakerGo.GetComponent<RectTransform>();
-        speakerRect.anchorMin = new Vector2(0f, 0f);
-        speakerRect.anchorMax = new Vector2(0.22f, 1f);
-        speakerRect.offsetMin = new Vector2(16f, 6f);
-        speakerRect.offsetMax = new Vector2(-4f, -6f);
-        var speakerTmp = GetOrAdd<TextMeshProUGUI>(speakerGo);
-        speakerTmp.text = "";
-        speakerTmp.fontSize = 16;
-        speakerTmp.fontStyle = FontStyles.Bold;
-        speakerTmp.color = new Color(1f, 0.85f, 0.6f, 1f);
-        speakerTmp.alignment = TextAlignmentOptions.MidlineLeft;
-
-        // ── Subtitle text ──────────────────────────────────────────────────
-        var subtitleGo = GetOrCreateChild(topBarT.gameObject, "SubtitleText");
-        var subtitleRect = subtitleGo.GetComponent<RectTransform>();
-        subtitleRect.anchorMin = new Vector2(0.22f, 0f);
-        subtitleRect.anchorMax = new Vector2(0.92f, 1f);
-        subtitleRect.offsetMin = new Vector2(8f, 6f);
-        subtitleRect.offsetMax = new Vector2(-8f, -6f);
-        var subtitleTmp = GetOrAdd<TextMeshProUGUI>(subtitleGo);
-        subtitleTmp.text = "";
-        subtitleTmp.fontSize = 15;
-        subtitleTmp.color = Color.white;
-        subtitleTmp.alignment = TextAlignmentOptions.MidlineLeft;
-        subtitleTmp.enableWordWrapping = true;
-        subtitleTmp.overflowMode = TextOverflowModes.Overflow;
-
-        // ── Skip ">" button (top bar, far right) ───────────────────────────
-        var skipGo = GetOrCreateChild(topBarT.gameObject, "SkipButton");
-        var skipRect = skipGo.GetComponent<RectTransform>();
-        skipRect.anchorMin = new Vector2(0.92f, 0f);
-        skipRect.anchorMax = Vector2.one;
-        skipRect.offsetMin = new Vector2(2f, 6f);
-        skipRect.offsetMax = new Vector2(-8f, -6f);
-        var skipBtn = GetOrAdd<Button>(skipGo);
-        var skipLabelGo = GetOrCreateChild(skipGo, "Label");
-        StretchFill(skipLabelGo);
-        var skipTmp = GetOrAdd<TextMeshProUGUI>(skipLabelGo);
-        skipTmp.text = ">";
-        skipTmp.fontSize = 18;
-        skipTmp.color = new Color(1f, 1f, 1f, 0.6f);
-        skipTmp.alignment = TextAlignmentOptions.Center;
-        skipGo.SetActive(false);
-
-        // ── Create or reuse bottom bar ─────────────────────────────────────
-        Transform bottomBarT = canvas.transform.Find("CinematicBottomBar");
-        if (bottomBarT == null)
-        {
-            var go = new GameObject("CinematicBottomBar", typeof(RectTransform));
-            go.transform.SetParent(canvas.transform, false);
-            bottomBarT = go.transform;
-        }
-        SetupCinematicBar(bottomBarT.gameObject, anchorMin: Vector2.zero, anchorMax: new Vector2(1f, 0.18f));
-
-        // ── Monologue text ─────────────────────────────────────────────────
-        var monoGo = GetOrCreateChild(bottomBarT.gameObject, "MonologueText");
-        var monoRect = monoGo.GetComponent<RectTransform>();
-        monoRect.anchorMin = Vector2.zero;
-        monoRect.anchorMax = Vector2.one;
-        monoRect.offsetMin = new Vector2(24f, 8f);
-        monoRect.offsetMax = new Vector2(-24f, -8f);
-        var monoTmp = GetOrAdd<TextMeshProUGUI>(monoGo);
-        monoTmp.text = "";
-        monoTmp.fontSize = 14;
-        monoTmp.fontStyle = FontStyles.Italic;
-        monoTmp.color = new Color(0.78f, 0.78f, 0.78f, 1f);
-        monoTmp.alignment = TextAlignmentOptions.MidlineLeft;
-        monoTmp.enableWordWrapping = true;
-
-        // ── Input field ────────────────────────────────────────────────────
-        var inputGo = GetOrCreateChild(bottomBarT.gameObject, "InputField");
-        var inputRect = inputGo.GetComponent<RectTransform>();
-        inputRect.anchorMin = new Vector2(0f, 0.1f);
-        inputRect.anchorMax = new Vector2(0.82f, 0.9f);
-        inputRect.offsetMin = new Vector2(20f, 0f);
-        inputRect.offsetMax = new Vector2(-6f, 0f);
-        var inputBg = GetOrAdd<Image>(inputGo);
-        inputBg.color = new Color(0f, 0f, 0f, 0.5f);
-        // Ensure TMP_InputField subcomponents
-        var textAreaGo = GetOrCreateChild(inputGo, "Text Area");
-        StretchFill(textAreaGo, 4f);
-        var taRect = textAreaGo.GetComponent<RectTransform>();
-        var textAreaMask = GetOrAdd<RectMask2D>(textAreaGo);
-        var inputTextField = GetOrCreateChild(textAreaGo, "Text");
-        StretchFill(inputTextField);
-        var inputTmp = GetOrAdd<TextMeshProUGUI>(inputTextField);
-        inputTmp.fontSize = 14;
-        inputTmp.color = Color.white;
-        var placeholderGo = GetOrCreateChild(textAreaGo, "Placeholder");
-        StretchFill(placeholderGo);
-        var placeholderTmp = GetOrAdd<TextMeshProUGUI>(placeholderGo);
-        placeholderTmp.text = "Robert says...";
-        placeholderTmp.fontSize = 14;
-        placeholderTmp.color = new Color(0.55f, 0.55f, 0.6f, 1f);
-        placeholderTmp.fontStyle = FontStyles.Italic;
-        var tmpInput = GetOrAdd<TMP_InputField>(inputGo);
-        tmpInput.textViewport = taRect;
-        tmpInput.textComponent = inputTmp;
-        tmpInput.placeholder = placeholderTmp;
-        inputGo.SetActive(false);
-
-        // ── Send button ────────────────────────────────────────────────────
-        var sendGo = GetOrCreateChild(bottomBarT.gameObject, "SendButton");
-        var sendRect = sendGo.GetComponent<RectTransform>();
-        sendRect.anchorMin = new Vector2(0.83f, 0.1f);
-        sendRect.anchorMax = new Vector2(0.97f, 0.9f);
-        sendRect.offsetMin = new Vector2(4f, 0f);
-        sendRect.offsetMax = new Vector2(-8f, 0f);
-        var sendImg = GetOrAdd<Image>(sendGo);
-        sendImg.color = new Color(0.25f, 0.25f, 0.28f, 0.9f);
-        var sendBtn = GetOrAdd<Button>(sendGo);
-        var sendLabelGo = GetOrCreateChild(sendGo, "Label");
-        StretchFill(sendLabelGo);
-        var sendTmp = GetOrAdd<TextMeshProUGUI>(sendLabelGo);
-        sendTmp.text = "Send";
-        sendTmp.fontSize = 13;
-        sendTmp.color = Color.white;
-        sendTmp.alignment = TextAlignmentOptions.Center;
-        sendGo.SetActive(false);
-
-        // ── Wire CinematicDialogueUI on Canvas ─────────────────────────────
-        var cinUi = canvas.GetComponent<CinematicDialogueUI>();
-        if (cinUi == null) cinUi = canvas.AddComponent<CinematicDialogueUI>();
-
-        var topBarCg   = topBarT.GetComponent<CanvasGroup>();
-        var bottomBarCg = bottomBarT.GetComponent<CanvasGroup>();
-
-        SetPrivateField(cinUi, "topBar",          topBarCg);
-        SetPrivateField(cinUi, "speakerNameText",  speakerTmp);
-        SetPrivateField(cinUi, "subtitleText",     subtitleTmp);
-        SetPrivateField(cinUi, "skipButton",       skipBtn);
-        SetPrivateField(cinUi, "bottomBar",        bottomBarCg);
-        SetPrivateField(cinUi, "monologueText",    monoTmp);
-        SetPrivateField(cinUi, "inputField",       tmpInput);
-        SetPrivateField(cinUi, "sendButton",       sendBtn);
-
-        // Both bars start hidden
-        topBarT.gameObject.SetActive(false);
-        bottomBarT.gameObject.SetActive(false);
-
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-
-        Debug.Log("[Patch] CinematicDialogueUI applied. Assign EB Garamond TMP Font Assets in the Inspector, then test with LastDay/Test: Cinematic Dialogue.");
-    }
-
-    static void SetupCinematicBar(GameObject go, Vector2 anchorMin, Vector2 anchorMax)
-    {
-        var rect = go.GetComponent<RectTransform>();
-        rect.anchorMin = anchorMin;
-        rect.anchorMax = anchorMax;
-        rect.offsetMin = Vector2.zero;
-        rect.offsetMax = Vector2.zero;
-
-        var img = GetOrAdd<Image>(go);
-        img.color = new Color(0f, 0f, 0f, 0.82f);
-
-        var cg = GetOrAdd<CanvasGroup>(go);
-        cg.alpha = 1f;
-        cg.blocksRaycasts = true;
-        cg.interactable = true;
-    }
-
-    static GameObject GetOrCreateChild(GameObject parent, string childName)
-    {
-        var t = parent.transform.Find(childName);
-        if (t != null) return t.gameObject;
-        var go = new GameObject(childName, typeof(RectTransform));
-        go.transform.SetParent(parent.transform, false);
-        return go;
-    }
-
-    static T GetOrAdd<T>(GameObject go) where T : Component
-    {
-        var c = go.GetComponent<T>();
-        return c != null ? c : go.AddComponent<T>();
-    }
 
     static void SetStretchBottom(GameObject go, float height, float margin)
     {
@@ -2416,279 +1388,207 @@ public class SceneSetupEditor : EditorWindow
             test.RunTestsNow();
     }
 
-    // ── Computer HUD Layout Fix ──────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Setup: Download Progress Panel
+    // ─────────────────────────────────────────────────────────────────────────────
 
-    [MenuItem("LastDay/Patch: Fix Computer HUD layout", priority = 2)]
-    public static void PatchFixComputerHUD()
+    [MenuItem("LastDay/Setup: Download Progress Panel", priority = 5)]
+    public static void SetupDownloadProgressPanel()
     {
         var canvas = GameObject.Find("Canvas");
-        if (canvas == null) { Debug.LogError("[Patch] Canvas not found."); return; }
-
-        // ── Locate ComputerPanel ─────────────────────────────────────────
-        var compPanelTf = canvas.transform.Find("ComputerOverlay/ComputerPanel")
-                       ?? canvas.transform.Find("ComputerPanel");
-        if (compPanelTf == null)
+        if (canvas == null)
         {
-            Debug.LogError("[Patch] ComputerPanel not found. Run 'LastDay/Patch: Add Computer + Security UI' first.");
+            Debug.LogError("[Setup] Canvas not found. Run 'Setup Scene (Full)' first.");
             return;
         }
-        var compPanel = compPanelTf.gameObject;
-        Debug.Log($"[Patch] Found ComputerPanel at: {GetFullPath(compPanelTf)}");
 
-        // Widen the panel to give the layout more room
-        var cpRect = compPanel.GetComponent<RectTransform>();
-        cpRect.anchorMin = new Vector2(0.18f, 0.15f);
-        cpRect.anchorMax = new Vector2(0.82f, 0.85f);
-        cpRect.offsetMin = Vector2.zero;
-        cpRect.offsetMax = Vector2.zero;
+        var existing = canvas.transform.Find("DownloadProgressPanel");
+        if (existing != null)
+        {
+            Debug.Log("[Setup] DownloadProgressPanel already exists.");
+            return;
+        }
 
-        var computerInteraction = Object.FindObjectOfType<LastDay.Interaction.ComputerInteraction>();
+        CreateDownloadProgressPanel(canvas);
 
-        // ── HeaderBar — create if missing, then position ─────────────────
-        var headerTf = compPanelTf.Find("HeaderBar");
-        GameObject header = headerTf != null
-            ? headerTf.gameObject
-            : CreateUIPanel(compPanel, "HeaderBar", new Color32(49, 82, 170, 255), AnchorPreset.TopCenter, 40f);
-        Debug.Log(headerTf == null ? "[Patch] HeaderBar created." : "[Patch] HeaderBar found.");
+        var dlPanel = canvas.transform.Find("DownloadProgressPanel");
+        var dlComp = canvas.GetComponent<LastDay.UI.DownloadProgressPanel>();
+        if (dlComp == null)
+            dlComp = canvas.AddComponent<LastDay.UI.DownloadProgressPanel>();
 
-        var hbRect = header.GetComponent<RectTransform>();
-        hbRect.anchorMin = new Vector2(0f, 0.88f);
-        hbRect.anchorMax = new Vector2(1f, 1f);
-        hbRect.offsetMin = Vector2.zero;
-        hbRect.offsetMax = Vector2.zero;
+        if (dlPanel != null)
+        {
+            SetPrivateField(dlComp, "panel", dlPanel.gameObject);
+            var dlTitle     = dlPanel.Find("TitleText");
+            var dlModelInfo = dlPanel.Find("ModelInfoText");
+            var dlStatus    = dlPanel.Find("StatusText");
+            var dlPercent   = dlPanel.Find("PercentText");
+            var dlBar       = dlPanel.Find("ProgressBar");
+            var dlErrGroup  = dlPanel.Find("ErrorGroup");
+            var dlErrText   = dlErrGroup?.Find("ErrorText");
+            var dlRetry     = dlErrGroup?.Find("RetryButton");
+            var dlQuit      = dlErrGroup?.Find("QuitButton");
+            if (dlTitle     != null) SetPrivateField(dlComp, "titleText",     dlTitle.GetComponent<TMP_Text>());
+            if (dlModelInfo != null) SetPrivateField(dlComp, "modelInfoText", dlModelInfo.GetComponent<TMP_Text>());
+            if (dlStatus    != null) SetPrivateField(dlComp, "statusText",    dlStatus.GetComponent<TMP_Text>());
+            if (dlPercent   != null) SetPrivateField(dlComp, "percentText",   dlPercent.GetComponent<TMP_Text>());
+            if (dlBar       != null) SetPrivateField(dlComp, "progressBar",   dlBar.GetComponent<Slider>());
+            if (dlErrGroup  != null) SetPrivateField(dlComp, "errorGroup",    dlErrGroup.gameObject);
+            if (dlErrText   != null) SetPrivateField(dlComp, "errorText",     dlErrText.GetComponent<TMP_Text>());
+            if (dlRetry     != null) SetPrivateField(dlComp, "retryButton",   dlRetry.GetComponent<Button>());
+            if (dlQuit      != null) SetPrivateField(dlComp, "quitButton",    dlQuit.GetComponent<Button>());
+        }
 
-        // Title text — create if missing
-        var titleTf = header.transform.Find("TitleText");
-        GameObject titleGo = titleTf != null
-            ? titleTf.gameObject
-            : CreateUIText(header, "TitleText", "SECURE ACCESS TERMINAL", 14, Color.white);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        Debug.Log("[Setup] DownloadProgressPanel created and wired on Canvas.");
+    }
+
+    /// <summary>Builds the DownloadProgressPanel hierarchy under a canvas parent and returns the root GameObject.</summary>
+    static GameObject CreateDownloadProgressPanel(GameObject canvas)
+    {
+        // Full-screen dark overlay (starts active so it shows on first launch if needed)
+        var root = CreateUIPanel(canvas, "DownloadProgressPanel",
+            new Color32(10, 10, 18, 240), AnchorPreset.Stretch, 0f);
+        StretchFill(root);
+        root.SetActive(false); // DownloadProgressPanel.Awake() activates it when needed
+
+        // Centre column — card
+        var card = CreateUIPanel(root, "Card", new Color32(22, 28, 44, 255), AnchorPreset.Center, 0f);
+        var cardRect = card.GetComponent<RectTransform>();
+        cardRect.anchorMin = new Vector2(0.25f, 0.3f);
+        cardRect.anchorMax = new Vector2(0.75f, 0.7f);
+        cardRect.offsetMin = Vector2.zero;
+        cardRect.offsetMax = Vector2.zero;
+
+        // Title
+        var titleGo = CreateUIText(card, "TitleText", "Last Day — Preparing AI Characters…", 22, Color.white);
         var titleRect = titleGo.GetComponent<RectTransform>();
-        titleRect.anchorMin = new Vector2(0f, 0f);
-        titleRect.anchorMax = new Vector2(0.52f, 1f);
-        titleRect.offsetMin = new Vector2(10f, 0f);
+        titleRect.anchorMin = new Vector2(0.05f, 0.74f);
+        titleRect.anchorMax = new Vector2(0.95f, 0.94f);
+        titleRect.offsetMin = Vector2.zero;
         titleRect.offsetMax = Vector2.zero;
         var titleTmp = titleGo.GetComponent<TMP_Text>();
-        if (titleTmp != null) { titleTmp.alignment = TextAlignmentOptions.MidlineLeft; titleTmp.fontSize = 14; }
+        titleTmp.alignment = TextAlignmentOptions.Center;
+        titleTmp.fontStyle = FontStyles.Bold;
 
-        // Question number label — create if missing
-        var labelTf = header.transform.Find("QuestionLabel");
-        GameObject labelGo = labelTf != null
-            ? labelTf.gameObject
-            : CreateUIText(header, "QuestionLabel", "SECURITY CHECK  1 / 3", 13, new Color(0.6f, 0.85f, 1f));
-        var labelRect = labelGo.GetComponent<RectTransform>();
-        labelRect.anchorMin = new Vector2(0.53f, 0f);
-        labelRect.anchorMax = new Vector2(0.85f, 1f);   // stops before × button at 0.87
-        labelRect.offsetMin = Vector2.zero;
-        labelRect.offsetMax = Vector2.zero;
-        var labelTmp = labelGo.GetComponent<TMP_Text>();
-        if (labelTmp != null)
-        {
-            labelTmp.alignment = TextAlignmentOptions.MidlineRight;
-            labelTmp.fontSize = 13;
-            labelTmp.color = new Color(0.6f, 0.85f, 1f);
-        }
-        if (computerInteraction != null)
-            SetPrivateField(computerInteraction, "questionLabelText", labelTmp);
+        // Model info
+        var modelInfoGo = CreateUIText(card, "ModelInfoText", "", 15, new Color(0.7f, 0.7f, 0.7f));
+        var miRect = modelInfoGo.GetComponent<RectTransform>();
+        miRect.anchorMin = new Vector2(0.05f, 0.62f);
+        miRect.anchorMax = new Vector2(0.95f, 0.74f);
+        miRect.offsetMin = Vector2.zero;
+        miRect.offsetMax = Vector2.zero;
+        modelInfoGo.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
 
-        // ── QuestionText — create if missing, position below header ──────
-        var qTextTf = compPanelTf.Find("QuestionText");
-        GameObject qTextGo = qTextTf != null
-            ? qTextTf.gameObject
-            : CreateUIText(compPanel, "QuestionText", "", 20, new Color(0f, 0.85f, 0.35f));
-        Debug.Log(qTextTf == null ? "[Patch] QuestionText created." : "[Patch] QuestionText found.");
-        var qRect = qTextGo.GetComponent<RectTransform>();
-        qRect.anchorMin = new Vector2(0.06f, 0.46f);
-        qRect.anchorMax = new Vector2(0.94f, 0.86f);
-        qRect.offsetMin = Vector2.zero;
-        qRect.offsetMax = Vector2.zero;
-        var qTmp = qTextGo.GetComponent<TMP_Text>();
-        if (qTmp != null) { qTmp.fontSize = 20; qTmp.alignment = TextAlignmentOptions.Center; qTmp.enableWordWrapping = true; }
-        if (computerInteraction != null)
-            SetPrivateField(computerInteraction, "questionText", qTmp);
+        // Progress bar (Slider — value-only, no handle)
+        var barGo = new GameObject("ProgressBar", typeof(RectTransform));
+        barGo.transform.SetParent(card.transform, false);
+        var barRect = barGo.GetComponent<RectTransform>();
+        barRect.anchorMin = new Vector2(0.06f, 0.44f);
+        barRect.anchorMax = new Vector2(0.94f, 0.54f);
+        barRect.offsetMin = Vector2.zero;
+        barRect.offsetMax = Vector2.zero;
 
-        // ── AnswerInput ───────────────────────────────────────────────────
-        var inputTf = compPanelTf.Find("AnswerInput");
-        if (inputTf != null)
-        {
-            var iRect = inputTf.GetComponent<RectTransform>();
-            iRect.anchorMin = new Vector2(0.06f, 0.28f);
-            iRect.anchorMax = new Vector2(0.65f, 0.42f);
-            iRect.offsetMin = Vector2.zero;
-            iRect.offsetMax = Vector2.zero;
-        }
-        else Debug.LogWarning("[Patch] AnswerInput not found.");
+        var slider = barGo.AddComponent<Slider>();
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.value = 0f;
+        slider.wholeNumbers = false;
+        slider.direction = Slider.Direction.LeftToRight;
 
-        // ── SubmitButton ──────────────────────────────────────────────────
-        var submitTf = compPanelTf.Find("SubmitButton");
-        if (submitTf != null)
-        {
-            var sRect = submitTf.GetComponent<RectTransform>();
-            sRect.anchorMin = new Vector2(0.67f, 0.28f);
-            sRect.anchorMax = new Vector2(0.94f, 0.42f);
-            sRect.offsetMin = Vector2.zero;
-            sRect.offsetMax = Vector2.zero;
-            var sTmp = submitTf.GetComponentInChildren<TMP_Text>();
-            if (sTmp != null) { sTmp.fontSize = 15; sTmp.text = "SUBMIT"; }
-        }
-        else Debug.LogWarning("[Patch] SubmitButton not found.");
+        var bgImg = barGo.AddComponent<Image>();
+        bgImg.color = new Color32(40, 40, 60, 255);
+        slider.targetGraphic = bgImg;
 
-        // ── FeedbackText ──────────────────────────────────────────────────
-        var feedTf = compPanelTf.Find("FeedbackText");
-        if (feedTf != null)
-        {
-            var fRect = feedTf.GetComponent<RectTransform>();
-            fRect.anchorMin = new Vector2(0.06f, 0.12f);
-            fRect.anchorMax = new Vector2(0.94f, 0.25f);
-            fRect.offsetMin = Vector2.zero;
-            fRect.offsetMax = Vector2.zero;
-            var fTmp = feedTf.GetComponent<TMP_Text>();
-            if (fTmp != null) { fTmp.fontSize = 14; fTmp.alignment = TextAlignmentOptions.Center; }
-        }
+        var fillAreaGo = new GameObject("Fill Area", typeof(RectTransform));
+        fillAreaGo.transform.SetParent(barGo.transform, false);
+        var faRect = fillAreaGo.GetComponent<RectTransform>();
+        faRect.anchorMin = Vector2.zero;
+        faRect.anchorMax = Vector2.one;
+        faRect.offsetMin = Vector2.zero;
+        faRect.offsetMax = Vector2.zero;
 
-        // ── CloseButton — create if missing, slot into HeaderBar right ────
-        var closeTf = compPanelTf.Find("CloseButton");
-        GameObject closeGo = closeTf != null
-            ? closeTf.gameObject
-            : CreateUIButton(compPanel, "CloseButton", "\u00D7");
-        Debug.Log(closeTf == null ? "[Patch] CloseButton created." : "[Patch] CloseButton found.");
-        var cRect = closeGo.GetComponent<RectTransform>();
-        cRect.pivot = new Vector2(0.5f, 0.5f);
-        cRect.anchorMin = new Vector2(0.87f, 0.895f);
-        cRect.anchorMax = new Vector2(0.98f, 0.99f);
-        cRect.offsetMin = Vector2.zero;
-        cRect.offsetMax = Vector2.zero;
-        var cImg = closeGo.GetComponent<UnityEngine.UI.Image>();
-        if (cImg != null) cImg.color = new Color32(100, 30, 30, 220);
-        var cTmp = closeGo.GetComponentInChildren<TMP_Text>();
-        if (cTmp != null) { cTmp.text = "\u00D7"; cTmp.fontSize = 16; cTmp.alignment = TextAlignmentOptions.Center; }
-        if (computerInteraction != null)
-        {
-            var existingClose = closeTf != null
-                ? closeTf.GetComponent<UnityEngine.UI.Button>()
-                : closeGo.GetComponent<UnityEngine.UI.Button>();
-            if (existingClose != null)
-                SetPrivateField(computerInteraction, "closeButton", existingClose);
-        }
+        var fillGo = new GameObject("Fill", typeof(RectTransform));
+        fillGo.transform.SetParent(fillAreaGo.transform, false);
+        var fillRect = fillGo.GetComponent<RectTransform>();
+        fillRect.anchorMin = new Vector2(0f, 0f);
+        fillRect.anchorMax = new Vector2(0f, 1f);
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+        var fillImg = fillGo.AddComponent<Image>();
+        fillImg.color = new Color32(49, 120, 200, 255);
+        slider.fillRect = fillRect;
 
-        // ── FinalPromptPanel ──────────────────────────────────────────────
-        var finalPanelTf = canvas.transform.Find("ComputerOverlay/FinalPromptPanel")
-                        ?? canvas.transform.Find("FinalPromptPanel");
-        if (finalPanelTf != null)
-        {
-            // Widen to match ComputerPanel
-            var fpRect = finalPanelTf.GetComponent<RectTransform>();
-            fpRect.anchorMin = new Vector2(0.18f, 0.15f);
-            fpRect.anchorMax = new Vector2(0.82f, 0.85f);
-            fpRect.offsetMin = Vector2.zero;
-            fpRect.offsetMax = Vector2.zero;
+        // Status text
+        var statusGo = CreateUIText(card, "StatusText", "Connecting…", 14, new Color(0.8f, 0.8f, 0.8f));
+        var stRect = statusGo.GetComponent<RectTransform>();
+        stRect.anchorMin = new Vector2(0.05f, 0.30f);
+        stRect.anchorMax = new Vector2(0.78f, 0.42f);
+        stRect.offsetMin = Vector2.zero;
+        stRect.offsetMax = Vector2.zero;
+        statusGo.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.MidlineLeft;
 
-            // Add / update HeaderBar with title label
-            var fpHeaderTf = finalPanelTf.Find("HeaderBar");
-            GameObject fpHeader;
-            if (fpHeaderTf == null)
-            {
-                fpHeader = CreateUIPanel(finalPanelTf.gameObject, "HeaderBar",
-                    new Color32(49, 82, 170, 255), AnchorPreset.TopCenter, 40f);
-            }
-            else
-            {
-                fpHeader = fpHeaderTf.gameObject;
-            }
+        // Percent text
+        var pctGo = CreateUIText(card, "PercentText", "0%", 16, Color.white);
+        var pctRect = pctGo.GetComponent<RectTransform>();
+        pctRect.anchorMin = new Vector2(0.80f, 0.30f);
+        pctRect.anchorMax = new Vector2(0.95f, 0.42f);
+        pctRect.offsetMin = Vector2.zero;
+        pctRect.offsetMax = Vector2.zero;
+        var pctTmp = pctGo.GetComponent<TMP_Text>();
+        pctTmp.alignment = TextAlignmentOptions.MidlineRight;
+        pctTmp.fontStyle = FontStyles.Bold;
 
-            var fpHeaderRect = fpHeader.GetComponent<RectTransform>();
-            fpHeaderRect.anchorMin = new Vector2(0f, 0.88f);
-            fpHeaderRect.anchorMax = new Vector2(1f, 1f);
-            fpHeaderRect.offsetMin = Vector2.zero;
-            fpHeaderRect.offsetMax = Vector2.zero;
+        // Error group (hidden by default)
+        var errGroup = CreateUIPanel(card, "ErrorGroup", new Color32(80, 20, 20, 200), AnchorPreset.Center, 0f);
+        var egRect = errGroup.GetComponent<RectTransform>();
+        egRect.anchorMin = new Vector2(0.05f, 0.04f);
+        egRect.anchorMax = new Vector2(0.95f, 0.28f);
+        egRect.offsetMin = Vector2.zero;
+        egRect.offsetMax = Vector2.zero;
+        errGroup.SetActive(false);
 
-            // Title text inside header
-            var fpTitleTf = fpHeader.transform.Find("TitleText");
-            GameObject fpTitleGo = fpTitleTf != null
-                ? fpTitleTf.gameObject
-                : CreateUIText(fpHeader, "TitleText", "FINAL SECURITY CHECK", 14, Color.white);
+        var errTextGo = CreateUIText(errGroup, "ErrorText", "", 13, new Color(1f, 0.6f, 0.6f));
+        var errTxtRect = errTextGo.GetComponent<RectTransform>();
+        errTxtRect.anchorMin = new Vector2(0f, 0.45f);
+        errTxtRect.anchorMax = new Vector2(1f, 1f);
+        errTxtRect.offsetMin = new Vector2(8f, 4f);
+        errTxtRect.offsetMax = new Vector2(-8f, -4f);
+        var errTmp = errTextGo.GetComponent<TMP_Text>();
+        errTmp.alignment = TextAlignmentOptions.TopLeft;
+        errTmp.enableWordWrapping = true;
 
-            var fpTitleRect = fpTitleGo.GetComponent<RectTransform>();
-            fpTitleRect.anchorMin = Vector2.zero;
-            fpTitleRect.anchorMax = Vector2.one;
-            fpTitleRect.offsetMin = new Vector2(10f, 0f);
-            fpTitleRect.offsetMax = Vector2.zero;
-            var fpTitleTmp = fpTitleGo.GetComponent<TMP_Text>();
-            if (fpTitleTmp != null)
-            {
-                fpTitleTmp.text = "FINAL SECURITY CHECK";
-                fpTitleTmp.alignment = TextAlignmentOptions.MidlineLeft;
-                fpTitleTmp.fontSize = 14;
-            }
+        // Retry / Quit buttons inside ErrorGroup
+        var retryGo = CreateUIButton(errGroup, "RetryButton", "Try Again", new Color32(60, 100, 60, 230));
+        var retryRect = retryGo.GetComponent<RectTransform>();
+        retryRect.anchorMin = new Vector2(0f, 0f);
+        retryRect.anchorMax = new Vector2(0.48f, 0.42f);
+        retryRect.offsetMin = new Vector2(8f, 4f);
+        retryRect.offsetMax = new Vector2(-4f, -4f);
 
-            // Wire label to ComputerInteraction
-            var computerInteraction2 = Object.FindObjectOfType<LastDay.Interaction.ComputerInteraction>();
-            if (computerInteraction2 != null)
-                SetPrivateField(computerInteraction2, "finalPromptLabelText", fpTitleTmp);
+        var quitGo = CreateUIButton(errGroup, "QuitButton", "Quit", new Color32(100, 40, 40, 230));
+        var quitRect = quitGo.GetComponent<RectTransform>();
+        quitRect.anchorMin = new Vector2(0.52f, 0f);
+        quitRect.anchorMax = new Vector2(1f, 0.42f);
+        quitRect.offsetMin = new Vector2(4f, 4f);
+        quitRect.offsetMax = new Vector2(-8f, -4f);
 
-            // FinalPromptText — body only, no title prefix
-            var fpTextTf = finalPanelTf.Find("FinalPromptText");
-            if (fpTextTf != null)
-            {
-                var ftRect = fpTextTf.GetComponent<RectTransform>();
-                ftRect.anchorMin = new Vector2(0.06f, 0.44f);
-                ftRect.anchorMax = new Vector2(0.94f, 0.86f);
-                ftRect.offsetMin = Vector2.zero;
-                ftRect.offsetMax = Vector2.zero;
-                var ftTmp = fpTextTf.GetComponent<TMP_Text>();
-                if (ftTmp != null)
-                {
-                    ftTmp.fontSize = 20;
-                    ftTmp.alignment = TextAlignmentOptions.Center;
-                    ftTmp.enableWordWrapping = true;
-                }
-            }
+        // Note
+        var noteGo = CreateUIText(root, "NoteText",
+            "This is a one-time download. The model will be cached for future sessions.", 12,
+            new Color(0.5f, 0.5f, 0.5f));
+        var noteRect = noteGo.GetComponent<RectTransform>();
+        noteRect.anchorMin = new Vector2(0.1f, 0.22f);
+        noteRect.anchorMax = new Vector2(0.9f, 0.28f);
+        noteRect.offsetMin = Vector2.zero;
+        noteRect.offsetMax = Vector2.zero;
+        noteGo.GetComponent<TMP_Text>().alignment = TextAlignmentOptions.Center;
 
-            // Sign button
-            var signTf = finalPanelTf.Find("SignButton");
-            if (signTf != null)
-            {
-                var sRect = signTf.GetComponent<RectTransform>();
-                sRect.anchorMin = new Vector2(0.06f, 0.10f);
-                sRect.anchorMax = new Vector2(0.44f, 0.36f);
-                sRect.offsetMin = Vector2.zero;
-                sRect.offsetMax = Vector2.zero;
-                var sTmp = signTf.GetComponentInChildren<TMP_Text>();
-                if (sTmp != null) sTmp.fontSize = 15;
-            }
-
-            // Tear button
-            var tearTf = finalPanelTf.Find("TearButton");
-            if (tearTf != null)
-            {
-                var tRect = tearTf.GetComponent<RectTransform>();
-                tRect.anchorMin = new Vector2(0.56f, 0.10f);
-                tRect.anchorMax = new Vector2(0.94f, 0.36f);
-                tRect.offsetMin = Vector2.zero;
-                tRect.offsetMax = Vector2.zero;
-                var tTmp = tearTf.GetComponentInChildren<TMP_Text>();
-                if (tTmp != null) tTmp.fontSize = 15;
-            }
-
-            Debug.Log("[Patch] FinalPromptPanel layout fixed.");
-        }
-        else
-        {
-            Debug.LogWarning("[Patch] FinalPromptPanel not found — skipping. Run 'Add Computer + Security UI' first.");
-        }
-
-        var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(activeScene);
-        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(activeScene);
-        Debug.Log("[Patch] Computer HUD layout fixed and scene SAVED — anchors updated, QuestionLabel added, close button fixed.");
+        Debug.Log("[Setup] DownloadProgressPanel created.");
+        return root;
     }
 
-    static string GetFullPath(Transform t)
-    {
-        if (t == null) return "(null)";
-        var path = t.name;
-        while (t.parent != null) { t = t.parent; path = t.name + "/" + path; }
-        return path;
-    }
 
     // ─────────────────────────────────────────────────────────────────────────────
     // Patch: Wire Character Idle Movement

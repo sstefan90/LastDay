@@ -139,12 +139,18 @@ namespace LastDay.Dialogue
 
                 try
                 {
-                    await marthaCharacter.Warmup();
+                    var marthaWarmup = marthaCharacter.Warmup();
+                    if (await System.Threading.Tasks.Task.WhenAny(marthaWarmup, System.Threading.Tasks.Task.Delay(System.TimeSpan.FromSeconds(20))) != marthaWarmup)
+                        throw new System.TimeoutException("Martha Warmup timed out after 20 s.");
+                    await marthaWarmup;
                     Debug.Log("[LLM] Martha warmed up.");
 
                     if (davidCharacter != null)
                     {
-                        await davidCharacter.Warmup();
+                        var davidWarmup = davidCharacter.Warmup();
+                        if (await System.Threading.Tasks.Task.WhenAny(davidWarmup, System.Threading.Tasks.Task.Delay(System.TimeSpan.FromSeconds(20))) != davidWarmup)
+                            throw new System.TimeoutException("David Warmup timed out after 20 s.");
+                        await davidWarmup;
                         Debug.Log("[LLM] David warmed up.");
                     }
 
