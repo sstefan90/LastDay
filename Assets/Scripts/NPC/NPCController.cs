@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using LastDay.Core;
 using LastDay.Player;
 using LastDay.UI;
 using LastDay.Utilities;
@@ -56,6 +57,7 @@ namespace LastDay.NPC
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (GameStateMachine.Instance != null && !GameStateMachine.Instance.CanInteract) return;
             CursorHelper.SetHoverCursor(hoverCursor, cursorHotspot);
         }
 

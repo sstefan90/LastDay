@@ -17,6 +17,7 @@ namespace LastDay.Interaction
         [SerializeField] private GameObject computerOverlay;
         [SerializeField] private GameObject computerPanel;
         [SerializeField] private RectTransform computerWindowRect;
+        [SerializeField] private TMP_Text questionLabelText;
         [SerializeField] private TMP_Text questionText;
         [SerializeField] private TMP_Text feedbackText;
         [SerializeField] private TMP_InputField answerInputField;
@@ -25,6 +26,7 @@ namespace LastDay.Interaction
 
         [Header("Final Prompt UI")]
         [SerializeField] private GameObject finalPromptPanel;
+        [SerializeField] private TMP_Text finalPromptLabelText;
         [SerializeField] private TMP_Text finalPromptText;
         [SerializeField] private Button signButton;
         [SerializeField] private Button tearButton;
@@ -37,12 +39,20 @@ namespace LastDay.Interaction
             "Date of my proudest moment. The guitar is in the corner. I should look at the guitar."
         };
 
-        // Security questions displayed on screen
+        // Question number labels shown in the header bar
+        private static readonly string[] QuestionLabels = new string[]
+        {
+            "SECURITY CHECK  1 / 3",
+            "SECURITY CHECK  2 / 3",
+            "SECURITY CHECK  3 / 3",
+        };
+
+        // Question body text shown in the main panel area
         private static readonly string[] Questions = new string[]
         {
-            "SECURITY CHECK 1\n\nEmergency Contact for the '98 K2 Expedition.",
-            "SECURITY CHECK 2\n\nBeneficiary Name for Offshore Account 4014.",
-            "SECURITY CHECK 3\n\nDate of Your Proudest Moment."
+            "Emergency Contact for the '98 K2 Expedition.",
+            "Beneficiary Name for Offshore Account 4014.",
+            "Date of Your Proudest Moment.",
         };
 
         // Accepted answers — case-insensitive, trimmed. Multiple forms accepted for Q3.
@@ -162,6 +172,9 @@ namespace LastDay.Interaction
                 return;
             }
 
+            if (questionLabelText != null)
+                questionLabelText.text = QuestionLabels[currentQuestionIndex];
+
             if (questionText != null)
                 questionText.text = Questions[currentQuestionIndex];
 
@@ -255,6 +268,8 @@ namespace LastDay.Interaction
 
         private void ClosePanel()
         {
+            Audio.AudioManager.Instance?.StopSFX();
+
             if (computerPanel != null)
                 computerPanel.SetActive(false);
             if (computerOverlay != null)
@@ -289,8 +304,11 @@ namespace LastDay.Interaction
             {
                 finalPromptPanel.SetActive(true);
 
+                if (finalPromptLabelText != null)
+                    finalPromptLabelText.text = "FINAL SECURITY CHECK";
+
                 if (finalPromptText != null)
-                    finalPromptText.text = "FINAL SECURITY CHECK\n\nCan you forgive yourself?";
+                    finalPromptText.text = "Can you forgive yourself?";
             }
             outsideClickEnabledAtTime = Time.unscaledTime + 0.12f;
 
@@ -340,6 +358,7 @@ namespace LastDay.Interaction
         {
             if (signButton != null) signButton.interactable = false;
             if (tearButton != null) tearButton.interactable = false;
+            Audio.AudioManager.Instance?.StopSFX();
         }
 
         private void HideFinalPrompt()

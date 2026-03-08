@@ -2669,12 +2669,12 @@ MonoBehaviour:
   - regularTypeface: {fileID: 0}
     italicTypeface: {fileID: 0}
   - regularTypeface: {fileID: 0}
-    italicTypeface: {fileID: 0}
+    italicTypeface: {fileID: 11400000, guid: ab29166219d724a99922356194a8fb04, type: 2}
+  - regularTypeface: {fileID: 0}
+    italicTypeface: {fileID: 11400000, guid: 4eefbefdb2e80459ca446d855ff7cb77, type: 2}
   - regularTypeface: {fileID: 0}
     italicTypeface: {fileID: 0}
-  - regularTypeface: {fileID: 0}
-    italicTypeface: {fileID: 0}
-  - regularTypeface: {fileID: 0}
+  - regularTypeface: {fileID: 11400000, guid: 5fb01dbbd8be84f91926fbe1d40d87ed, type: 2}
     italicTypeface: {fileID: 0}
   - regularTypeface: {fileID: 0}
     italicTypeface: {fileID: 0}
