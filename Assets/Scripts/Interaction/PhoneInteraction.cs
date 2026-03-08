@@ -76,15 +76,9 @@ namespace LastDay.Interaction
 
         public override void OnInteract()
         {
-            if (!isRinging && !hasBeenAnswered)
-            {
-                LastDay.UI.DialogueSession.Current?.ShowAction("The phone is silent.");
-                return;
-            }
-
             if (isRinging)
                 AnswerPhone();
-            else if (hasBeenAnswered)
+            else
                 CallDavidBack();
         }
 
