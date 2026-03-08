@@ -2691,4 +2691,79 @@ public class SceneSetupEditor : EditorWindow
         while (t.parent != null) { t = t.parent; path = t.name + "/" + path; }
         return path;
     }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Patch: Wire Character Idle Movement
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    [MenuItem("LastDay/Patch: Wire Character Idle Movement", priority = 3)]
+    public static void PatchWireCharacterIdleMovement()
+    {
+        int fixed_ = 0;
+
+        // Robert
+        var robert = GameObject.Find("Robert");
+        if (robert == null)
+        {
+            Debug.LogWarning("[Patch] 'Robert' GameObject not found in scene.");
+        }
+        else
+        {
+            var idleR = robert.GetComponent<LastDay.Player.CharacterIdleMovement>();
+            if (idleR == null)
+            {
+                idleR = robert.AddComponent<LastDay.Player.CharacterIdleMovement>();
+                Debug.Log("[Patch] Added CharacterIdleMovement to Robert.");
+            }
+
+            var pc = robert.GetComponent<LastDay.Player.PlayerController2D>();
+            if (pc != null)
+            {
+                var so = new UnityEditor.SerializedObject(pc);
+                var prop = so.FindProperty("idleMovement");
+                if (prop != null)
+                {
+                    prop.objectReferenceValue = idleR;
+                    so.ApplyModifiedProperties();
+                    Debug.Log("[Patch] Wired Robert's PlayerController2D.idleMovement → CharacterIdleMovement.");
+                    fixed_++;
+                }
+            }
+        }
+
+        // Martha
+        var martha = GameObject.Find("Martha");
+        if (martha == null)
+        {
+            Debug.LogWarning("[Patch] 'Martha' GameObject not found in scene.");
+        }
+        else
+        {
+            var idleM = martha.GetComponent<LastDay.Player.CharacterIdleMovement>();
+            if (idleM == null)
+            {
+                idleM = martha.AddComponent<LastDay.Player.CharacterIdleMovement>();
+                Debug.Log("[Patch] Added CharacterIdleMovement to Martha.");
+            }
+
+            var npc = martha.GetComponent<LastDay.NPC.NPCController>();
+            if (npc != null)
+            {
+                var so = new UnityEditor.SerializedObject(npc);
+                var prop = so.FindProperty("idleMovement");
+                if (prop != null)
+                {
+                    prop.objectReferenceValue = idleM;
+                    so.ApplyModifiedProperties();
+                    Debug.Log("[Patch] Wired Martha's NPCController.idleMovement → CharacterIdleMovement.");
+                    fixed_++;
+                }
+            }
+        }
+
+        var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(activeScene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(activeScene);
+        Debug.Log($"[Patch] Wire Character Idle Movement complete — {fixed_} reference(s) updated. Scene saved.");
+    }
 }
